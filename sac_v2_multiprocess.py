@@ -46,7 +46,7 @@ print(device)
 
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=False)
+parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -346,13 +346,18 @@ def worker(id, sac_trainer, ENV, rewards_queue, replay_buffer, max_episodes, max
         SCREEN_SHOT=False
         action_range = 10.0
 
-        env=Reacher(screen_size=SCREEN_SIZE, num_joints=NUM_JOINTS, link_lengths = LINK_LENGTH, \
-        ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=True, change_goal=False)
+        env=Reacher(screen_size=SCREEN_SIZE, num_joints=NUM_JOINTS, link_lengths = LINK_LENGTH, ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=False, change_goal=False)
         action_dim = env.num_actions
         state_dim  = env.num_observations
 
     elif ENV == 'Pendulum':
         env = NormalizedActions(gym.make("Pendulum-v0"))
+        action_dim = env.action_space.shape[0]
+        state_dim  = env.observation_space.shape[0]
+        action_range=1.
+
+    elif ENV == 'HalfCheetah':
+        env = NormalizedActions(gym.make("HalfCheetah-v2"))
         action_dim = env.action_space.shape[0]
         state_dim  = env.observation_space.shape[0]
         action_range=1.
@@ -367,6 +372,8 @@ def worker(id, sac_trainer, ENV, rewards_queue, replay_buffer, max_episodes, max
             state = env.reset(SCREEN_SHOT)
         elif ENV == 'Pendulum':
             state =  env.reset()
+        elif ENV == 'HalfCheetah':
+            state = env.reset()
         
         for step in range(max_steps):
             if frame_idx > explore_steps:
@@ -379,7 +386,10 @@ def worker(id, sac_trainer, ENV, rewards_queue, replay_buffer, max_episodes, max
                     next_state, reward, done, _ = env.step(action, SPARSE_REWARD, SCREEN_SHOT)
                 elif ENV ==  'Pendulum':
                     next_state, reward, done, _ = env.step(action)
-                    env.render()   
+                    # env.render()
+                elif ENV == 'HalfCheetah':
+                    next_state, reward, done, _ = env.step(action)
+
             except KeyboardInterrupt:
                 print('Finished')
                 sac_trainer.save_model(model_path)
@@ -444,7 +454,7 @@ if __name__ == '__main__':
 
 
     # choose env
-    ENV = ['Pendulum', 'Reacher'][0]
+    ENV = ['Pendulum', 'Reacher', 'HalfCheetah'][2]
     if ENV == 'Reacher':
         NUM_JOINTS=2
         LINK_LENGTH=[200, 140]
@@ -454,12 +464,18 @@ if __name__ == '__main__':
         action_range = 10.0
 
         env=Reacher(screen_size=SCREEN_SIZE, num_joints=NUM_JOINTS, link_lengths = LINK_LENGTH, \
-        ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=True, change_goal=False)
+        ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=False, change_goal=False)
         action_dim = env.num_actions
         state_dim  = env.num_observations
 
     elif ENV == 'Pendulum':
         env = NormalizedActions(gym.make("Pendulum-v0"))
+        action_dim = env.action_space.shape[0]
+        state_dim  = env.observation_space.shape[0]
+        action_range=1.
+
+    elif ENV == 'HalfCheetah':
+        env = NormalizedActions(gym.make("HalfCheetah-v2"))
         action_dim = env.action_space.shape[0]
         state_dim  = env.observation_space.shape[0]
         action_range=1.
@@ -493,7 +509,7 @@ if __name__ == '__main__':
 
         rewards_queue=mp.Queue()  # used for get rewards from all processes and plot the curve
 
-        num_workers=2  # or: mp.cpu_count()
+        num_workers=mp.cpu_count()//2  # or: mp.cpu_count()
         processes=[]
         rewards=[]
 
@@ -534,7 +550,7 @@ if __name__ == '__main__':
                     next_state, reward, done, _ = env.step(action, SPARSE_REWARD, SCREEN_SHOT)
                 elif ENV ==  'Pendulum':
                     next_state, reward, done, _ = env.step(action)
-                    env.render()   
+                    # env.render()   
 
 
                 episode_reward += reward

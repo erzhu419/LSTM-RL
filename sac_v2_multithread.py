@@ -43,7 +43,7 @@ print(device)
 
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=False)
+parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -333,7 +333,7 @@ def worker(id, ):  # thread could read global variables
     print(sac_trainer, replay_buffer)
     if ENV == 'Reacher':
         env=Reacher(screen_size=SCREEN_SIZE, num_joints=NUM_JOINTS, link_lengths = LINK_LENGTH, \
-        ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=True, change_goal=False)
+        ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=False, change_goal=False)
 
     elif ENV == 'Pendulum':
         env = NormalizedActions(gym.make("Pendulum-v0"))
@@ -434,7 +434,7 @@ if __name__ == '__main__':
     sac_trainer=SAC_Trainer(replay_buffer, hidden_dim=hidden_dim, action_range=action_range )
     
     if args.train:
-        num_workers=2
+        num_workers=8
         threads=[]
 
         for i in range(num_workers):
