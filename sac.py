@@ -37,7 +37,7 @@ print(device)
 
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=False)
+parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -387,7 +387,7 @@ if __name__ == '__main__':
                     next_state, reward, done, _ = env.step(action, SPARSE_REWARD, SCREEN_SHOT)
                 elif ENV ==  'Pendulum':
                     next_state, reward, done, _ = env.step(action)
-                    env.render()
+                    # env.render()
 
                 replay_buffer.push(state, action, reward, next_state, done)
                 

@@ -170,7 +170,7 @@ class PPO(nn.Module):
         
 def main():
     # env = gym.make('HalfCheetah-v2')
-    env = gym.make('Ant-v2')
+    env = gym.make('LunarLanderContinuous-v2')
     state_dim = env.observation_space.shape[0]
     action_dim =  env.action_space.shape[0]
     hidden_dim = 128

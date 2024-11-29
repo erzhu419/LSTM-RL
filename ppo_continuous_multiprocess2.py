@@ -63,7 +63,7 @@ print(device)
 
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=False)
+parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -73,7 +73,7 @@ args = parser.parse_args()
 ENV_NAME = 'LunarLanderContinuous-v2'  # environment name: LunarLander-v2, Pendulum-v0
 RANDOMSEED = 2  # random seed
 
-EP_MAX = 1000  # total number of episodes for training
+EP_MAX = 10000  # total number of episodes for training
 EP_LEN = 1000  # total number of steps for each episode
 GAMMA = 0.99  # reward discount
 A_LR = 0.0001  # learning rate for actor
@@ -84,12 +84,12 @@ C_UPDATE_STEPS = 50  # critic update steps
 HIDDEN_DIM = 64
 EPS = 1e-8  # numerical residual
 MODEL_PATH = 'model/ppo_multi'
-NUM_WORKERS=1  # or: mp.cpu_count()
+NUM_WORKERS=16  # or: mp.cpu_count()
 ACTION_RANGE = 1.  # normalized action range should be 1.
 METHOD = [
     dict(name='kl_pen', kl_target=0.01, lam=0.5),  # KL penalty
     dict(name='clip', epsilon=0.2),  # Clipped surrogate objective
-][0]  # choose the method for optimization, it's usually task specific
+][1]  # choose the method for optimization, it's usually task specific
 
 ###############################  PPO  ####################################
 class AddBias(nn.Module):
@@ -394,7 +394,7 @@ def worker(id, ppo, rewards_queue):
                 time.time() - t0
             )
         )
-        rewards_queue.put(ep_r)        
+        rewards_queue.put(ep_r)
     ppo.save_model(MODEL_PATH)
     env.close()
 
@@ -449,7 +449,7 @@ def main():
             s = env.reset()
             eps_r=0
             for i in range(EP_LEN):
-                env.render()
+                # env.render()
                 s, r, done, _ = env.step(ppo.choose_action(s, True))
                 eps_r+=r
                 if done:

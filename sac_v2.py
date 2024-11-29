@@ -38,7 +38,7 @@ print(device)
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
 parser.add_argument('--train', dest='train', action='store_true', default=False)
-parser.add_argument('--test', dest='test', action='store_true', default=False)
+parser.add_argument('--test', dest='test', action='store_true', default=True)
 
 args = parser.parse_args()
 
@@ -337,7 +337,7 @@ replay_buffer_size = 1e6
 replay_buffer = ReplayBuffer(replay_buffer_size)
 
 # choose env
-ENV = ['Reacher', 'Pendulum-v0', 'HalfCheetah-v2'][1]
+ENV = ['Reacher', 'Pendulum-v0', 'HalfCheetah-v2'][2]
 if ENV == 'Reacher':
     NUM_JOINTS=2
     LINK_LENGTH=[200, 140]
@@ -347,7 +347,7 @@ if ENV == 'Reacher':
     SCREEN_SHOT=False
     action_range = 10.0
     env=Reacher(screen_size=SCREEN_SIZE, num_joints=NUM_JOINTS, link_lengths = LINK_LENGTH, \
-    ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=True, change_goal=False)
+    ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=False, change_goal=False)
     action_dim = env.num_actions
     state_dim  = env.num_observations
 else:
@@ -437,7 +437,7 @@ if __name__ == '__main__':
                     next_state, reward, done, _ = env.step(action, SPARSE_REWARD, SCREEN_SHOT)
                 else:
                     next_state, reward, done, _ = env.step(action)
-                    env.render()   
+                    # env.render()   
 
 
                 episode_reward += reward

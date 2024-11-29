@@ -41,7 +41,7 @@ print(device)
 
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=False)
+parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -103,12 +103,12 @@ class SAC_Trainer():
         hidden_in, hidden_out, state, action, last_action, reward, next_state, done = self.replay_buffer.sample(batch_size)
         # print('sample:', state, action,  reward, done)
 
-        state      = torch.FloatTensor(state).to(device)
-        next_state = torch.FloatTensor(next_state).to(device)
-        action     = torch.FloatTensor(action).to(device)
-        last_action     = torch.FloatTensor(last_action).to(device)
-        reward     = torch.FloatTensor(reward).unsqueeze(-1).to(device)  # reward is single value, unsqueeze() to add one dim to be [reward] at the sample dim;
-        done       = torch.FloatTensor(np.float32(done)).unsqueeze(-1).to(device)
+        state = torch.FloatTensor(np.array(state)).to(device)
+        next_state = torch.FloatTensor(np.array(next_state)).to(device)
+        action     = torch.FloatTensor(np.array(action)).to(device)
+        last_action = torch.FloatTensor(np.array(last_action)).to(device)
+        reward     = torch.FloatTensor(np.array(reward)).unsqueeze(-1).to(device)  # reward is single value, unsqueeze() to add one dim to be [reward] at the sample dim;
+        done       = torch.FloatTensor(np.array(done, dtype=np.float32)).unsqueeze(-1).to(device)
 
         predicted_q_value1, _ = self.soft_q_net1(state, action, last_action, hidden_in)
         predicted_q_value2, _ = self.soft_q_net2(state, action, last_action, hidden_in)
@@ -207,7 +207,7 @@ if ENV == 'Reacher':
     action_range = 10.0
 
     env=Reacher(screen_size=SCREEN_SIZE, num_joints=NUM_JOINTS, link_lengths = LINK_LENGTH, \
-    ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=True, change_goal=False)
+    ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=False, change_goal=False)
     action_space = spaces.Box(low=-1.0, high=1.0, shape=(env.num_actions,), dtype=np.float32)
     state_space  = spaces.Box(low=-np.inf, high=np.inf, shape=(env.num_observations, ))
 
@@ -228,7 +228,7 @@ explore_steps = 0  # for action sampling in the beginning of training
 update_itr = 1
 AUTO_ENTROPY=True
 DETERMINISTIC=False
-hidden_dim =512
+hidden_dim =128
 rewards     = []
 model_path = './model/sac_v2_lstm'
 
@@ -310,7 +310,7 @@ if __name__ == '__main__':
                     next_state, reward, done, _ = env.step(action, SPARSE_REWARD, SCREEN_SHOT)
                 else:
                     next_state, reward, done, _ = env.step(action)
-                    env.render()   
+                    # env.render()   
 
                 last_action = action
                 episode_reward += reward

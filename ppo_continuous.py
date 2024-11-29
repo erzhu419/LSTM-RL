@@ -48,7 +48,7 @@ print(device)
 
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=False)
+parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -425,7 +425,7 @@ def main():
         while True:
             s = env.reset()
             for i in range(EP_LEN):
-                env.render()
+                # env.render()
                 a = ppo.choose_action(s, True)
                 print(a)
                 s, r, done, _ = env.step(a)
