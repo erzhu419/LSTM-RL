@@ -129,9 +129,18 @@ class PPO(nn.Module):
             value_lst.append([v])
             done_mask = 0 if done else 1
             done_lst.append([done_mask])
-        s,a,r,s_prime,v,done_mask,prob_a = torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst), \
-                                          torch.tensor(r_lst, dtype=torch.float), torch.tensor(s_prime_lst, dtype=torch.float), \
-                                           torch.tensor(value_lst), torch.tensor(done_lst, dtype=torch.float), torch.tensor(prob_a_lst)
+        # s,a,r,s_prime,v,done_mask,prob_a = torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst), \
+        #                                   torch.tensor(r_lst, dtype=torch.float), torch.tensor(s_prime_lst, dtype=torch.float), \
+        #                                    torch.tensor(value_lst), torch.tensor(done_lst, dtype=torch.float), torch.tensor(prob_a_lst)
+
+        s = torch.tensor(s_lst, dtype=torch.float)
+        a = torch.tensor(a_lst)
+        r = torch.tensor(r_lst, dtype=torch.float)
+        s_prime = torch.tensor(s_prime_lst, dtype=torch.float)
+        v = torch.tensor(value_lst)
+        done_mask = torch.tensor(done_lst, dtype=torch.float)
+        prob_a = torch.tensor(prob_a_lst)
+
         self.data = []
         return s, a, r, s_prime, done_mask, prob_a, v
         
