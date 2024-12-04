@@ -305,8 +305,8 @@ class visualize(object):
                     occupancy = bus.occupancy
                     occupancy_surface = font_small.render(occupancy, True, text_color)
                     screen.blit(occupancy_surface, (position[0], position[1] + 25))
-                    
-                    bus_id_surface = font_small.render(str(bus.bus_id), True, text_color)
+                    dwelling_time = bus.dwelling_time if bus.dwelling_time is not None else 0
+                    bus_id_surface = font_small.render(str(int(dwelling_time)), True, text_color)
                     
                     screen.blit(bus_id_surface, (position[0] + 30, position[1]))
                     

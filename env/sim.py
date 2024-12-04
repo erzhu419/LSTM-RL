@@ -45,11 +45,10 @@ class env_bus(object):
         with open(config_path, 'r') as f:
             args = json.load(f)
         self.args = args
-
-        self.current_time = 0
         self.effective_trip_num = 264
         
         self.time_step = args["time_step"]
+        self.passenger_update_freq = args["passenger_state_update_freq"]
         # read data, multi-index used here
         self.od = pd.read_excel(os.path.join(path, "data/passenger_OD.xlsx"), index_col=[1, 0])
         self.station_set = pd.read_excel(os.path.join(path, "data/stop_news.xlsx"))
@@ -66,29 +65,9 @@ class env_bus(object):
         # Set effective station and time period
         self.effective_station_name = sorted(set([self.od.index[i][0] for i in range(self.od.shape[0])]))
         self.effective_period = sorted(list(set([self.od.index[i][1] for i in range(self.od.shape[0])])))
-        # initialize station, routes and timetables
-        self.stations = self.set_stations()
-        self.routes = self.set_routes()
-        self.timetables = self.set_timetables()
 
-        # initial list of bus on route
-        self.bus_id = 0
-        self.bus_all = []
-
-        # self.state is combine with route_state, which contains the route.speed_limit of each route, station_state, which
-        # contains the station.waiting_passengers of each station and bus_state, which is bus.obs for each bus.
-        self.route_state = []
-
-        self.state = {key: [] for key in range(self.max_agent_num)}
-        self.reward = {key: 0 for key in range(self.max_agent_num)}
-
-        self.state_dim = 7
-        self.action_space = Box(0, 20, shape=(1,))
-
-        # self.state_dim = self.routes_set.shape[0] + len(self.stations)
-        # self.obs = [[0] * self.state_dim[0]] * self.max_agent_num
-
-        self.done = False
+        self.state_dim = 6
+        self.action_space = Box(0, 60, shape=(1,))
 
         if debug:
             self.summary_data = pd.DataFrame(columns=['bus_id', 'station_id', 'trip_id', 'abs_dis', 'forward_headway',
@@ -174,6 +153,7 @@ class env_bus(object):
 
         self.current_time = 0
 
+        # initialize station, routes and timetables
         self.stations = self.set_stations()
         self.routes = self.set_routes()
         self.timetables = self.set_timetables()
@@ -183,7 +163,8 @@ class env_bus(object):
         self.bus_all = []
         self.route_state = []
 
-        # self.state = [10] * self.routes_set.shape[0] + [0] * len(self.stations)
+        # self.state is combine with route_state, which contains the route.speed_limit of each route, station_state, which
+        # contains the station.waiting_passengers of each station and bus_state, which is bus.obs for each bus.
         self.state = {key: [] for key in range(self.max_agent_num)}
         self.reward = {key: 0 for key in range(self.max_agent_num)}
         self.done = False
@@ -232,25 +213,27 @@ class env_bus(object):
         # update route speed limit by freq
         if self.current_time % self.args['route_state_update_freq'] == 0:
             for route in self.routes:
-                route.update(self.current_time, self.effective_period)
+                route.route_update(self.current_time, self.effective_period)
                 route_state.append(route.speed_limit)
             self.route_state = route_state
         # update waiting passengers of every station every second
         # station_state = []
-        for station in self.stations:
-            station.update(self.current_time, self.stations)
+        if self.current_time % self.passenger_update_freq == 0:
+            for station in self.stations:
+                station.station_update(self.current_time, self.stations, self.passenger_update_freq)
             # station_state.append(len(station.waiting_passengers))
         # update bus state
         for bus in self.bus_all:
             # if bus.bus_id == 0:
                 # print(bus.last_station.station_name, bus.absolute_distance)
+            # 每次开始前，清零状态和奖励
             bus.reward = None
             bus.obs = []
             if bus.in_station:
                 bus.trajectory.append([bus.last_station.station_name, self.current_time, bus.absolute_distance, bus.direction, bus.trip_id])
                 bus.trajectory_dict[bus.last_station.station_name].append([bus.last_station.station_name, self.current_time + bus.holding_time, bus.absolute_distance, bus.direction, bus.trip_id])
             if bus.on_route:
-                bus.drive(self.current_time, action[bus.bus_id], self.bus_all)
+                bus.drive(self.current_time, action[bus.bus_id], self.bus_all, debug=debug)
 
         self.state_bus_list = state_bus_list = list(filter(lambda x: len(x.obs) != 0, self.bus_all))
         self.reward_list = reward_list = list(filter(lambda x: x.reward is not None, self.bus_all))
@@ -315,11 +298,12 @@ if __name__ == '__main__':
 
     env = env_bus(os.getcwd(), debug=debug)
     start_time = time.time()
-    actions = {key: 0 for key in list(range(env.max_agent_num))}
-
+    actions = {key: 15. for key in list(range(env.max_agent_num))}
+    env.reset()
     while not env.done:
         state, reward, done = env.step(action=actions, debug=debug)
-        if env.current_time % 4 == 0:
+        if debug and env.current_time % 4 == 0:
             env.visualizer.render()
+            time.sleep(0.01)  # Add a delay to slow down the rendering
     pygame.quit()
     print(time.time() - start_time)

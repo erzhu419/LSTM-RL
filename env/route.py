@@ -8,7 +8,7 @@ class Route(object):
         self.maximum_velocity = 0
         self.variant_velocity = 0
 
-        self.sigma = 1.5
+        self.sigma = 1.
         self.route_id = route_id
         self.route_max_speed = max_speed
         self.speed_history = route_speed_history
@@ -18,7 +18,7 @@ class Route(object):
         self.end_stop = end_stop
         self.distance = route_length
 
-    def update(self, current_time, effective_period):
+    def route_update(self, current_time, effective_period):
         current_hour = effective_period[current_time//3600]
         v = np.clip(math.log(random.lognormvariate(self.speed_history.loc[current_hour], self.sigma)), 2, 15)
         # v = math.log(random.lognormvariate(self.speed_history.loc[current_hour], self.sigma))

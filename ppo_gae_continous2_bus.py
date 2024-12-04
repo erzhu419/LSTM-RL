@@ -18,6 +18,7 @@ import os
 
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
+import time
 
 
 # Hyperparameters
@@ -73,22 +74,24 @@ class PPO(nn.Module):
 
     def pi(self, x):
 
-        x = F.tanh(self.linear1(x))
-        x = F.tanh(self.linear2(x))
-        x1 = F.tanh(self.linear3(x).detach())  # std learning not BP to the feature
-        x2 = F.tanh(self.linear4(x))
+        x = F.relu(self.linear1(x))
+        x = F.relu(self.linear2(x))
+        x1 = F.relu(self.linear3(x).detach())  # std learning not BP to the feature
+        x2 = F.relu(self.linear4(x))
 
         mean = F.tanh(self.mean_linear(x1))
-        log_std = self.log_std_linear(x2)
+        # log_std = self.log_std_linear(x2)
+        log_std = torch.clamp(self.log_std_linear(x2), min=-10, max=2)
+
         # log_std = self.log_std_param.expand_as(mean)
 
         return mean, log_std
 
     def v(self, x):
-        x = F.tanh(self.linear1(x))
-        x = F.tanh(self.linear2(x))
-        x = F.tanh(self.linear5(x))
-        x = F.tanh(self.linear6(x))
+        x = F.relu(self.linear1(x))
+        x = F.relu(self.linear2(x))
+        x = F.relu(self.linear5(x))
+        x = F.relu(self.linear6(x))
 
         v = self.v_linear(x)
         return v
@@ -202,6 +205,7 @@ def plot(rewards):
     plt.close()
     
 def main():
+    debug = False
     # env = gym.make('HalfCheetah-v2')
     path = os.getcwd() + '/env'
     env = env_bus(path, debug=False)
@@ -209,13 +213,13 @@ def main():
     state_dim = env.state_dim
     action_dim = env.action_space.shape[0]
     hidden_dim = 128
-    model = PPO(state_dim, action_dim, hidden_dim, action_range=20.)
+    model = PPO(state_dim, action_dim, hidden_dim, action_range=env.action_space.high[0])
     score = 0.0
     print_interval = 2
     step = 0
     step_trained = 0
 
-    for n_epi in range(10000):
+    for n_epi in range(1,10000):
         state_dict, reward_dict, _ = env.reset()
         done = False
         episode_steps = 0
@@ -228,9 +232,12 @@ def main():
             for key in state_dict:
                 if len(state_dict[key]) == 1:
                     if action_dict[key] is None:
-                        state_input = np.array(state_dict[key][0]).reshape(1,-1)
+                        state_input = np.expand_dims(state_dict[key][0][1:], axis=0)
                         a, prob, v = model.get_action(torch.from_numpy(state_input).float())
+
                         action_dict[key] = a
+                        if key == 2 and debug:
+                            print('Bus id: ',key,' , station id is: ' , state_dict[key][0][1],' ,current time is: ', env.current_time, ' ,action is: ', a)
                         prob_dict[key] = prob
                         v_dict[key] = v
 
@@ -239,15 +246,25 @@ def main():
                         state_dict[key] = state_dict[key][1:]
                     else:
                         # print(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], prob_dict[key], v_dict[key], done)
-                        model.put_data((state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], prob_dict[key], v_dict[key], done))
+                        model.put_data((state_dict[key][0][1:], action_dict[key], reward_dict[key], state_dict[key][1][1:], prob_dict[key], v_dict[key], done))
                         episode_steps += 1
                         step += 1
                         score += reward_dict[key]
+                        # if reward_dict[key] == 1.0:
+                        #     print('Bus id: ',key,' , station id is: ' , state_dict[key][1][1],' ,current time is: ', env.current_time)
                         state_dict[key] = state_dict[key][1:]
-                        action_dict[key],v_dict[key],prob_dict[key] = None,None,None
+
+                        state_input = np.expand_dims(state_dict[key][0][1:], axis=0)
+
+                        action_dict[key],prob_dict[key], v_dict[key]  = model.get_action(torch.from_numpy(state_input).float())
+
+                        if key == 2 and debug:
+                            print('Bus id: ',key,' , station id is: ' , state_dict[key][0][1],' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key])
 
             state_dict, reward_dict, done = env.step(action_dict)
-
+            if debug and env.current_time % 4 == 0:
+                env.visualizer.render()
+                time.sleep(0.02)  # Add a delay to slow down the rendering
 
             if (step + 1) % batch_size == 0 and step_trained != step:
                 step_trained = step
@@ -255,12 +272,11 @@ def main():
 
             if done:
                 break
-        if n_epi % print_interval == 0 and n_epi != 0:
+        if n_epi % print_interval == 0:
             
             plot(score)
             print("# of episode :{}, avg score : {:.1f}, episode steps : {}, total_rewards : {:.4f}, value loss : {:.4f}".format(n_epi, score / print_interval, episode_steps, total_rewards, v_loss))
             score = 0.0
-
 
 if __name__ == '__main__':
     main()
