@@ -9,10 +9,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.distributions import Categorical
 from torch.distributions import Normal
 import numpy as np
-import json
 from env.sim import env_bus
 import os
 
@@ -30,6 +28,9 @@ batch_size = 1280
 K_epoch = 10
 T_horizon = 10000
 
+def orthogonal_init(layer, gain=1.0):
+    nn.init.orthogonal_(layer.weight, gain=gain)
+    nn.init.constant_(layer.bias, 0)
 
 class NormalizedActions(gym.ActionWrapper):
     def _action(self, action):
@@ -66,11 +67,21 @@ class PPO(nn.Module):
 
         self.mean_linear = nn.Linear(hidden_size, num_actions)
         self.log_std_linear = nn.Linear(hidden_size, num_actions)
-        # self.log_std_param = nn.Parameter(torch.zeros(num_actions, requires_grad=True))
+        self.log_std_param = nn.Parameter(torch.zeros(num_actions, requires_grad=True))
 
         self.v_linear = nn.Linear(hidden_size, 1)
 
-        self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        orthogonal_init(self.linear1)
+        orthogonal_init(self.linear2)
+        orthogonal_init(self.linear3)
+        orthogonal_init(self.linear4)
+        orthogonal_init(self.linear5)
+        orthogonal_init(self.linear6)
+        orthogonal_init(self.mean_linear, gain=0.01)
+        orthogonal_init(self.log_std_linear, gain=0.01)
+        orthogonal_init(self.v_linear)
+
+        self.optimizer = optim.Adam(self.parameters(), lr=learning_rate, eps=1e-5)
 
     def pi(self, x):
 
@@ -81,7 +92,7 @@ class PPO(nn.Module):
 
         mean = F.tanh(self.mean_linear(x1))
         # log_std = self.log_std_linear(x2)
-        log_std = torch.clamp(self.log_std_linear(x2), min=-10, max=2)
+        log_std = torch.clamp(self.log_std_linear(x2), min=-10, max=10)
 
         # log_std = self.log_std_param.expand_as(mean)
 
@@ -206,26 +217,30 @@ def plot(rewards):
     
 def main():
     debug = False
+    render = False
     # env = gym.make('HalfCheetah-v2')
     path = os.getcwd() + '/env'
-    env = env_bus(path, debug=False)
+    env = env_bus(path, debug=debug)
 
     state_dim = env.state_dim
     action_dim = env.action_space.shape[0]
-    hidden_dim = 128
+    hidden_dim = 32
     model = PPO(state_dim, action_dim, hidden_dim, action_range=env.action_space.high[0])
     score = 0.0
-    print_interval = 2
+    print_interval = 4
     step = 0
     step_trained = 0
 
-    for n_epi in range(1,10000):
-        state_dict, reward_dict, _ = env.reset()
+    for n_epi in range(1,100000):
+        state_dict, reward_dict, _ = env.reset(render=render)
         done = False
         episode_steps = 0
         action_dict = {key: None for key in list(range(env.max_agent_num))}
+        action_dict_zero = {key: 0 for key in list(range(env.max_agent_num))} # 全0的action，用于查看reward的上限
+
         prob_dict = {key: None for key in list(range(env.max_agent_num))}
         v_dict = {key: None for key in list(range(env.max_agent_num))}
+        total_rewards, v_loss = 0, 0
         # while not done:
         while not done:
 
@@ -235,45 +250,56 @@ def main():
                         state_input = np.expand_dims(state_dict[key][0][1:], axis=0)
                         a, prob, v = model.get_action(torch.from_numpy(state_input).float())
 
-                        action_dict[key] = a
+                        action_dict[key], prob_dict[key], v_dict[key] = a, prob, v
+
                         if key == 2 and debug:
-                            print('Bus id: ',key,' , station id is: ' , state_dict[key][0][1],' ,current time is: ', env.current_time, ' ,action is: ', a)
-                        prob_dict[key] = prob
-                        v_dict[key] = v
+                            print('From Algorithm, when no state, Bus id: ',key,' , station id is: ' , state_dict[key][0][1],' ,current time is: ', env.current_time, ' ,action is: ', a, ', reward: ', reward_dict[key])
+                            print()
 
                 elif len(state_dict[key]) == 2:
-                    if state_dict[key][0][1] == state_dict[key][1][1]:
-                        state_dict[key] = state_dict[key][1:]
-                    else:
+                    # if state_dict[key][0][1] == state_dict[key][1][1]:
+                    #
+                    #     state_dict[key] = state_dict[key][1:]
+                    #     state_input = np.expand_dims(state_dict[key][0][1:], axis=0)
+                    #     action_dict[key], prob_dict[key], v_dict[key] = model.get_action(torch.from_numpy(state_input).float())
+                    #
+                    #     if key == 2 and debug:
+                    #         print('From Algo, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key], ', reward: ', reward_dict[key])
+                    #         print()
+
+                    if state_dict[key][0][1] != state_dict[key][1][1]:
                         # print(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], prob_dict[key], v_dict[key], done)
                         model.put_data((state_dict[key][0][1:], action_dict[key], reward_dict[key], state_dict[key][1][1:], prob_dict[key], v_dict[key], done))
+                        if key == 2 and debug:
+                            print('From Algorithm, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key], ', reward: ', reward_dict[key])
+                            print()
+
                         episode_steps += 1
                         step += 1
                         score += reward_dict[key]
                         # if reward_dict[key] == 1.0:
                         #     print('Bus id: ',key,' , station id is: ' , state_dict[key][1][1],' ,current time is: ', env.current_time)
-                        state_dict[key] = state_dict[key][1:]
+                    state_dict[key] = state_dict[key][1:]
 
-                        state_input = np.expand_dims(state_dict[key][0][1:], axis=0)
+                    state_input = np.expand_dims(state_dict[key][0][1:], axis=0)
 
-                        action_dict[key],prob_dict[key], v_dict[key]  = model.get_action(torch.from_numpy(state_input).float())
+                    action_dict[key],prob_dict[key], v_dict[key]  = model.get_action(torch.from_numpy(state_input).float())
 
-                        if key == 2 and debug:
-                            print('Bus id: ',key,' , station id is: ' , state_dict[key][0][1],' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key])
-
-            state_dict, reward_dict, done = env.step(action_dict)
-            if debug and env.current_time % 4 == 0:
-                env.visualizer.render()
-                time.sleep(0.02)  # Add a delay to slow down the rendering
+            state_dict, reward_dict, done = env.step(action_dict, debug=debug, render=render)
 
             if (step + 1) % batch_size == 0 and step_trained != step:
                 step_trained = step
+                # print("training!")
                 total_rewards, v_loss = model.train_net()
 
             if done:
                 break
         if n_epi % print_interval == 0:
-            
+
+            output_dir = os.path.join(env.path, 'pic')
+            os.makedirs(output_dir, exist_ok=True)
+            # env.visualizer.plot(n_epi)
+
             plot(score)
             print("# of episode :{}, avg score : {:.1f}, episode steps : {}, total_rewards : {:.4f}, value loss : {:.4f}".format(n_epi, score / print_interval, episode_steps, total_rewards, v_loss))
             score = 0.0
