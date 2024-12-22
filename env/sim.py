@@ -13,23 +13,12 @@ import copy
 import os, sys
 import pygame
 import json
-# TODO 对奖励的值采用forward-固定值，而不是与backward做差
-# TODO 对agent数量限制，即每次都是同一批agent发车，而不是随着每次串车而导致先后顺序不一致。
 # TODO 归一化
 # TODO 对站点标签进行one-hot处理
-# TODO 实在不行 上 MADDPG
 # TODO 是否会因为最后一个agent经常不发生作用而不被训练的充分，然后出问题？参考下秦伟志的
 # TODO 对站点和direction进行one-hot
-# TODO 可能是预热不足导致的state和reward与实际偏离，然后不收敛
-# TODO 继续查不收敛的情况，或者修改state的空间，是否会因为状态空间太大所以不收敛，或者网络结构过于简单,增加网络结构从而增加拟合度
-# 已经做出的修改：加大batch_size， 原算法中的batch_size 是256，整个循环周期是200秒，所以将公交仿真的batch_size调整到和仿真周期类似
-# 已经修改reset时返回的state为模拟初始情况。
-# 已经设置seed
-# 已经把每辆bus的obs从state中去除
+# TODO 增加一个提前结束的条件
 # 已经把relu换成relu6
-# 已经预热 无效
-# 已经输出过state是否存在nan或inf值，无效
-# 已经对obs缩减到和论文一样的三个，state和论文一样是state_dim * agents_num， 无效
 # 已经归一化state，
 
 
@@ -67,7 +56,7 @@ class env_bus(object):
         self.effective_period = sorted(list(set([self.od.index[i][1] for i in range(self.od.shape[0])])))
 
         self.state_dim = 6
-        self.action_space = Box(0, 60, shape=(1,))
+        self.action_space = Box(0, 20, shape=(1,))
 
         if debug:
             self.summary_data = pd.DataFrame(columns=['bus_id', 'station_id', 'trip_id', 'abs_dis', 'forward_headway',
@@ -76,28 +65,28 @@ class env_bus(object):
                                                     'backward_headway', 'reward', 'time'])
 
 
-    def save_snapshot(self):
-        snapshot = {
-            'current_time': self.current_time,
-            'bus_all': copy.deepcopy(self.bus_all),
-            'stations': copy.deepcopy(self.stations),
-            'routes': copy.deepcopy(self.routes),
-            'timetables': copy.deepcopy(self.timetables),
-            'state': copy.deepcopy(self.state),
-            'reward': copy.deepcopy(self.reward),
-            'done': self.done
-        }
-        return snapshot
-
-    def load_snapshot(self, snapshot):
-        self.current_time = snapshot['current_time']
-        self.bus_all = copy.deepcopy(snapshot['bus_all'])
-        self.stations = copy.deepcopy(snapshot['stations'])
-        self.routes = copy.deepcopy(snapshot['routes'])
-        self.timetables = copy.deepcopy(snapshot['timetables'])
-        self.state = copy.deepcopy(snapshot['state'])
-        self.reward = copy.deepcopy(snapshot['reward'])
-        self.done = snapshot['done']
+    # def save_snapshot(self):
+    #     snapshot = {
+    #         'current_time': self.current_time,
+    #         'bus_all': copy.deepcopy(self.bus_all),
+    #         'stations': copy.deepcopy(self.stations),
+    #         'routes': copy.deepcopy(self.routes),
+    #         'timetables': copy.deepcopy(self.timetables),
+    #         'state': copy.deepcopy(self.state),
+    #         'reward': copy.deepcopy(self.reward),
+    #         'done': self.done
+    #     }
+    #     return snapshot
+    #
+    # def load_snapshot(self, snapshot):
+    #     self.current_time = snapshot['current_time']
+    #     self.bus_all = copy.deepcopy(snapshot['bus_all'])
+    #     self.stations = copy.deepcopy(snapshot['stations'])
+    #     self.routes = copy.deepcopy(snapshot['routes'])
+    #     self.timetables = copy.deepcopy(snapshot['timetables'])
+    #     self.state = copy.deepcopy(snapshot['state'])
+    #     self.reward = copy.deepcopy(snapshot['reward'])
+    #     self.done = snapshot['done']
 
     # Example usage:
     # env = env_bus(config, os.getcwd(), debug=debug)
@@ -149,7 +138,7 @@ class env_bus(object):
         return total_station
 
     # return default state and reward
-    def reset(self):
+    def reset(self, render=False):
 
         self.current_time = 0
 
@@ -175,8 +164,7 @@ class env_bus(object):
             return sum(1 for sublist in lst if sublist)
 
         while count_non_empty_sublist(list(self.state.values())) == 0:
-                self.state, self.reward, _ = self.step(self.action_dict)
-                
+                self.state, self.reward, _ = self.step(self.action_dict, render=render)
         # self.state_dim = self.routes_set.shape[0] + len(self.stations)
         # self.obs = [[0] * self.state_dim[0]] * self.max_agent_num
 
@@ -200,7 +188,7 @@ class env_bus(object):
             # the iteration in drive(), we just update the state of those bus which on routes
             bus.on_route = True
 
-    def step(self, action, debug=False):
+    def step(self, action, debug=False, render=False):
         # Enumerate trips in timetables, if current_time<=launch_time of the trip, then launch it.
         # E.X. timetables = [6:00/launched, 6:05, 6:10], current time is 6:05, then iteration will judge from first trip [6:00]
         # But [6:00] is launched, so next is [6:05]
@@ -278,32 +266,45 @@ class env_bus(object):
                 #     self.summary_reward.loc[len(self.summary_reward)] = new_reward
 
         self.current_time += self.time_step
-        self.done = True if sum([trip.launched for trip in self.timetables]) == len(self.timetables) and sum([bus.on_route for bus in self.bus_all]) == 0 else False
+        unhealthy_all = [bus.is_unhealthy for bus in self.bus_all]
+        if sum([trip.launched for trip in self.timetables]) == len(self.timetables) and sum([bus.on_route for bus in self.bus_all]) == 0:
+            self.done = True
+        else:
+            self.done = False
 
         if self.done and debug:
             self.summary_data = self.summary_data.sort_values(['bus_id', 'time'])
+
             output_dir = os.path.join(self.path, 'pic')
             os.makedirs(output_dir, exist_ok=True)
+            self.visualizer.plot()
+
             self.summary_data.to_csv(os.path.join(output_dir, 'summary_data.csv'))
             self.summary_reward = self.summary_reward.sort_values(['bus_id', 'time'])
             self.summary_reward.to_csv(os.path.join(self.path, 'pic', 'summary_reward.csv'))
-            self.visualizer.plot()
+
+        if render and self.current_time % 4 == 0:
+            self.visualizer.render()
+            # time.sleep(0.1)  # Add a delay to slow down the rendering
 
         return self.state, self.reward, self.done
 
 
 if __name__ == '__main__':
     debug = True
+    render = True
+
     config_path = os.path.join(os.path.dirname(__file__), 'config.json')
 
     env = env_bus(os.getcwd(), debug=debug)
     start_time = time.time()
     actions = {key: 15. for key in list(range(env.max_agent_num))}
-    env.reset()
+    env.reset(render=render)
     while not env.done:
-        state, reward, done = env.step(action=actions, debug=debug)
-        if debug and env.current_time % 4 == 0:
-            env.visualizer.render()
-            time.sleep(0.01)  # Add a delay to slow down the rendering
+        state, reward, done = env.step(action=actions, debug=debug, render=render)
+        # if debug and env.current_time % 4 == 0:
+        #     if render:
+        #         env.visualizer.render()
+        #         time.sleep(0.05)  # Add a delay to slow down the rendering
     pygame.quit()
     print(time.time() - start_time)

@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numpy as np
 
 
@@ -11,7 +12,7 @@ class Bus(object):
 
         self.routes_list = routes
         self.stations_list = stations
-        self.in_station = False
+        self.in_station = True
         self.passengers = np.array([]) # list of passengers on bus
         self.capacity = 50 # upper bound of passengers on bus
         self.current_speed = 0. # current speed of bus
@@ -43,7 +44,7 @@ class Bus(object):
         self.acceleration = 3 # 加速度
         self.deceleration = 5 # 刹车加速度
 
-        self.holding = False # 是否正在上下乘客
+        self.holding = True # 是否正在上下乘客
         self.held = False # 是否已经上下乘客完毕，如果是，则为True，返回状态值
         self.dwelling = False # 是否在驻站
         self.on_route = True # 是否在路上，如果在路上，为True，否则为False，用于判断是否到达终点站
@@ -52,6 +53,7 @@ class Bus(object):
         self.dwelling_time = 0. # 驻站时间，用于执行动作，停车等待
 
         self.headway_dif = []
+        self.is_unhealthy = False # False if the bus is healthy, True if the bus is unhealthy, then terminate env early
 
     @property
     def occupancy(self):
@@ -80,6 +82,10 @@ class Bus(object):
         # return the station after the next station
         return self.effective_station[self.last_station.station_id + 2 * self.direction_int] if self.direction else self.effective_station[-(self.last_station.station_id + 2 * self.direction_int + 1)]
 
+    @property
+    def station_before_the_last(self):
+        # return the station before the last station
+        return self.effective_station[self.last_station.station_id - 2 * self.direction_int] if self.direction else self.effective_station[-(self.last_station.station_id - 2 * self.direction_int + 1)]
     # searching for current_route when last_station and next_station changed
     # @property
     # def current_route(self):
@@ -93,7 +99,7 @@ class Bus(object):
         return self.route_index[key]
 
     # When bus is arrived in a station, passengers have to alight and boarding.
-    def exchange_passengers(self, current_time):
+    def exchange_passengers(self, current_time, debug):
         # Because we cannot mutate the list inter iteration. Record the index of every passenger we want to remove from
         # original passengers list then remove them with the pre-record index
         index_of_passenger_on_bus = []
@@ -125,8 +131,8 @@ class Bus(object):
 
         self.holding_time = max(self.alight_num, (self.board_num * 2.)) + 4.
         # print('Bus id: ',self.bus_id, ', stop id: ', self.last_station.station_id," ,holding time: ", self.holding_time)
-        # if self.bus_id == 2:
-        #     print('Bus: ', self.bus_id, ' at station: ', self.last_station.station_id ,' , holding time: ', self.holding_time)
+        # if self.bus_id == 2 and debug:
+        #     print('Bus: ', self.bus_id, ' at station: ', self.next_station.station_id ,' ,current time: ', current_time,' ,holding time: ', self.holding_time)
         self.alight_num = 0.
         self.board_num = 0.
 
@@ -140,17 +146,19 @@ class Bus(object):
     def drive(self, current_time, action, bus_all, debug):
         # absolute_distance & last_station_dis is divided by 1000 as kilometers rather than meters. forward_headway & backward_headway
         # is divided by 60 as minutes rather than seconds. passenger on bus, boarding passengers & alighting passengers are divided by self.capacity
-        # self.obs = [self.forward_headway/360, self.backward_headway/360, len(self.passengers)/self.capacity] if self.on_route else [0] * 3
         # step_length = 0, which means how long a bus move in a time step, calculated by accelerate and original velocity.
 
         if self.next_station_dis <= self.current_speed and not self.holding and not self.dwelling:
             # when bus is arriving at station first time, set self.holding = True
-            self.arrive_station(current_time, bus_all)
+            self.exchange_passengers(current_time, debug)  # self.holding_time is set in this function
+
+            self.trajectory.append([self.next_station.station_name, current_time, self.absolute_distance, self.direction, self.trip_id])
+            self.trajectory_dict[self.next_station.station_name].append([self.next_station.station_name, current_time + self.holding_time + 0.01,
+                                                                         self.absolute_distance,self.direction, self.trip_id])
+
+            self.arrive_station(current_time, bus_all, debug)
             self.holding = True
             # print('Bus: ', self.bus_id, ' ,holding at:', self.last_station.station_id)
-            self.trajectory.append([self.last_station.station_name, current_time, self.absolute_distance, self.direction, self.trip_id])
-
-            self.trajectory_dict[self.last_station.station_name].append([self.last_station.station_name, current_time + self.holding_time, self.absolute_distance,self.direction, self.trip_id])
             # self.trajectory_dict[self.last_station.station_name].append(
             #     [self.last_station.station_name, current_time + self.holding_time, self.absolute_distance,
             #      self.direction, self.trip_id])
@@ -185,7 +193,12 @@ class Bus(object):
                 # 作为在站内的最后一秒，返回奖励值，更新车辆状态
                 self.dwelling = False
                 self.in_station = False
-                # self.reward = np.exp(-abs(self.forward_headway - 360)) if len(self.forward_bus) != 0 else None
+                # if self.trip_id not in [0, 1] and self.next_station in self.effective_station[3:-1]:
+                #     self.reward = np.exp(-abs(self.forward_headway - 360)) if len(self.forward_bus) != 0 else None
+                #
+                # # print bus id, station id, trip id, direction, time, headway, reward
+                #     if self.bus_id == 2 and debug:
+                #         print(' , station id is: ', self.last_station.station_id, ' ,current time: ',current_time ,', reward: ', self.reward)
                 # self.bus_update()
                 self.dwelling_time = 0
             else:
@@ -194,14 +207,39 @@ class Bus(object):
         elif self.holding and not self.dwelling:
             if self.holding_time <= 1:
                 self.holding_time = 0
+
                 if not self.held:
-                    self.held = True
-                    if self.trip_id not in [0, 1] and self.next_station in self.effective_station[3:-1]:
+
+                    self.forward_bus = list(filter(lambda x: self.trip_id - 2 in x.trip_id_list, bus_all))
+                    self.backward_bus = list(filter(lambda x: self.trip_id + 2 in x.trip_id_list, bus_all))
+
+                    if self.next_station in self.effective_station[2:] and (len(self.forward_bus) != 0 or len(self.backward_bus) != 0):
                         self.obs = [self.bus_id, self.last_station.station_id, self.trip_id, self.direction,
-                                    current_time//1800, (self.forward_headway - self.backward_headway)/60,
+                                    self.forward_headway, self.backward_headway,
                                     len(self.next_station.waiting_passengers) * 1.5 +
                                     self.current_route.distance/self.current_route.speed_limit]
+
+                        # 计算 forward 和 backward 头时距的奖励
+                        forward_reward = np.exp(-abs(self.forward_headway - 360)) if len(self.forward_bus) != 0 else None
+                        backward_reward = np.exp(-abs(self.backward_headway - 360)) if len(self.backward_bus) != 0 else None
+
+                        # 整合前车和后车的奖励
+                        if forward_reward is not None and backward_reward is not None:
+                            self.reward = (forward_reward + backward_reward) / 2  # 加权平均
+                        elif forward_reward is not None:
+                            self.reward = forward_reward
+                        elif backward_reward is not None:
+                            self.reward = backward_reward
+                        else:
+                            self.reward = np.exp(-abs(0 - 360))  # 默认奖励，比如与理想车头时距偏差计算
+
+                        if self.bus_id == 2 and debug:
+                            print('From Simulation ,', 'bus id is: ', self.bus_id,', station id is: ', self.last_station.station_id, ' ,current time: ', current_time, ', reward: ', self.reward)
+                            print()
+
                         # print(1)
+                    self.held = True
+
                 else:
                     self.holding = False
                     self.dwelling = True
@@ -213,15 +251,22 @@ class Bus(object):
                     else:
                         # if self.bus_id == 2:
                         #     print("Simulation: Bus id: ", self.bus_id, ' ,station id: ', self.last_station.station_id - 1, ' , dwelling time is: ', action)
-                        self.dwelling_time = action
-                        if debug:
-                            print('Bus id', self.bus_id, ', stop id: ', self.last_station.station_id, ", dwell time: ", self.dwelling_time)
+
+                        self.dwelling_time = deepcopy(action) # 使用深拷贝，防止原始数据被修改，因为原始数据要以(s,a,s',r)的transition形式存储，作为训练用
+                        if action is not None:
+                            # print(self.forward_headway, self.backward_headway, action)
+                            self.is_unhealthy = self.forward_headway > self.backward_headway + 1 and action > 1
+
+                    if debug and self.bus_id == 2:
+
+                        print('Bus id', self.bus_id, ', stop id: ', self.last_station.station_id, ' ,current time is: ',current_time, ", dwell time: ", self.dwelling_time)
+                        print()
             else:
                 self.holding_time -= 1
 
-    def arrive_station(self, current_time, bus_all):
+    def arrive_station(self, current_time, bus_all, debug):
         # Because we have to use the self.holding_time later, so we exchange passenger first when arrived a station
-        self.exchange_passengers(current_time) # self.holding_time is set in this function
+        # self.exchange_passengers(current_time) # self.holding_time is set in this function
         # Update forward_bus backward_bus and relative reward when a bus is arrived a station(except terminal)
 
         self.forward_bus = list(filter(lambda x: self.trip_id - 2 in x.trip_id_list, bus_all))
@@ -230,8 +275,10 @@ class Bus(object):
             forward_record = [record[1] for record in
                               self.forward_bus[0].trajectory_dict[self.next_station.station_name] if
                               record[-1] == self.trip_id - 2]
+            # 当前车到达过当前站点，此时用当前时间减去前车到达当前站点的时间，再加上本车在当前站点的停车时间，减去前车在当前站点的停车时间，即为前车车头时距
             if len(forward_record) != 0:
                 self.forward_headway = current_time + self.holding_time - min(forward_record)
+            # 当前车没有到达当前站点，此时用当前车的绝对距离减去前车的绝对距离，再除以前车的速度，即为前车车头时距
             else:
                 if not self.forward_bus[0].on_route:
                     forward_travel_distance = len(self.stations_list) // 2 * 500 + self.forward_bus[
@@ -262,7 +309,6 @@ class Bus(object):
             self.next_station = self.next_station_func()
         else:
             # if next_station is normal station, update last_station to its next_station, reset the relative distance of bus
-            self.reward = np.exp(-abs(self.forward_headway - 360)) if len(self.forward_bus) != 0 else None
             # if len(self.forward_bus) != 0:
             #     print('original_reward_place:', self.reward)
             station_id = self.last_station.station_id + 1 if self.direction else self.last_station.station_id - 1
@@ -278,6 +324,9 @@ class Bus(object):
         self.trip_id_list.append(trip_num)
         self.launch_time = launch_time
         self.last_station = self.effective_station[0]
+
+        self.forward_headway = 360
+        self.backward_headway = 360
 
         self.last_station_dis = 0.
         self.next_station_dis = self.current_route.distance
@@ -299,3 +348,5 @@ class Bus(object):
         self.held = False
         self.on_route = True
         self.trip_turn = len(self.trip_id_list)
+        self.is_unhealthy = False # False if the bus is healthy, True if the bus is unhealthy, then terminate env early
+

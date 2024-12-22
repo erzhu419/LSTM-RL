@@ -53,7 +53,7 @@ class Station(object):
         每秒更新一次，减少不必要的泊松分布计算,GPT优化
         """
         if self.od is not None:  # 确保存在OD矩阵
-            effective_period_str = f"{6 + current_time // 3600:02}:00:00"  # 每小时的有效时间段
+            effective_period_str = f"{6 + min(current_time // 3600, 13):02}:00:00"  # 每小时的有效时间段
             period_od = self.od[effective_period_str]  # 获取该时间段的OD需求
 
             # 计算每秒的平均需求

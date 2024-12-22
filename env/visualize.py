@@ -1,4 +1,3 @@
-from cgitb import text
 import os
 
 import numpy as np
@@ -269,11 +268,10 @@ class visualize(object):
             pygame.draw.line(screen, color, station_location[i*2], station_location[i*2+2], 5)
             
             speed_surface = font_small.render(str(speed), True, text_color)
-            screen.blit(speed_surface, ((station_location[i*2][0] + station_location[i*2+2][0])//2, (station_location[i*2][1] + station_location[i*2+2][1])//2))
+            screen.blit(speed_surface, ((station_location[i*2][0] + station_location[i*2+2][0])//2, (station_location[i*2][1] + station_location[i*2+2][1])//2 - 20))
         
         # draw lower routes speed limit, red means slow, green means fast
         for i,station in enumerate(self.env.effective_station_name[::-1][:-1]):
-            print
             route_list = list(filter(lambda x: x.start_stop==station and x.end_stop==self.env.effective_station_name[::-1][i+1], self.env.routes))
             route = route_list[0]
             
@@ -294,7 +292,7 @@ class visualize(object):
             if bus.on_route:
                 
                 color = self.bus_color[i]
-                dis = np.clip(bus.absolute_distance/pygame_simulation_distance_ratio - 100, 100, 2000)
+                dis = np.clip(bus.absolute_distance/pygame_simulation_distance_ratio, 100, 2000)
                 
                 position = np.array((dis, upper_direction_y + 10)) if bus.direction == 1 else np.array((dis, lower_direction_y - 55))
 
@@ -305,10 +303,19 @@ class visualize(object):
                     occupancy = bus.occupancy
                     occupancy_surface = font_small.render(occupancy, True, text_color)
                     screen.blit(occupancy_surface, (position[0], position[1] + 25))
+
+                    holding_time = bus.holding_time if bus.holding_time is not None else 0
+                    holding_time_surface = font_small.render('H:'+str(int(holding_time)), True, text_color)
+                    screen.blit(holding_time_surface, (position[0] + 30, position[1] - 10))
+
                     dwelling_time = bus.dwelling_time if bus.dwelling_time is not None else 0
-                    bus_id_surface = font_small.render(str(int(dwelling_time)), True, text_color)
-                    
-                    screen.blit(bus_id_surface, (position[0] + 30, position[1]))
+                    dwelling_time_surface = font_small.render('D:'+str(int(dwelling_time)), True, text_color)
+                    screen.blit(dwelling_time_surface, (position[0] + 30, position[1] + 10))
+
+                    bus_id_surface = font_small.render(str(bus.bus_id), True, text_color)
+                    screen.blit(bus_id_surface, (position[0] - 20, position[1]))
+
+
                     
                 except ValueError as e:
                     print(f"Invalid color value: {color}")
@@ -317,29 +324,42 @@ class visualize(object):
         pygame.display.flip()
 
                 
-    def plot(self, exp='0', iteration='0'):
+    def plot(self, exp='0'):
+        exp = str(exp)
         path = os.getcwd()
-        plt.figure(figsize=(48, 12), dpi=400)
+        plt.figure(figsize=(96, 24), dpi=300)
         total_headway = []
+        
+        global_time = [bus.trajectory[i][1] for bus in self.env.bus_all for i in range(len(bus.trajectory))]
+        min_time, max_time = min(global_time), max(global_time)
+    
         for bus in self.env.bus_all:
-            x = [bus.trajectory[i][1] for i in range(len(bus.trajectory))]
-            y = [bus.trajectory[i][2] for i in range(len(bus.trajectory))]
+            # 提取当前 bus 的轨迹坐标
+            x = [bus.trajectory[i][1] for i in range(len(bus.trajectory))]  # 时间坐标
+            y = [bus.trajectory[i][2] for i in range(len(bus.trajectory))]  # 站点坐标
             plt.plot(x, y, label=bus.bus_id, color=self.cnames[self.bus_color[bus.bus_id]])
-            plt.scatter(x, y)
+            plt.scatter(x, y, s=5)  # 添加散点，点大小更小更清晰
+
+            # 记录 headway 数据
             total_headway.extend([bus.headway_dif[i][0] for i in range(len(bus.headway_dif))])
 
-        x1 = [i for i in range(len(self.env.bus_all[0].trajectory))]
-        for j in range(len(self.env.stations)//2 + 1):
-            y1 = [j * 500] * len(self.env.bus_all[0].trajectory)
+        # 绘制站点参考线
+        x1 = np.linspace(min_time, max_time, num=500)  # 生成等间隔的时间点
+        station_names = ['Terminal up'] + [f'X{i:02d}' for i in range(1, 21)] + ['Terminal down']
+        for j in range(len(station_names)):
+            y1 = [j * 500] * len(x1)
             plt.plot(x1, y1, color="red", linewidth=0.3, linestyle='-')
+        
+        
+        # 坐标轴设置
         plt.xticks(fontsize=16)
-        plt.yticks(fontsize=16)
-
+        plt.yticks(ticks=[j * 500 for j in range(len(station_names))], labels=station_names, fontsize=16)
         plt.legend(fontsize=18)
         plt.xlabel('time', fontsize=20)
-        plt.ylabel('distance', fontsize=20)
+        plt.ylabel('station', fontsize=20)
         plt.title('result', fontsize=20)
-        plt.savefig(path+'/pic/exp ' + exp + ',test '+iteration+', bus trajectory.jpg')
+        plt.xlim(min_time, max_time)  # 横坐标范围是全局时间
+        plt.savefig(path + '/pic/exp ' + exp + ', bus trajectory.jpg')
         plt.close()
 
         total_passengers = []
@@ -366,12 +386,12 @@ class visualize(object):
         plt.legend()
         positions = list(range(max_x))
         labels = max_stations
-        plt.xticks(positions, labels, fontsize=16)
+        plt.xticks(positions[::5], labels[::5], fontsize=16)  # Show every 5th label
         plt.ylim((-1000, 1000))
         plt.yticks(fontsize=16)
         plt.xlabel('station')
         plt.ylabel('difference of headway')
-        plt.savefig(path+'/pic/exp ' + exp + ',test '+iteration+', bus headway.jpg')
+        plt.savefig(path+'/pic/exp ' + exp + ', bus headway.jpg')
         plt.close()
 
         fig = plt.figure()
@@ -386,14 +406,12 @@ class visualize(object):
         ax2.plot(bins[:-1] + 45, y, color='red', marker='o', linestyle='dashed', linewidth=1.5, label='cumulative probability')
         ax2.set_ylabel('cumulative probability')
         plt.legend()
-        # n, bins, _ = plt.hist(total_waiting_time, bins=20, color='#0504aa', alpha=0.7, rwidth=0.85)
-        plt.savefig(path+'/pic/exp ' + exp + ',test '+iteration+ ' headway variance.jpg')
-        # for (traveling_time, waiting_time, headway) in zip(total_traveling_time, total_waiting_time, total_headway):
+        plt.savefig(path+'/pic/exp ' + exp + ', headway variance.jpg')
         total_headway = total_headway + [np.nan] * (len(total_waiting_time) - len(total_headway))
         df = pd.DataFrame({'traveling_time': total_traveling_time,
                            'waiting_time': total_waiting_time,
                            'headway': total_headway})
-        df.to_csv(path+'/pic/exp ' + exp + ',test '+iteration+'.csv', index=False)
+        df.to_csv(path+'/pic/exp ' + exp + '.csv', index=False)
         plt.close()
 
 
