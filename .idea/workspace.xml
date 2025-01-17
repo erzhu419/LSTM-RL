@@ -4,21 +4,34 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="299c8d0f-b713-48a7-9c21-4eadc1e90d98" name="更改" comment="">
+    <list default="true" id="299c8d0f-b713-48a7-9c21-4eadc1e90d98" name="更改" comment="修改了状态的存储方式">
+      <change afterPath="$PROJECT_DIR$/sac_v2_bus.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/env/bus.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/bus.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/env/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/data/route_news.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/env/data/route_news.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/data/stop_news.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/env/data/stop_news.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/exp 0test 0.jpg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/env/route.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/route.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/env/sim.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/sim.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env/station.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/station.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env/visualize.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/visualize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/test 0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/test_headway.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/test_waiting_time.jpg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/plot.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/plot.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ppo_gae_continous2_bus.py" beforeDir="false" afterPath="$PROJECT_DIR$/ppo_gae_continous2_bus.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ppo_gae_continuous2.py" beforeDir="false" afterPath="$PROJECT_DIR$/ppo_gae_continuous2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sac_v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/sac_v2.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -45,15 +58,21 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Python.bus.executor&quot;: &quot;Run&quot;,
+    &quot;Locals&quot;: &quot;true&quot;,
+    &quot;Python.bus.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.embedding_demo.executor&quot;: &quot;Debug&quot;,
     &quot;Python.ppo_gae_continous2_bus.executor&quot;: &quot;Run&quot;,
     &quot;Python.ppo_gae_continuous2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.sac_v2.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.sac_v2_bus.executor&quot;: &quot;Run&quot;,
     &quot;Python.sim.executor&quot;: &quot;Debug&quot;,
     &quot;Python.station.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.visualize.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;//wsl.localhost/Ubuntu-22.04/home/erzhu419/RL-BUS-torch&quot;,
+    &quot;last_opened_file_path&quot;: &quot;//wsl.localhost/Ubuntu-22.04/home/erzhu419/mine_code/RNAC&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -63,8 +82,8 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.ppo_gae_continous2_bus">
-    <configuration name="bus" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.sac_v2_bus">
+    <configuration name="embedding_demo" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="LSTM-RL" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -73,12 +92,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/env" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/env/bus.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/embedding_demo.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -87,7 +106,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="ppo_gae_continous2_bus" type="PythonConfigurationType" factoryName="Python" singleton="false" temporary="true" nameIsGenerated="true">
+    <configuration name="ppo_gae_continous2_bus" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="LSTM-RL" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -110,7 +129,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="ppo_gae_continuous2" type="PythonConfigurationType" factoryName="Python" singleton="false" temporary="true" nameIsGenerated="true">
+    <configuration name="sac_v2" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="LSTM-RL" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -124,7 +143,30 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ppo_gae_continuous2.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sac_v2.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="sac_v2_bus" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="LSTM-RL" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sac_v2_bus.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -156,45 +198,30 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="station" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="LSTM-RL" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/env" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/env/station.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <list>
-      <item itemvalue="Python.bus" />
-      <item itemvalue="Python.ppo_gae_continous2_bus" />
-      <item itemvalue="Python.ppo_gae_continuous2" />
       <item itemvalue="Python.sim" />
-      <item itemvalue="Python.station" />
+      <item itemvalue="Python.sac_v2" />
+      <item itemvalue="Python.sac_v2_bus" />
+      <item itemvalue="Python.embedding_demo" />
+      <item itemvalue="Python.ppo_gae_continous2_bus" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.sac_v2_bus" />
         <item itemvalue="Python.ppo_gae_continous2_bus" />
         <item itemvalue="Python.sim" />
-        <item itemvalue="Python.ppo_gae_continuous2" />
-        <item itemvalue="Python.bus" />
-        <item itemvalue="Python.station" />
+        <item itemvalue="Python.sac_v2" />
+        <item itemvalue="Python.embedding_demo" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-deb605915726-JavaScript-PY-243.22562.220" />
+        <option value="bundled-python-sdk-0fc6c617c4bd-9a18a617cbe4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.22562.220" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -212,6 +239,36 @@
       <workItem from="1733272963176" duration="23166000" />
       <workItem from="1733346179050" duration="3342000" />
       <workItem from="1733352106858" duration="610000" />
+      <workItem from="1733360778482" duration="18145000" />
+      <workItem from="1733466422791" duration="12469000" />
+      <workItem from="1733712988858" duration="12251000" />
+      <workItem from="1733746099387" duration="22198000" />
+      <workItem from="1733832879344" duration="10819000" />
+      <workItem from="1733899104759" duration="428000" />
+      <workItem from="1733899691319" duration="6323000" />
+      <workItem from="1733919065413" duration="5273000" />
+      <workItem from="1733961963234" duration="55314000" />
+      <workItem from="1734245469374" duration="5673000" />
+      <workItem from="1734402400569" duration="9842000" />
+      <workItem from="1734474798888" duration="424000" />
+      <workItem from="1734475311881" duration="55000" />
+      <workItem from="1734475507089" duration="218000" />
+      <workItem from="1734485040501" duration="5913000" />
+      <workItem from="1734591841218" duration="1690000" />
+      <workItem from="1734596774441" duration="135000" />
+      <workItem from="1734596921311" duration="20000" />
+      <workItem from="1734597065667" duration="39000" />
+      <workItem from="1734597231298" duration="4824000" />
+      <workItem from="1734762127158" duration="5789000" />
+      <workItem from="1734824680171" duration="8045000" />
+      <workItem from="1734853535074" duration="34630000" />
+      <workItem from="1735172742453" duration="8119000" />
+      <workItem from="1735184428412" duration="5900000" />
+      <workItem from="1735208004601" duration="15209000" />
+      <workItem from="1736296482603" duration="4134000" />
+      <workItem from="1736391334038" duration="60213000" />
+      <workItem from="1736941200070" duration="15171000" />
+      <workItem from="1737027622443" duration="3015000" />
     </task>
     <servers />
   </component>
@@ -229,22 +286,51 @@
       </map>
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="修改了状态的存储方式" />
+    <option name="LAST_COMMIT_MESSAGE" value="修改了状态的存储方式" />
+  </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/env/bus.py</url>
+          <line>216</line>
+          <option name="timeStamp" value="48" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/embedding_demo.py</url>
+          <line>160</line>
+          <option name="timeStamp" value="53" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sac_v2.py</url>
+          <line>393</line>
+          <option name="timeStamp" value="55" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="jupyter-line">
+          <url>file://$PROJECT_DIR$/embedding_demo.ipynb</url>
+          <line>79</line>
+          <option name="timeStamp" value="49" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
-        <watch expression="v_dict[key]" language="Python" />
-        <watch expression="v" language="Python" />
-        <watch expression="env.current_time" language="Python" />
-        <watch expression="prob_dict[key]" language="Python" />
-        <watch expression="prob" language="Python" />
+        <watch expression="state_dict[key][0][1]" language="Python" />
       </configuration>
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/LSTM_RL$ppo_gae_continuous2.coverage" NAME="ppo_gae_continuous2 覆盖结果" MODIFIED="1733275463236" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/LSTM_RL$bus.coverage" NAME="bus 覆盖结果" MODIFIED="1733273038716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/env" />
-    <SUITE FILE_PATH="coverage/LSTM_RL$sim.coverage" NAME="sim 覆盖结果" MODIFIED="1733313890934" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/env" />
-    <SUITE FILE_PATH="coverage/LSTM_RL$ppo_gae_continous2_bus.coverage" NAME="ppo_gae_continous2_bus 覆盖结果" MODIFIED="1733349597912" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/LSTM_RL$sac_v2.coverage" NAME="sac_v2 覆盖结果" MODIFIED="1736647420928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/LSTM_RL$test.coverage" NAME="test 覆盖结果" MODIFIED="1735172813874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/LSTM_RL$bus.coverage" NAME="bus 覆盖结果" MODIFIED="1734604127372" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/env" />
+    <SUITE FILE_PATH="coverage/LSTM_RL$sim.coverage" NAME="sim 覆盖结果" MODIFIED="1736994886410" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/env" />
+    <SUITE FILE_PATH="coverage/LSTM_RL$embedding_demo.coverage" NAME="embedding_demo 覆盖结果" MODIFIED="1735209950716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/LSTM_RL$ppo_gae_continous2_bus.coverage" NAME="ppo_gae_continous2_bus 覆盖结果" MODIFIED="1737007884869" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/LSTM_RL$sac_v2_bus.coverage" NAME="sac_v2_bus 覆盖结果" MODIFIED="1737092748019" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/LSTM_RL$visualize.coverage" NAME="visualize 覆盖结果" MODIFIED="1734244437921" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/env" />
     <SUITE FILE_PATH="coverage/LSTM_RL$station.coverage" NAME="station 覆盖结果" MODIFIED="1732966267118" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/env" />
   </component>
 </project>

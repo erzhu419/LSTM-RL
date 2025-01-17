@@ -37,8 +37,8 @@ print(device)
 
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=False)
-parser.add_argument('--test', dest='test', action='store_true', default=True)
+parser.add_argument('--train', dest='train', action='store_true', default=True)
+parser.add_argument('--test', dest='test', action='store_true', default=False)
 
 args = parser.parse_args()
 
@@ -337,7 +337,7 @@ replay_buffer_size = 1e6
 replay_buffer = ReplayBuffer(replay_buffer_size)
 
 # choose env
-ENV = ['Reacher', 'Pendulum-v0', 'HalfCheetah-v2'][2]
+ENV = ['Reacher', 'Pendulum-v0', 'HalfCheetah-v2'][1]
 if ENV == 'Reacher':
     NUM_JOINTS=2
     LINK_LENGTH=[200, 140]

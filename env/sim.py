@@ -138,7 +138,7 @@ class env_bus(object):
         return total_station
 
     # return default state and reward
-    def reset(self, render=False):
+    def reset(self):
 
         self.current_time = 0
 
@@ -160,13 +160,12 @@ class env_bus(object):
 
         self.action_dict = {key: None for key in list(range(self.max_agent_num))}
 
+    def initialize_state(self, render=False):
         def count_non_empty_sublist(lst):
             return sum(1 for sublist in lst if sublist)
 
         while count_non_empty_sublist(list(self.state.values())) == 0:
-                self.state, self.reward, _ = self.step(self.action_dict, render=render)
-        # self.state_dim = self.routes_set.shape[0] + len(self.stations)
-        # self.obs = [[0] * self.state_dim[0]] * self.max_agent_num
+            self.state, self.reward, _ = self.step(self.action_dict, render=render)
 
         return self.state, self.reward, self.done
 
@@ -283,9 +282,9 @@ class env_bus(object):
             self.summary_reward = self.summary_reward.sort_values(['bus_id', 'time'])
             self.summary_reward.to_csv(os.path.join(self.path, 'pic', 'summary_reward.csv'))
 
-        if render and self.current_time % 4 == 0:
+        if render and self.current_time % 1 == 0:
             self.visualizer.render()
-            # time.sleep(0.1)  # Add a delay to slow down the rendering
+            time.sleep(0.05)  # Add a delay to slow down the rendering
 
         return self.state, self.reward, self.done
 
@@ -299,7 +298,7 @@ if __name__ == '__main__':
     env = env_bus(os.getcwd(), debug=debug)
     start_time = time.time()
     actions = {key: 15. for key in list(range(env.max_agent_num))}
-    env.reset(render=render)
+    env.reset()
     while not env.done:
         state, reward, done = env.step(action=actions, debug=debug, render=render)
         # if debug and env.current_time % 4 == 0:
