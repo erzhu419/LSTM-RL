@@ -87,8 +87,8 @@ class PPO(nn.Module):
 
         x = F.relu(self.linear1(x))
         x = F.relu(self.linear2(x))
-        x1 = F.relu(self.linear3(x).detach())  # std learning not BP to the feature
-        x2 = F.relu(self.linear4(x))
+        x1 = F.relu(self.linear3(x)) 
+        x2 = F.relu(self.linear4(x).detach()) # std learning not BP to the feature
 
         mean = F.tanh(self.mean_linear(x1))
         # log_std = self.log_std_linear(x2)
@@ -134,10 +134,21 @@ class PPO(nn.Module):
         return action.detach().numpy(), prob, value
 
     def get_log_prob(self, mean, log_std, action):
-        action = action / self.action_range
-        log_prob = Normal(mean, log_std.exp()).log_prob(action)
-        log_prob = log_prob.sum(dim=-1, keepdim=True)  # reduce dim
-        return log_prob
+        # 逆映射 action 回原始范围
+        action = (action - self.action_range) * 2 / self.action_range
+
+        # 使用 Normal 分布
+        normal = Normal(mean, log_std.exp())
+
+        # 处理被裁剪的动作
+        log_prob = normal.log_prob(action)
+        # 裁剪范围之外的动作概率
+        log_prob = torch.where(
+            (action < -1) | (action > 1),
+            torch.full_like(log_prob, -float('inf')),  # 溢出概率设置为负无穷
+            log_prob
+        )
+        return log_prob.sum(dim=-1, keepdim=True)
 
     def put_data(self, transition):
         self.data.append(transition)
@@ -232,11 +243,13 @@ def main():
     step_trained = 0
 
     for n_epi in range(1,100000):
-        state_dict, reward_dict, _ = env.reset(render=render)
+        env.reset()
+        state_dict, reward_dict, _ = env.initialize_state(render=render)    
         done = False
         episode_steps = 0
         action_dict = {key: None for key in list(range(env.max_agent_num))}
         action_dict_zero = {key: 0 for key in list(range(env.max_agent_num))} # 全0的action，用于查看reward的上限
+        action_dict_twenty = {key: 20 for key in list(range(env.max_agent_num))} # 全20的action，用于查看reward的上限
 
         prob_dict = {key: None for key in list(range(env.max_agent_num))}
         v_dict = {key: None for key in list(range(env.max_agent_num))}
@@ -253,7 +266,7 @@ def main():
                         action_dict[key], prob_dict[key], v_dict[key] = a, prob, v
 
                         if key == 2 and debug:
-                            print('From Algorithm, when no state, Bus id: ',key,' , station id is: ' , state_dict[key][0][1],' ,current time is: ', env.current_time, ' ,action is: ', a, ', reward: ', reward_dict[key])
+                            print('From Algorithm, when no state, Bus id: ',key,' , station id is: ' , state_dict[key][0][1],' ,current time is: ', env.current_time, ' ,action is: ', a, ', reward: ', reward_dict[key], 'value is: ', v)  
                             print()
 
                 elif len(state_dict[key]) == 2:
@@ -271,7 +284,7 @@ def main():
                         # print(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], prob_dict[key], v_dict[key], done)
                         model.put_data((state_dict[key][0][1:], action_dict[key], reward_dict[key], state_dict[key][1][1:], prob_dict[key], v_dict[key], done))
                         if key == 2 and debug:
-                            print('From Algorithm, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key], ', reward: ', reward_dict[key])
+                            print('From Algorithm store, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key], ', reward: ', reward_dict[key], 'value is: ', v_dict[key])
                             print()
 
                         episode_steps += 1
@@ -284,6 +297,10 @@ def main():
                     state_input = np.expand_dims(state_dict[key][0][1:], axis=0)
 
                     action_dict[key],prob_dict[key], v_dict[key]  = model.get_action(torch.from_numpy(state_input).float())
+                    # print info like before
+                    if key == 2 and debug:
+                        print('From Algorithm run, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key], ', reward: ', reward_dict[key], ' ,value is: ', v_dict[key])
+                        print()
 
             state_dict, reward_dict, done = env.step(action_dict, debug=debug, render=render)
 

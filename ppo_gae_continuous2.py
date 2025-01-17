@@ -198,7 +198,8 @@ def main():
             s_prime, r, done, info = env.step(a)
             # print(a)
             # env.render()
-
+            # print the transition tuple
+            print('step:', step, 'state:', s, 'action:', a, 'reward:', r, 'next_state:', s_prime, 'value:', v, 'done:', done)
             model.put_data((s, a, r, s_prime, prob, v, done))
             s = s_prime
 

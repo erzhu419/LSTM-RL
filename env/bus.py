@@ -214,24 +214,38 @@ class Bus(object):
                     self.backward_bus = list(filter(lambda x: self.trip_id + 2 in x.trip_id_list, bus_all))
 
                     if self.next_station in self.effective_station[2:] and (len(self.forward_bus) != 0 or len(self.backward_bus) != 0):
-                        self.obs = [self.bus_id, self.last_station.station_id, self.trip_id, self.direction,
+                        self.obs = [self.bus_id, self.last_station.station_id, current_time // 3600, self.direction,
                                     self.forward_headway, self.backward_headway,
                                     len(self.next_station.waiting_passengers) * 1.5 +
                                     self.current_route.distance/self.current_route.speed_limit]
 
                         # 计算 forward 和 backward 头时距的奖励
-                        forward_reward = np.exp(-abs(self.forward_headway - 360)) if len(self.forward_bus) != 0 else None
-                        backward_reward = np.exp(-abs(self.backward_headway - 360)) if len(self.backward_bus) != 0 else None
+                        def headway_reward(headway):
+                            if abs(headway - 360) <= 10:
+                                return 100  # 完美匹配，给高奖励
+                            elif abs(headway - 360) <= 60:
+                                return 5  # 较小偏差
+                            else:
+                                return np.exp(-abs(headway - 360)) * 10  # 大偏差，奖励递减
 
-                        # 整合前车和后车的奖励
+                        forward_reward = headway_reward(self.forward_headway) if len(self.forward_bus) != 0 else None
+                        backward_reward = headway_reward(self.backward_headway) if len(self.backward_bus) != 0 else None
+
                         if forward_reward is not None and backward_reward is not None:
-                            self.reward = (forward_reward + backward_reward) / 2  # 加权平均
+                            weight = abs(self.forward_headway - 360) / (abs(self.forward_headway - 360) + abs(self.backward_headway - 360) + 1e-6)
+                            self.reward = forward_reward * weight + backward_reward * (1 - weight)
+                            if self.forward_headway > self.backward_headway + 1 and action > 1:
+                                self.is_unhealthy = True
                         elif forward_reward is not None:
                             self.reward = forward_reward
                         elif backward_reward is not None:
                             self.reward = backward_reward
                         else:
-                            self.reward = np.exp(-abs(0 - 360))  # 默认奖励，比如与理想车头时距偏差计算
+                            self.reward = -50  # 设定一个较大的负奖励，鼓励策略优化
+                        if abs(self.forward_headway - 360) > 180 or abs(self.backward_headway - 360) > 180:
+                            self.reward -= 20  # 额外惩罚
+                            self.is_unhealthy = True
+
 
                         if self.bus_id == 2 and debug:
                             print('From Simulation ,', 'bus id is: ', self.bus_id,', station id is: ', self.last_station.station_id, ' ,current time: ', current_time, ', reward: ', self.reward)
@@ -253,9 +267,9 @@ class Bus(object):
                         #     print("Simulation: Bus id: ", self.bus_id, ' ,station id: ', self.last_station.station_id - 1, ' , dwelling time is: ', action)
 
                         self.dwelling_time = deepcopy(action) # 使用深拷贝，防止原始数据被修改，因为原始数据要以(s,a,s',r)的transition形式存储，作为训练用
-                        if action is not None:
-                            # print(self.forward_headway, self.backward_headway, action)
-                            self.is_unhealthy = self.forward_headway > self.backward_headway + 1 and action > 1
+                        # if action is not None:
+                        #     # print(self.forward_headway, self.backward_headway, action)
+                        #     self.is_unhealthy = self.forward_headway > self.backward_headway + 1 and action > 1
 
                     if debug and self.bus_id == 2:
 

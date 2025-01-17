@@ -8,7 +8,7 @@ class Route(object):
         self.maximum_velocity = 0
         self.variant_velocity = 0
 
-        self.sigma = 2.
+        self.sigma = 1.5
         self.route_id = route_id
         self.route_max_speed = max_speed
         self.speed_history = route_speed_history
