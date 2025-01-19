@@ -55,7 +55,7 @@ class env_bus(object):
         self.effective_station_name = sorted(set([self.od.index[i][0] for i in range(self.od.shape[0])]))
         self.effective_period = sorted(list(set([self.od.index[i][1] for i in range(self.od.shape[0])])))
 
-        self.state_dim = 6
+        self.state_dim = 7
         self.action_space = Box(0, 20, shape=(1,))
 
         if debug:

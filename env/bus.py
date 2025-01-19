@@ -219,7 +219,7 @@ class Bus(object):
                                     len(self.next_station.waiting_passengers) * 1.5 +
                                     self.current_route.distance/self.current_route.speed_limit]
 
-                        # 计算 forward 和 backward 头时距的奖励
+                        # 计算 forward 和 backward 头时距的奖励 TODO: 可视化很奇怪，远不如默认的-(abs(headway - 360)),后面根据实验效果修改
                         def headway_reward(headway):
                             if abs(headway - 360) <= 10:
                                 return 100  # 完美匹配，给高奖励
@@ -228,12 +228,13 @@ class Bus(object):
                             else:
                                 return np.exp(-abs(headway - 360)) * 10  # 大偏差，奖励递减
 
+                        # 这里是GPT根据我的要求修改的，做了可视化，现在forward_headway和backward_headway在都是360时最大，在其余相等时次之，最后是差距较大时
                         forward_reward = headway_reward(self.forward_headway) if len(self.forward_bus) != 0 else None
                         backward_reward = headway_reward(self.backward_headway) if len(self.backward_bus) != 0 else None
-
                         if forward_reward is not None and backward_reward is not None:
                             weight = abs(self.forward_headway - 360) / (abs(self.forward_headway - 360) + abs(self.backward_headway - 360) + 1e-6)
-                            self.reward = forward_reward * weight + backward_reward * (1 - weight)
+                            similarity_bonus = -abs(self.forward_headway - self.backward_headway) * 0.5  # 添加相等性奖励
+                            self.reward = forward_reward * weight + backward_reward * (1 - weight) + similarity_bonus
                             if self.forward_headway > self.backward_headway + 1 and action > 1:
                                 self.is_unhealthy = True
                         elif forward_reward is not None:
