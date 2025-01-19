@@ -70,10 +70,35 @@ class ReplayBuffer:
         return len(self.buffer)
 
 
+class EmbeddingLayer(nn.Module):
+    def __init__(self, cat_code_dict, cat_cols):
+        super(EmbeddingLayer, self).__init__()
+        self.cat_code_dict = cat_code_dict
+        self.cat_cols = cat_cols
+
+        # Create embedding layers for categorical variables
+        self.embeddings = nn.ModuleDict({
+            col: nn.Embedding(len(cat_code_dict[col]), min(50, len(cat_code_dict[col]) // 2))
+            for col in cat_cols
+        })
+
+    def forward(self, cat_tensor):
+        embedding_tensor_group = []
+        for idx, col in enumerate(self.cat_cols):
+            layer = self.embeddings[col]
+            out = layer(cat_tensor[:, idx])
+            embedding_tensor_group.append(out)
+
+        # Concatenate all embeddings
+        embed_tensor = torch.cat(embedding_tensor_group, dim=1)
+        return embed_tensor
+
+
 class SoftQNetwork(nn.Module):
-    def __init__(self, num_inputs, num_actions, hidden_size, init_w=3e-3):
+    def __init__(self, num_inputs, num_actions, hidden_size, embedding_layer, init_w=3e-3):
         super(SoftQNetwork, self).__init__()
 
+        self.embedding_layer = embedding_layer
         self.linear1 = nn.Linear(num_inputs + num_actions, hidden_size)
         self.linear2 = nn.Linear(hidden_size, hidden_size)
         self.linear3 = nn.Linear(hidden_size, hidden_size)
@@ -83,7 +108,14 @@ class SoftQNetwork(nn.Module):
         self.linear4.bias.data.uniform_(-init_w, init_w)
 
     def forward(self, state, action):
-        x = torch.cat([state, action], 1)  # the dim 0 is number of samples
+        cat_tensor = state[:, :len(self.embedding_layer.cat_cols)]  # Assuming first columns are categorical
+        num_tensor = state[:, len(self.embedding_layer.cat_cols):]  # The rest are numerical
+
+        # cat_tensor = torch.clamp(cat_tensor, min=0, max=max(self.embedding_layer.cat_code_dict.values()))
+        embedding = self.embedding_layer(cat_tensor.long())
+        state_with_embeddings = torch.cat([embedding, num_tensor], dim=1)  # Concatenate embedding and numerical features
+        x = torch.cat([state_with_embeddings, action], 1)
+
         x = F.relu(self.linear1(x))
         x = F.relu(self.linear2(x))
         x = F.relu(self.linear3(x))
@@ -92,9 +124,10 @@ class SoftQNetwork(nn.Module):
 
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, num_inputs, num_actions, hidden_size, action_range=1., init_w=3e-3, log_std_min=-20, log_std_max=2):
+    def __init__(self, num_inputs, num_actions, hidden_size, embedding_layer, action_range=1., init_w=3e-3, log_std_min=-20, log_std_max=2):
         super(PolicyNetwork, self).__init__()
 
+        self.embedding_layer = embedding_layer
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
 
@@ -115,7 +148,13 @@ class PolicyNetwork(nn.Module):
         self.num_actions = num_actions
 
     def forward(self, state):
-        x = F.relu(self.linear1(state))
+        cat_tensor = state[:, :len(self.embedding_layer.cat_cols)]
+        num_tensor = state[:, len(self.embedding_layer.cat_cols):]
+
+        embedding = self.embedding_layer(cat_tensor.long())
+        state_with_embeddings = torch.cat([embedding, num_tensor], dim=1)
+
+        x = F.relu(self.linear1(state_with_embeddings))
         x = F.relu(self.linear2(x))
         x = F.relu(self.linear3(x))
         x = F.relu(self.linear4(x))
@@ -167,20 +206,31 @@ class PolicyNetwork(nn.Module):
         action = self.action_range/2 * torch.tanh(mean).detach().cpu().numpy()[0] + self.action_range/2 if deterministic else action.detach().cpu().numpy()[0]
         return action
 
-    def sample_action(self, ):
-        a = torch.FloatTensor(self.num_actions).uniform_(-1, 1)
-        return self.action_range * a.numpy()
-
-
 class SAC_Trainer():
-    def __init__(self, replay_buffer, hidden_dim, action_range):
+    def __init__(self, env, replay_buffer, hidden_dim, action_range):
+        # 以下是类别特征和数值特征
+        cat_cols = ['bus_id', 'station_id', 'time_period','direction']
+        cat_code_dict = {
+            'bus_id': {i: i for i in range(env.max_agent_num)},  # 最大车辆数，预设值
+            'station_id': {i: i for i in range(round(len(env.stations) / 2))},  # station_id，有几个站就有几个类别
+            'time_period': {i: i for i in range(env.timetables[-1].launch_time//3600 + 2)},  # time period,以每小时区分，+2是因为让车运行完
+            'direction': {0: 0, 1: 1}  # direction 二分类
+        }
+        # 数值特征的数量
+        num_cont_features = state_len - len(cat_cols)  # 包括 forward_headway, backward_headway 和最后一个 feature
+        # 创建嵌入层
+        embedding_layer = EmbeddingLayer(cat_code_dict, cat_cols)
+        # SAC 网络的输入维度
+        embedding_dim = sum([min(50, len(cat_code_dict[col]) // 2) for col in cat_cols])  # 总嵌入维度
+        state_dim = embedding_dim + num_cont_features  # 状态维度 = 嵌入维度 + 数值特征维度
+
         self.replay_buffer = replay_buffer
 
-        self.soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim).to(device)
-        self.soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim).to(device)
-        self.target_soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim).to(device)
-        self.target_soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim).to(device)
-        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, action_range).to(device)
+        self.soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
+        self.soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
+        self.target_soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
+        self.target_soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
+        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim,embedding_layer, action_range).to(device)
         self.log_alpha = torch.zeros(1, dtype=torch.float32, requires_grad=True, device=device)
         print('Soft Q Network (1,2): ', self.soft_q_net1)
         print('Policy Network: ', self.policy_net)
@@ -193,9 +243,9 @@ class SAC_Trainer():
         self.soft_q_criterion1 = nn.MSELoss()
         self.soft_q_criterion2 = nn.MSELoss()
 
-        soft_q_lr = 3e-4
-        policy_lr = 3e-4
-        alpha_lr = 3e-4
+        soft_q_lr = 1e-5
+        policy_lr = 1e-5
+        alpha_lr = 1e-5
 
         self.soft_q_optimizer1 = optim.Adam(self.soft_q_net1.parameters(), lr=soft_q_lr)
         self.soft_q_optimizer2 = optim.Adam(self.soft_q_net2.parameters(), lr=soft_q_lr)
@@ -280,7 +330,6 @@ class SAC_Trainer():
         self.policy_net.eval()
 
 
-
 def plot(rewards):
     clear_output(True)
     plt.figure(figsize=(20, 5))
@@ -297,7 +346,7 @@ path = os.getcwd() + '/env'
 env = env_bus(path, debug=debug)
 env.reset()
 
-state_dim = env.state_dim
+state_len = env.state_dim
 action_dim = env.action_space.shape[0]
 action_range = env.action_space.high[0]
 
@@ -316,7 +365,7 @@ hidden_dim = 64
 rewards = []
 model_path = './model/sac_v2'
 
-sac_trainer = SAC_Trainer(replay_buffer, hidden_dim, action_range=action_range)
+sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range)
 
 if __name__ == '__main__':
     if args.train:
@@ -342,7 +391,7 @@ if __name__ == '__main__':
                 for key in state_dict:
                     if len(state_dict[key]) == 1:
                         if action_dict[key] is None:
-                            state_input = np.array(state_dict[key][0][1:])
+                            state_input = np.array(state_dict[key][0])
                             a = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
 
                             action_dict[key] = a
@@ -355,7 +404,7 @@ if __name__ == '__main__':
 
                         if state_dict[key][0][1] != state_dict[key][1][1]:
                             # print(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], prob_dict[key], v_dict[key], done)
-                            replay_buffer.push(state_dict[key][0][1:], action_dict[key], reward_dict[key], state_dict[key][1][1:], done)
+                            replay_buffer.push(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], done)
                             if key == 2 and debug:
                                 print('From Algorithm store, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key], ', reward: ', reward_dict[key],
                                       'value is: ', v_dict[key])
@@ -368,7 +417,7 @@ if __name__ == '__main__':
                             #     print('Bus id: ',key,' , station id is: ' , state_dict[key][1][1],' ,current time is: ', env.current_time)
                         state_dict[key] = state_dict[key][1:]
 
-                        state_input = np.array(state_dict[key][0][1:])
+                        state_input = np.array(state_dict[key][0])
 
                         action_dict[key]= sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
                         # print(action_dict[key])
@@ -409,7 +458,7 @@ if __name__ == '__main__':
                 for key in state_dict:
                     if len(state_dict[key]) == 1:
                         if action_dict[key] is None:
-                            state_input = np.array(state_dict[key][0][1:])
+                            state_input = np.array(state_dict[key][0])
                             a, _, _ = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
                             action_dict[key] = a
                     elif len(state_dict[key]) == 2:
@@ -417,7 +466,7 @@ if __name__ == '__main__':
                             episode_reward += reward_dict[key]
                         state_dict[key] = state_dict[key][1:]
                         
-                        state_input = np.array(state_dict[key][0][1:])
+                        state_input = np.array(state_dict[key][0])
                         
                         action_dict[key], _, _ = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
                         
