@@ -220,13 +220,16 @@ class Bus(object):
                                     self.current_route.distance/self.current_route.speed_limit]
 
                         # 计算 forward 和 backward 头时距的奖励 TODO: 可视化很奇怪，远不如默认的-(abs(headway - 360)),后面根据实验效果修改
+                        # def headway_reward(headway):
+                        #     if abs(headway - 360) <= 10:
+                        #         return 100  # 完美匹配，给高奖励
+                        #     elif abs(headway - 360) <= 60:
+                        #         return 5  # 较小偏差
+                        #     else:
+                        #         return np.exp(-abs(headway - 360)) * 10  # 大偏差，奖励递减
+
                         def headway_reward(headway):
-                            if abs(headway - 360) <= 10:
-                                return 100  # 完美匹配，给高奖励
-                            elif abs(headway - 360) <= 60:
-                                return 5  # 较小偏差
-                            else:
-                                return np.exp(-abs(headway - 360)) * 10  # 大偏差，奖励递减
+                            return -abs(headway - 360)  # 简化的reward函数，目标是360秒时距时奖励最大
 
                         # 这里是GPT根据我的要求修改的，做了可视化，现在forward_headway和backward_headway在都是360时最大，在其余相等时次之，最后是差距较大时
                         forward_reward = headway_reward(self.forward_headway) if len(self.forward_bus) != 0 else None

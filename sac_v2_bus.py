@@ -7,10 +7,11 @@ paper: https://arxiv.org/pdf/1812.05905.pdf
 
 import math
 import random
-
+import copy
 import gym
 import numpy as np
 
+from normalization import Normalization, RewardScaling, RunningMeanStd
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -37,8 +38,14 @@ else:
 print(device)
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=True)
-parser.add_argument('--test', dest='test', action='store_true', default=False)
+parser.add_argument('--train', dest='train', action='store_true', default=False)
+parser.add_argument('--test', dest='test', action='store_true', default=True)
+parser.add_argument("--use_state_norm", type=bool, default=False, help="Trick 2:state normalization")
+parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3:reward normalization")
+parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
+parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
+parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
+
 
 args = parser.parse_args()
 
@@ -217,12 +224,13 @@ class SAC_Trainer():
             'direction': {0: 0, 1: 1}  # direction 二分类
         }
         # 数值特征的数量
-        num_cont_features = state_len - len(cat_cols)  # 包括 forward_headway, backward_headway 和最后一个 feature
+        self.num_cat_features = len(cat_cols)
+        self.num_cont_features = env.state_dim - self.num_cat_features  # 包括 forward_headway, backward_headway 和最后一个 feature
         # 创建嵌入层
         embedding_layer = EmbeddingLayer(cat_code_dict, cat_cols)
         # SAC 网络的输入维度
         embedding_dim = sum([min(50, len(cat_code_dict[col]) // 2) for col in cat_cols])  # 总嵌入维度
-        state_dim = embedding_dim + num_cont_features  # 状态维度 = 嵌入维度 + 数值特征维度
+        state_dim = embedding_dim + self.num_cont_features  # 状态维度 = 嵌入维度 + 数值特征维度
 
         self.replay_buffer = replay_buffer
 
@@ -252,6 +260,15 @@ class SAC_Trainer():
         self.policy_optimizer = optim.Adam(self.policy_net.parameters(), lr=policy_lr)
         self.alpha_optimizer = optim.Adam([self.log_alpha], lr=alpha_lr)
 
+        # 初始化RunningMeanStd
+        initial_mean = [360., 360., 90.]
+        initial_std = [165., 133., 45.]
+
+        running_ms = RunningMeanStd(shape=(self.num_cont_features,), init_mean=initial_mean, init_std=initial_std)
+
+        self.state_norm = Normalization(num_categorical=self.num_cat_features, num_numerical=self.num_cont_features, running_ms=running_ms)
+        self.reward_scaling = RewardScaling(shape=1, gamma=0.99)
+    
     def update(self, batch_size, reward_scale=10., auto_entropy=True, target_entropy=-2, gamma=0.99, soft_tau=1e-2):
         state, action, reward, next_state, done = self.replay_buffer.sample(batch_size)
         # print('sample:', state, action,  reward, done)
@@ -321,9 +338,9 @@ class SAC_Trainer():
         torch.save(self.policy_net.state_dict(), path + '_policy')
 
     def load_model(self, path):
-        self.soft_q_net1.load_state_dict(torch.load(path + '_q1'))
-        self.soft_q_net2.load_state_dict(torch.load(path + '_q2'))
-        self.policy_net.load_state_dict(torch.load(path + '_policy'))
+        self.soft_q_net1.load_state_dict(torch.load(path + '_q1', weights_only=True))
+        self.soft_q_net2.load_state_dict(torch.load(path + '_q2', weights_only=True))
+        self.policy_net.load_state_dict(torch.load(path + '_policy',weights_only=True))
 
         self.soft_q_net1.eval()
         self.soft_q_net2.eval()
@@ -346,7 +363,6 @@ path = os.getcwd() + '/env'
 env = env_bus(path, debug=debug)
 env.reset()
 
-state_len = env.state_dim
 action_dim = env.action_space.shape[0]
 action_range = env.action_space.high[0]
 
@@ -361,7 +377,7 @@ explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
 AUTO_ENTROPY = True
 DETERMINISTIC = False
-hidden_dim = 64
+hidden_dim = 32
 rewards = []
 model_path = './model/sac_v2'
 
@@ -391,7 +407,10 @@ if __name__ == '__main__':
                 for key in state_dict:
                     if len(state_dict[key]) == 1:
                         if action_dict[key] is None:
-                            state_input = np.array(state_dict[key][0])
+                            if args.use_state_norm:
+                                state_input = sac_trainer.state_norm(copy.deepcopy(np.array(state_dict[key][0])))
+                            else:
+                                state_input = np.array(state_dict[key][0])
                             a = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
 
                             action_dict[key] = a
@@ -404,7 +423,19 @@ if __name__ == '__main__':
 
                         if state_dict[key][0][1] != state_dict[key][1][1]:
                             # print(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], prob_dict[key], v_dict[key], done)
-                            replay_buffer.push(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], done)
+
+                            if args.use_state_norm:
+                                state = sac_trainer.state_norm(copy.deepcopy(np.array(state_dict[key][0])))
+                                next_state = sac_trainer.state_norm(copy.deepcopy(np.array(state_dict[key][1])))
+                            else:
+                                state = np.array(state_dict[key][0])
+                                next_state = np.array(state_dict[key][1])
+                            if args.use_reward_scaling:
+                                reward = sac_trainer.reward_scaling(reward_dict[key])
+                            else:
+                                reward = reward_dict[key]
+
+                            replay_buffer.push(state, action_dict[key], reward, next_state, done)
                             if key == 2 and debug:
                                 print('From Algorithm store, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key], ', reward: ', reward_dict[key],
                                       'value is: ', v_dict[key])
@@ -416,8 +447,10 @@ if __name__ == '__main__':
                             # if reward_dict[key] == 1.0:
                             #     print('Bus id: ',key,' , station id is: ' , state_dict[key][1][1],' ,current time is: ', env.current_time)
                         state_dict[key] = state_dict[key][1:]
-
-                        state_input = np.array(state_dict[key][0])
+                        if args.use_state_norm:
+                            state_input = sac_trainer.state_norm(copy.deepcopy(np.array(state_dict[key][0])))
+                        else:
+                            state_input = np.array(state_dict[key][0])
 
                         action_dict[key]= sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
                         # print(action_dict[key])
@@ -428,8 +461,7 @@ if __name__ == '__main__':
                             print()
 
                 state_dict, reward_dict, done = env.step(action_dict, debug=debug, render=render)
-
-                if len(replay_buffer) > batch_size and step_trained != step:
+                if len(replay_buffer) > batch_size and len(replay_buffer) % args.training_freq == 0 and step_trained != step:
                     step_trained = step
                     for i in range(update_itr):
                         _ = sac_trainer.update(batch_size, reward_scale=10., auto_entropy=AUTO_ENTROPY, target_entropy=-1. * action_dim)
@@ -450,7 +482,8 @@ if __name__ == '__main__':
         for eps in range(10):
 
             done = False
-            state_dict, reward_dict, _ = env.reset(render=render)
+            env.reset()
+            state_dict, reward_dict, _ = env.initialize_state(render=render)
             episode_reward = 0
             action_dict = {key: None for key in list(range(env.max_agent_num))}
 
@@ -459,21 +492,21 @@ if __name__ == '__main__':
                     if len(state_dict[key]) == 1:
                         if action_dict[key] is None:
                             state_input = np.array(state_dict[key][0])
-                            a, _, _ = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
+                            a = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
                             action_dict[key] = a
                     elif len(state_dict[key]) == 2:
                         if state_dict[key][0][1] != state_dict[key][1][1]:
                             episode_reward += reward_dict[key]
+                            
                         state_dict[key] = state_dict[key][1:]
                         
                         state_input = np.array(state_dict[key][0])
                         
-                        action_dict[key], _, _ = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
+                        action_dict[key] = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
                         
-                next_state, reward, done, _ = env.step(action_dict)
+                state_dict, reward_dict, done = env.step(action_dict)
                 # env.render()
 
-                episode_reward += reward
-                state = next_state
+                episode_reward += reward_dict[key]
 
             print('Episode: ', eps, '| Episode Reward: ', episode_reward)
