@@ -163,7 +163,7 @@ class PPO(nn.Module):
 
             td_target = advantage + self.v(s)
 
-        for i in range(K_epoch):            
+        for i in range(K_epoch):
             mean, log_std = self.pi(s)
             log_pi_a = self.get_log_prob(mean, log_std, a)
             # pi = self.pi(s, softmax_dim=1)

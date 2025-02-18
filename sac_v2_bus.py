@@ -38,8 +38,8 @@ else:
 print(device)
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
-parser.add_argument('--train', dest='train', action='store_true', default=False)
-parser.add_argument('--test', dest='test', action='store_true', default=True)
+parser.add_argument('--train', dest='train', action='store_true', default=True)
+parser.add_argument('--test', dest='test', action='store_true', default=False)
 parser.add_argument("--use_state_norm", type=bool, default=False, help="Trick 2:state normalization")
 parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3:reward normalization")
 parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
@@ -238,7 +238,7 @@ class SAC_Trainer():
         self.soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
         self.target_soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
         self.target_soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
-        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim,embedding_layer, action_range).to(device)
+        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_layer, action_range).to(device)
         self.log_alpha = torch.zeros(1, dtype=torch.float32, requires_grad=True, device=device)
         print('Soft Q Network (1,2): ', self.soft_q_net1)
         print('Policy Network: ', self.policy_net)
@@ -506,7 +506,4 @@ if __name__ == '__main__':
                         
                 state_dict, reward_dict, done = env.step(action_dict)
                 # env.render()
-
-                episode_reward += reward_dict[key]
-
             print('Episode: ', eps, '| Episode Reward: ', episode_reward)
