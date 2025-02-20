@@ -39,71 +39,86 @@ parser.add_argument('--test', dest='test', action='store_true', default=False)
 parser.add_argument('--use_gradient_clip', type=bool, default=True, help="Trick 1:gradient clipping")
 parser.add_argument("--use_state_norm", type=bool, default=False, help="Trick 2:state normalization")
 parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3:reward normalization")
-parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
+parser.add_argument("--use_reward_scaling", type=bool, default=True, help="Trick 4:reward scaling")
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
-parser.add_argument("--plot_freq", type=int, default=10, help="frequency of plotting the result")
+parser.add_argument("--plot_freq", type=int, default=100, help="frequency of plotting the result")
 parser.add_argument('--weight_reg', type=float, default=0.1, help='weight of regularization')
+parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
+parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
 args = parser.parse_args()
 
 
-# class ReplayBuffer:
-#     def __init__(self, capacity):
-#         self.capacity = capacity
-#         self.buffer = []
-#         self.position = 0
-#
-#     def push(self, state, action, reward, next_state, done):
-#         if len(self.buffer) < self.capacity:
-#             self.buffer.append(None)
-#         self.buffer[self.position] = (state, action, reward, next_state, done)
-#         self.position = (self.position + 1) % self.capacity
-#
-#     def sample(self, batch_size):
-#         batch = random.sample(self.buffer, batch_size)
-#         state, action, reward, next_state, done = map(np.stack, zip(*batch))  # stack for each element
-#         '''
-#         the * serves as unpack: sum(a,b) <=> batch=(a,b), sum(*batch) ;
-#         zip: a=[1,2], b=[2,3], zip(a,b) => [(1, 2), (2, 3)] ;
-#         the map serves as mapping the function on each list element: map(square, [2,3]) => [4,9] ;
-#         np.stack((1,2)) => array([1, 2])
-#         '''
-#         return state, action, reward, next_state, done
-#
-#     def __len__(self):
-#         return len(self.buffer)
-
-
+import numpy as np
+import random
+# 用字典作为replaybuffer的数据结构，提高性能
 class ReplayBuffer:
-    def __init__(self, capacity):
+    def __init__(self, capacity, last_episode_step=5000):
         self.capacity = capacity
-        self.last_episode_step = 5000  # 估算每个 episode 的 step 数
-        self.buffer = []
+        self.last_episode_step = last_episode_step  # 预估每个 episode 的 step 数
+        self.buffer = {}
+        self.position = 0  # 用作 dict 的 key
 
     def push(self, state, action, reward, next_state, done):
-        """添加新数据，当 buffer 超出容量时，直接丢弃最早的一批数据"""
-        self.buffer.append((state, action, reward, next_state, done))
+        """添加新数据"""
+        self.buffer[self.position] = (state, action, reward, next_state, done)
+        self.position += 1
 
-        # 当 buffer 过大时，批量删除最早的 episode 数据
+        # 当 buffer 过大时，删除最早的 episode 数据
         if len(self.buffer) > self.capacity:
-            self.buffer = self.buffer[self.last_episode_step:]  # 直接删除最早的 `last_episode_step` 条数据
+            keys_to_remove = list(self.buffer.keys())[:self.last_episode_step]  # 找到最早的 N 条数据
+            for key in keys_to_remove:
+                del self.buffer[key]  # 直接删除，提高性能
 
     def sample(self, batch_size):
         """随机采样 batch_size 大小的数据，确保数据格式正确"""
-        batch = random.sample(self.buffer, batch_size)
+        batch = random.sample(list(self.buffer.values()), batch_size)  # 直接从 dict 的值采样
         states, actions, rewards, next_states, dones = zip(*batch)
 
         # 确保维度正确，防止 PyTorch 计算时出现广播错误
-        states = np.stack(states)  # (batch_size, state_dim)
-        actions = np.stack(actions)  # (batch_size, action_dim) 或 (batch_size,)
+        states = np.stack(states)                      # (batch_size, state_dim)
+        actions = np.stack(actions)                    # (batch_size, action_dim) 或 (batch_size,)
         rewards = np.array(rewards, dtype=np.float32)  # (batch_size,)
-        next_states = np.stack(next_states)  # (batch_size, state_dim)
-        dones = np.array(dones, dtype=np.float32)  # (batch_size,)
+        next_states = np.stack(next_states)            # (batch_size, state_dim)
+        dones = np.array(dones, dtype=np.float32)      # (batch_size,)
 
         return states, actions, rewards, next_states, dones
 
     def __len__(self):
         return len(self.buffer)
+
+
+# # 用列表作为 replaybuffer 的数据结构
+# class ReplayBuffer:
+#     def __init__(self, capacity):
+#         self.capacity = capacity
+#         self.last_episode_step = 5000  # 估算每个 episode 的 step 数
+#         self.buffer = []
+#
+#     def push(self, state, action, reward, next_state, done):
+#         """添加新数据，当 buffer 超出容量时，直接丢弃最早的一批数据"""
+#         self.buffer.append((state, action, reward, next_state, done))
+#
+#         # 当 buffer 过大时，批量删除最早的 episode 数据
+#         if len(self.buffer) > self.capacity:
+#             self.buffer = self.buffer[self.last_episode_step:]  # 直接删除最早的 `last_episode_step` 条数据
+#
+#     def sample(self, batch_size):
+#         """随机采样 batch_size 大小的数据，确保数据格式正确"""
+#         batch = random.sample(self.buffer, batch_size)
+#         states, actions, rewards, next_states, dones = zip(*batch)
+#
+#         # 确保维度正确，防止 PyTorch 计算时出现广播错误
+#         states = np.stack(states)  # (batch_size, state_dim)
+#         actions = np.stack(actions)  # (batch_size, action_dim) 或 (batch_size,)
+#         rewards = np.array(rewards, dtype=np.float32)  # (batch_size,)
+#         next_states = np.stack(next_states)  # (batch_size, state_dim)
+#         dones = np.array(dones, dtype=np.float32)  # (batch_size,)
+#
+#         return states, actions, rewards, next_states, dones
+#
+#     def __len__(self):
+#         return len(self.buffer)
 
 
 class EmbeddingLayer(nn.Module):
@@ -300,7 +315,8 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma
         alpha_optimizer.zero_grad()
         alpha_loss.backward(retain_graph=False)
         alpha_optimizer.step()
-        alpha = log_alpha.exp()
+        # 限制 alpha 的范围
+        alpha = min(max(0.01, log_alpha.exp().item()), args.maximum_alpha)  # 0.01 ≤ α ≤ 0.3
     else:
         alpha = 1.
         alpha_loss = 0
@@ -326,12 +342,12 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma
     soft_q_optimizer1.zero_grad()
     q_value_loss1.backward(retain_graph=False)
     if args.use_gradient_clip:
-        torch.nn.utils.clip_grad_norm_(soft_q_net1.parameters(), max_norm=1.0)  # ✅ Q 网络梯度裁剪
+        torch.nn.utils.clip_grad_norm_(soft_q_net1.parameters(), max_norm=1.0)  # Q 网络梯度裁剪
     soft_q_optimizer1.step()
     soft_q_optimizer2.zero_grad()
     q_value_loss2.backward(retain_graph=False)
     if args.use_gradient_clip:
-        torch.nn.utils.clip_grad_norm_(soft_q_net2.parameters(), max_norm=1.0)  # ✅ Q 网络梯度裁剪
+        torch.nn.utils.clip_grad_norm_(soft_q_net2.parameters(), max_norm=1.0)  # Q 网络梯度裁剪
     soft_q_optimizer2.step()
 
 # Training Value Function
@@ -343,7 +359,7 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma
     value_optimizer.zero_grad()
     value_loss.backward(retain_graph=False)
     if args.use_gradient_clip:
-        torch.nn.utils.clip_grad_norm_(value_net.parameters(), max_norm=1.0)  # ✅ V 网络梯度裁剪
+        torch.nn.utils.clip_grad_norm_(value_net.parameters(), max_norm=1.0)  # V 网络梯度裁剪
     value_optimizer.step()
 
 # Training Policy Function
@@ -367,7 +383,7 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma
     policy_optimizer.zero_grad()
     policy_loss.backward(retain_graph=False)
     if args.use_gradient_clip:
-        torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=1.0)  # ✅ Policy 网络梯度裁剪
+        torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=1.0)  # Policy 网络梯度裁剪
     policy_optimizer.step()
 
     # print('value_loss: ', value_loss)
@@ -385,6 +401,7 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma
     v_values.append(predicted_value.mean().item())
     reg_norms.append(args.weight_reg * reg_norm.item())
     log_probs.append(-log_prob.mean().item())
+    alpha_values.append(alpha.item())
 
     return predicted_new_q_value.mean()
 
@@ -395,23 +412,28 @@ def plot(rewards, training_steps):
     plt.subplot(1, 2, 1)
     plt.plot(rewards, label="Reward")
     plt.legend()
-    plt.title(f"Training Reward (weight_reg={args.weight_reg})")
+    plt.title(f"Training Reward (weight_reg={args.weight_reg}, auto_entropy={args.auto_entropy}, reward_scaling={args.use_reward_scaling}, maximum_alpha={args.maximum_alpha})")
     plt.subplot(1, 2, 2)
-    # 计算每个 episode 的平均 Q 值和 V 值
-    q_values_episode.append(np.mean(q_values[-training_steps:]))
-    v_values_episode.append(np.mean(v_values[-training_steps:]))
-    reg_norms_episode.append(np.mean(reg_norms[-training_steps:]))
-    log_probs_episode.append(np.mean(log_probs[-training_steps:]))
 
     plt.plot(q_values_episode, label="Q-Value")
     plt.plot(v_values_episode, label="V-Value")
     plt.plot(reg_norms_episode, label="Regularization Term")
     plt.plot(log_probs_episode, label="Log Prob")
+    plt.plot(alpha_values_episode, label="Alpha")
 
     plt.legend()
     plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
 
-    plt.savefig(f'sac_monitoring_weight_reg_{args.weight_reg}.png')
+    if not os.path.exists('pic'):
+        os.makedirs('pic')
+    # Create subdirectory based on parameters except weight_reg
+    subdir_name = f'auto_entropy_{args.auto_entropy}_reward_scaling_{args.use_reward_scaling}_maximum_alpha_{args.maximum_alpha}'
+    subdir_path = os.path.join('pic', subdir_name)
+    if not os.path.exists(subdir_path):
+        os.makedirs(subdir_path)
+
+    # Save the plot in the subdirectory
+    plt.savefig(os.path.join(subdir_path, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
     plt.close()
 
 DETERMINISTIC=False
@@ -494,17 +516,20 @@ frame_idx = 0
 batch_size = 512
 explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
-AUTO_ENTROPY = True
 DETERMINISTIC = False
 rewards = []    # 记录奖励
 q_values = []  # 记录 Q 值变化
 v_values = []  # 记录 V 值变化
 reg_norms = []  # 记录正则化项
 log_probs = []  # 记录 log_prob
+alpha_values = []  # 记录 alpha 值
+
 q_values_episode = []  # 记录每个 episode 的 Q 值
 v_values_episode = []  # 记录每个 episode 的 V 值
 reg_norms_episode = []  # 记录每个 episode 的正则化项
 log_probs_episode = []  # 记录每个 episode 的 log_prob
+alpha_values_episode = []  # 记录每个 episode 的 alpha 值
+
 model_path = './model/sac_v2'
 tracemalloc.start()
 
@@ -512,7 +537,7 @@ tracemalloc.start()
 if __name__ == '__main__':
     if args.train:
         # training loop
-        for eps in tqdm(range(max_episodes)):
+        for eps in range(max_episodes):
             if eps != 0:
                 env.reset()
             state_dict, reward_dict, _ = env.initialize_state(render=render)
@@ -590,15 +615,21 @@ if __name__ == '__main__':
                 if len(replay_buffer) > batch_size and len(replay_buffer) % args.training_freq == 0 and step_trained != step:
                     step_trained = step
                     for i in range(update_itr):
-                        _ = update(batch_size, reward_scale=10., auto_entropy=AUTO_ENTROPY, target_entropy=-1. * action_dim)
+                        _ = update(batch_size, reward_scale=10., auto_entropy=args.auto_entropy, target_entropy=-1. * action_dim)
                         training_steps += 1
 
                 if done:
                     replay_buffer.last_episode_step = episode_steps
                     break
-
+            # 计算每个 episode 的平均 Q 值和 V 值
             rewards.append(episode_reward)
-            if eps % args.plot_freq == 0:  # plot and model saving interval
+            q_values_episode.append(np.mean(q_values[-training_steps:]))
+            v_values_episode.append(np.mean(v_values[-training_steps:]))
+            reg_norms_episode.append(np.mean(reg_norms[-training_steps:]))
+            log_probs_episode.append(np.mean(log_probs[-training_steps:]))
+            alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
+
+            if eps % args.plot_freq == 0 and eps != 0:  # plot and model saving interval
                 plot(rewards, training_steps)
                 np.save('rewards', rewards)
                 torch.save(policy_net.state_dict(), model_path)
