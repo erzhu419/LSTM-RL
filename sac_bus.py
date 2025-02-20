@@ -3,15 +3,12 @@ Soft Actor-Critic version 1
 using state value function: 1 V net, 1 target V net, 2 Q net, 1 policy net
 paper: https://arxiv.org/pdf/1801.01290.pdf
 '''
+import gc
 
-
-import math
-import random
-
+import psutil,tracemalloc
 import gym
-import numpy as np
 import copy
-
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -21,14 +18,11 @@ from normalization import Normalization, RewardScaling, RunningMeanStd
 
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
-from matplotlib import animation
-from IPython.display import display
-from reacher import Reacher
 from env.sim import env_bus
 import os
 import argparse
-import time
-
+import numpy as np
+import random
 
 GPU = True
 device_idx = 0
@@ -42,59 +36,75 @@ print(device)
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
 parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
+parser.add_argument('--use_gradient_clip', type=bool, default=True, help="Trick 1:gradient clipping")
 parser.add_argument("--use_state_norm", type=bool, default=False, help="Trick 2:state normalization")
 parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3:reward normalization")
 parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
-
+parser.add_argument("--plot_freq", type=int, default=10, help="frequency of plotting the result")
+parser.add_argument('--weight_reg', type=float, default=0.1, help='weight of regularization')
 args = parser.parse_args()
+
+
+# class ReplayBuffer:
+#     def __init__(self, capacity):
+#         self.capacity = capacity
+#         self.buffer = []
+#         self.position = 0
+#
+#     def push(self, state, action, reward, next_state, done):
+#         if len(self.buffer) < self.capacity:
+#             self.buffer.append(None)
+#         self.buffer[self.position] = (state, action, reward, next_state, done)
+#         self.position = (self.position + 1) % self.capacity
+#
+#     def sample(self, batch_size):
+#         batch = random.sample(self.buffer, batch_size)
+#         state, action, reward, next_state, done = map(np.stack, zip(*batch))  # stack for each element
+#         '''
+#         the * serves as unpack: sum(a,b) <=> batch=(a,b), sum(*batch) ;
+#         zip: a=[1,2], b=[2,3], zip(a,b) => [(1, 2), (2, 3)] ;
+#         the map serves as mapping the function on each list element: map(square, [2,3]) => [4,9] ;
+#         np.stack((1,2)) => array([1, 2])
+#         '''
+#         return state, action, reward, next_state, done
+#
+#     def __len__(self):
+#         return len(self.buffer)
 
 
 class ReplayBuffer:
     def __init__(self, capacity):
         self.capacity = capacity
+        self.last_episode_step = 5000  # 估算每个 episode 的 step 数
         self.buffer = []
-        self.position = 0
-    
+
     def push(self, state, action, reward, next_state, done):
-        if len(self.buffer) < self.capacity:
-            self.buffer.append(None)
-        self.buffer[self.position] = (state, action, reward, next_state, done)
-        self.position = (self.position + 1) % self.capacity
-    
+        """添加新数据，当 buffer 超出容量时，直接丢弃最早的一批数据"""
+        self.buffer.append((state, action, reward, next_state, done))
+
+        # 当 buffer 过大时，批量删除最早的 episode 数据
+        if len(self.buffer) > self.capacity:
+            self.buffer = self.buffer[self.last_episode_step:]  # 直接删除最早的 `last_episode_step` 条数据
+
     def sample(self, batch_size):
+        """随机采样 batch_size 大小的数据，确保数据格式正确"""
         batch = random.sample(self.buffer, batch_size)
-        state, action, reward, next_state, done = map(np.stack, zip(*batch)) # stack for each element
-        ''' 
-        the * serves as unpack: sum(a,b) <=> batch=(a,b), sum(*batch) ;
-        zip: a=[1,2], b=[2,3], zip(a,b) => [(1, 2), (2, 3)] ;
-        the map serves as mapping the function on each list element: map(square, [2,3]) => [4,9] ;
-        np.stack((1,2)) => array([1, 2])
-        '''
-        return state, action, reward, next_state, done
-    
+        states, actions, rewards, next_states, dones = zip(*batch)
+
+        # 确保维度正确，防止 PyTorch 计算时出现广播错误
+        states = np.stack(states)  # (batch_size, state_dim)
+        actions = np.stack(actions)  # (batch_size, action_dim) 或 (batch_size,)
+        rewards = np.array(rewards, dtype=np.float32)  # (batch_size,)
+        next_states = np.stack(next_states)  # (batch_size, state_dim)
+        dones = np.array(dones, dtype=np.float32)  # (batch_size,)
+
+        return states, actions, rewards, next_states, dones
+
     def __len__(self):
         return len(self.buffer)
 
-class NormalizedActions(gym.ActionWrapper):
-    def _action(self, action):
-        low  = self.action_space.low
-        high = self.action_space.high
-        
-        action = low + (action + 1.0) * 0.5 * (high - low)
-        action = np.clip(action, low, high)
-        
-        return action
-
-    def _reverse_action(self, action):
-        low  = self.action_space.low
-        high = self.action_space.high
-        
-        action = 2 * (action - low) / (high - low) - 1
-        action = np.clip(action, low, high)
-        
-        return action
 
 class EmbeddingLayer(nn.Module):
     def __init__(self, cat_code_dict, cat_cols):
@@ -132,7 +142,7 @@ class ValueNetwork(nn.Module):
         self.linear3.bias.data.uniform_(-init_w, init_w)
 
         self.activation = activation
-        
+
     def forward(self, state):
         cat_tensor = state[:, :len(self.embedding_layer.cat_cols)]  # Assuming first columns are categorical
         num_tensor = state[:, len(self.embedding_layer.cat_cols):]  # The rest are numerical
@@ -145,8 +155,8 @@ class ValueNetwork(nn.Module):
         x = self.activation(self.linear2(x))
         x = self.linear3(x)
         return x
-        
-        
+
+
 class SoftQNetwork(nn.Module):
     def __init__(self, num_inputs, num_actions, hidden_size, embedding_layer, activation=F.relu, init_w=3e-3):
         super(SoftQNetwork, self).__init__()
@@ -155,12 +165,12 @@ class SoftQNetwork(nn.Module):
         self.linear1 = nn.Linear(num_inputs + num_actions, hidden_size)
         self.linear2 = nn.Linear(hidden_size, hidden_size)
         self.linear3 = nn.Linear(hidden_size, 1)
-        
+
         self.linear3.weight.data.uniform_(-init_w, init_w)
         self.linear3.bias.data.uniform_(-init_w, init_w)
 
         self.activation = activation
-        
+
     def forward(self, state, action):
         cat_tensor = state[:, :len(self.embedding_layer.cat_cols)]  # Assuming first columns are categorical
         num_tensor = state[:, len(self.embedding_layer.cat_cols):]  # The rest are numerical
@@ -174,8 +184,8 @@ class SoftQNetwork(nn.Module):
         x = self.activation(self.linear2(x))
         x = self.linear3(x)
         return x
-        
-        
+
+
 class PolicyNetwork(nn.Module):
     def __init__(self, num_inputs, num_actions, hidden_size, embedding_layer, action_range, activation=F.relu, init_w=3e-3, log_std_min=-20, log_std_max=2):
         super(PolicyNetwork, self).__init__()
@@ -183,7 +193,7 @@ class PolicyNetwork(nn.Module):
         self.embedding_layer = embedding_layer
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
-        
+
         self.linear1 = nn.Linear(num_inputs, hidden_size)
         self.linear2 = nn.Linear(hidden_size, hidden_size)
         self.linear3 = nn.Linear(hidden_size, hidden_size)
@@ -192,7 +202,7 @@ class PolicyNetwork(nn.Module):
         self.mean_linear = nn.Linear(hidden_size, num_actions)
         self.mean_linear.weight.data.uniform_(-init_w, init_w)
         self.mean_linear.bias.data.uniform_(-init_w, init_w)
-        
+
         self.log_std_linear = nn.Linear(hidden_size, num_actions)
         self.log_std_linear.weight.data.uniform_(-init_w, init_w)
         self.log_std_linear.bias.data.uniform_(-init_w, init_w)
@@ -201,7 +211,7 @@ class PolicyNetwork(nn.Module):
         self.num_actions = num_actions
         self.activation = activation
 
-        
+
     def forward(self, state):
 
         cat_tensor = state[:, :len(self.embedding_layer.cat_cols)]
@@ -219,9 +229,9 @@ class PolicyNetwork(nn.Module):
         # mean    = F.leaky_relu(self.mean_linear(x))
         log_std = self.log_std_linear(x)
         log_std = torch.clamp(log_std, self.log_std_min, self.log_std_max)
-        
+
         return mean, log_std
-    
+
     def evaluate(self, state, epsilon=1e-6):
         '''
         generate sampled action with state as input wrt the policy network;
@@ -229,9 +239,9 @@ class PolicyNetwork(nn.Module):
         '''
         mean, log_std = self.forward(state)
         std = log_std.exp() # no clip in evaluation, clip affects gradients flow
-        
+
         normal = Normal(0, 1)
-        z      = normal.sample(mean.shape) 
+        z      = normal.sample(mean.shape)
         action_0 = torch.tanh(mean + std*z.to(device)) # TanhNormal distribution as actions; reparameterization trick
         action = self.action_range/2 *action_0 + self.action_range/2
         ''' stochastic evaluation '''
@@ -245,18 +255,18 @@ class PolicyNetwork(nn.Module):
          '''
         log_prob = log_prob.sum(dim=-1, keepdim=True)
         return action, log_prob, z, mean, log_std
-        
-    
+
+
     def get_action(self, state, deterministic):
         state = torch.FloatTensor(state).unsqueeze(0).to(device)
         mean, log_std = self.forward(state)
         std = log_std.exp()
-        
+
         normal = Normal(0, 1)
         z      = normal.sample(mean.shape).to(device)
         action = self.action_range/2 * torch.tanh(mean + std*z) + self.action_range/2
         action = self.action_range/2 * torch.tanh(mean).detach().cpu().numpy()[0] + self.action_range/2 if deterministic else action.detach().cpu().numpy()[0]
-        
+
         return action
 
 
@@ -265,7 +275,7 @@ class PolicyNetwork(nn.Module):
         return (self.action_range*a).numpy()
 
 
-def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-2, gamma=0.99,soft_tau=1e-2):
+def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma=0.99,soft_tau=1e-2):
 
     state, action, reward, next_state, done = replay_buffer.sample(batch_size)
     # print('sample:', state, action,  reward, done)
@@ -288,7 +298,7 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-2, gamma
         alpha_loss = -(log_alpha * (log_prob + target_entropy).detach()).mean()
         # print('alpha loss: ',alpha_loss)
         alpha_optimizer.zero_grad()
-        alpha_loss.backward()
+        alpha_loss.backward(retain_graph=False)
         alpha_optimizer.step()
         alpha = log_alpha.exp()
     else:
@@ -314,44 +324,52 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-2, gamma
 
 
     soft_q_optimizer1.zero_grad()
-    q_value_loss1.backward()
+    q_value_loss1.backward(retain_graph=False)
+    if args.use_gradient_clip:
+        torch.nn.utils.clip_grad_norm_(soft_q_net1.parameters(), max_norm=1.0)  # ✅ Q 网络梯度裁剪
     soft_q_optimizer1.step()
     soft_q_optimizer2.zero_grad()
-    q_value_loss2.backward()
+    q_value_loss2.backward(retain_graph=False)
+    if args.use_gradient_clip:
+        torch.nn.utils.clip_grad_norm_(soft_q_net2.parameters(), max_norm=1.0)  # ✅ Q 网络梯度裁剪
     soft_q_optimizer2.step()
 
 # Training Value Function
     predicted_new_q_value = torch.min(soft_q_net1(state, new_action),soft_q_net2(state, new_action))
-    target_value_func = predicted_new_q_value - alpha * log_prob # for stochastic training, it equals to expectation over action
-    value_loss = value_criterion(predicted_value, target_value_func.detach()) + weight_reg * reg_norm
+    target_value_func = predicted_new_q_value - alpha * log_prob - args.weight_reg * reg_norm# for stochastic training, it equals to expectation over action
+    value_loss = value_criterion(predicted_value , target_value_func.detach())
 
-    
+
     value_optimizer.zero_grad()
-    value_loss.backward()
+    value_loss.backward(retain_graph=False)
+    if args.use_gradient_clip:
+        torch.nn.utils.clip_grad_norm_(value_net.parameters(), max_norm=1.0)  # ✅ V 网络梯度裁剪
     value_optimizer.step()
 
 # Training Policy Function
     ''' implementation 1 '''
-    policy_loss = (alpha * log_prob - predicted_new_q_value).mean() - weight_reg * reg_norm
+    policy_loss = (alpha * log_prob - predicted_new_q_value).mean() + args.weight_reg * reg_norm
     ''' implementation 2 '''
-    # policy_loss = (alpha * log_prob - soft_q_net1(state, new_action)).mean() - weight_reg * reg_norm  # Openai Spinning Up implementation
+    # policy_loss = (alpha * log_prob - soft_q_net1(state, new_action)).mean() - args.weight_reg * reg_norm  # Openai Spinning Up implementation
     ''' implementation 3 '''
-    # policy_loss = (alpha * log_prob - (predicted_new_q_value - predicted_value.detach())).mean() - weight_reg * reg_norm # max Advantage instead of Q to prevent the Q-value drifted high
+    # policy_loss = (alpha * log_prob - (predicted_new_q_value - predicted_value.detach())).mean() - args.weight_reg * reg_norm # max Advantage instead of Q to prevent the Q-value drifted high
 
     ''' implementation 4 '''  # version of github/higgsfield
     # log_prob_target=predicted_new_q_value - predicted_value
-    # policy_loss = (log_prob * (log_prob - log_prob_target).detach()).mean() - weight_reg * reg_norm
+    # policy_loss = (log_prob * (log_prob - log_prob_target).detach()).mean() - args.weight_reg * reg_norm
     # mean_lambda=1e-3
     # std_lambda=1e-3
     # mean_loss = mean_lambda * mean.pow(2).mean()
     # std_loss = std_lambda * log_std.pow(2).mean()
-    # policy_loss += mean_loss + std_loss - weight_reg * reg_norm
+    # policy_loss += mean_loss + std_loss - args.weight_reg * reg_norm
 
 
     policy_optimizer.zero_grad()
-    policy_loss.backward()
+    policy_loss.backward(retain_graph=False)
+    if args.use_gradient_clip:
+        torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=1.0)  # ✅ Policy 网络梯度裁剪
     policy_optimizer.step()
-    
+
     # print('value_loss: ', value_loss)
     # print('q loss: ', q_value_loss1, q_value_loss2)
     # print('policy loss: ', policy_loss )
@@ -362,19 +380,41 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-2, gamma
         target_param.data.copy_(  # copy data value into target parameters
             target_param.data * (1.0 - soft_tau) + param.data * soft_tau
         )
+    # 记录 Q 值和 V 值用于绘图
+    q_values.append(predicted_new_q_value.mean().item())
+    v_values.append(predicted_value.mean().item())
+    reg_norms.append(args.weight_reg * reg_norm.item())
+    log_probs.append(-log_prob.mean().item())
+
     return predicted_new_q_value.mean()
 
 
-def plot(rewards):
+def plot(rewards, training_steps):
     clear_output(True)
-    plt.figure(figsize=(20,5))
-    plt.plot(rewards)
-    plt.savefig('sac.png')
-    # plt.show()
+    plt.figure(figsize=(20, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(rewards, label="Reward")
+    plt.legend()
+    plt.title(f"Training Reward (weight_reg={args.weight_reg})")
+    plt.subplot(1, 2, 2)
+    # 计算每个 episode 的平均 Q 值和 V 值
+    q_values_episode.append(np.mean(q_values[-training_steps:]))
+    v_values_episode.append(np.mean(v_values[-training_steps:]))
+    reg_norms_episode.append(np.mean(reg_norms[-training_steps:]))
+    log_probs_episode.append(np.mean(log_probs[-training_steps:]))
 
+    plt.plot(q_values_episode, label="Q-Value")
+    plt.plot(v_values_episode, label="V-Value")
+    plt.plot(reg_norms_episode, label="Regularization Term")
+    plt.plot(log_probs_episode, label="Log Prob")
+
+    plt.legend()
+    plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
+
+    plt.savefig(f'sac_monitoring_weight_reg_{args.weight_reg}.png')
+    plt.close()
 
 DETERMINISTIC=False
-weight_reg = 0.1
 
 debug = False
 render = False
@@ -417,7 +457,7 @@ print('Policy Network: ', policy_net)
 
 for target_param, param in zip(target_value_net.parameters(), value_net.parameters()):
     target_param.data.copy_(param.data)
-    
+
 
 value_criterion  = nn.MSELoss()
 soft_q_criterion1 = nn.MSELoss()
@@ -434,7 +474,7 @@ soft_q_optimizer2 = optim.Adam(soft_q_net2.parameters(), lr=soft_q_lr)
 policy_optimizer = optim.Adam(policy_net.parameters(), lr=policy_lr)
 alpha_optimizer = optim.Adam([log_alpha], lr=alpha_lr)
 
-replay_buffer_size = int(1e6)
+replay_buffer_size = int(1e5)
 replay_buffer = ReplayBuffer(replay_buffer_size)
 
 # 初始化RunningMeanStd
@@ -451,25 +491,35 @@ step = 0
 step_trained = 0
 max_episodes = 1000
 frame_idx = 0
-batch_size = 2048
+batch_size = 512
 explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
 AUTO_ENTROPY = True
 DETERMINISTIC = False
-rewards = []
+rewards = []    # 记录奖励
+q_values = []  # 记录 Q 值变化
+v_values = []  # 记录 V 值变化
+reg_norms = []  # 记录正则化项
+log_probs = []  # 记录 log_prob
+q_values_episode = []  # 记录每个 episode 的 Q 值
+v_values_episode = []  # 记录每个 episode 的 V 值
+reg_norms_episode = []  # 记录每个 episode 的正则化项
+log_probs_episode = []  # 记录每个 episode 的 log_prob
 model_path = './model/sac_v2'
+tracemalloc.start()
 
 
 if __name__ == '__main__':
     if args.train:
         # training loop
-        for eps in range(max_episodes):
+        for eps in tqdm(range(max_episodes)):
             if eps != 0:
                 env.reset()
             state_dict, reward_dict, _ = env.initialize_state(render=render)
 
             done = False
             episode_steps = 0
+            training_steps = 0
             action_dict = {key: None for key in list(range(env.max_agent_num))}
             action_dict_zero = {key: 0 for key in list(range(env.max_agent_num))}  # 全0的action，用于查看reward的上限
             action_dict_twenty = {key: 20 for key in list(range(env.max_agent_num))}  # 全20的action，用于查看reward的上限
@@ -485,15 +535,14 @@ if __name__ == '__main__':
                     if len(state_dict[key]) == 1:
                         if action_dict[key] is None:
                             if args.use_state_norm:
-                                state_input = state_norm(copy.deepcopy(np.array(state_dict[key][0])))
+                                state_input = state_norm(np.array(state_dict[key][0]))
                             else:
                                 state_input = np.array(state_dict[key][0])
-                            a = policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
 
-                            action_dict[key] = a
+                            action_dict[key] = policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
 
                             if key == 2 and debug:
-                                print('From Algorithm, when no state, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', a, ', reward: ', reward_dict[key])
+                                print('From Algorithm, when no state, Bus id: ', key, ' , station id is: ', state_dict[key][0][1], ' ,current time is: ', env.current_time, ' ,action is: ', action_dict[key], ', reward: ', reward_dict[key])
                                 print()
 
                     elif len(state_dict[key]) == 2:
@@ -502,8 +551,8 @@ if __name__ == '__main__':
                             # print(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], prob_dict[key], v_dict[key], done)
 
                             if args.use_state_norm:
-                                state = state_norm(copy.deepcopy(np.array(state_dict[key][0])))
-                                next_state = state_norm(copy.deepcopy(np.array(state_dict[key][1])))
+                                state = state_norm(np.array(state_dict[key][0]))
+                                next_state = state_norm(np.array(state_dict[key][1]))
                             else:
                                 state = np.array(state_dict[key][0])
                                 next_state = np.array(state_dict[key][1])
@@ -525,7 +574,7 @@ if __name__ == '__main__':
                             #     print('Bus id: ',key,' , station id is: ' , state_dict[key][1][1],' ,current time is: ', env.current_time)
                         state_dict[key] = state_dict[key][1:]
                         if args.use_state_norm:
-                            state_input = state_norm(copy.deepcopy(np.array(state_dict[key][0])))
+                            state_input = state_norm(np.array(state_dict[key][0]))
                         else:
                             state_input = np.array(state_dict[key][0])
 
@@ -542,16 +591,23 @@ if __name__ == '__main__':
                     step_trained = step
                     for i in range(update_itr):
                         _ = update(batch_size, reward_scale=10., auto_entropy=AUTO_ENTROPY, target_entropy=-1. * action_dim)
+                        training_steps += 1
 
                 if done:
+                    replay_buffer.last_episode_step = episode_steps
                     break
 
-            if eps % 20 == 0 and eps > 0:  # plot and model saving interval
-                plot(rewards)
+            rewards.append(episode_reward)
+            if eps % args.plot_freq == 0:  # plot and model saving interval
+                plot(rewards, training_steps)
                 np.save('rewards', rewards)
                 torch.save(policy_net.state_dict(), model_path)
-            print('Episode: ', eps, '| Episode Reward: ', episode_reward)
-            rewards.append(episode_reward)
+                # snapshot = tracemalloc.take_snapshot()
+                # for stat in snapshot.statistics('lineno')[:10]:
+                #     print(stat)  # 显示内存占用最大的10行
+            replay_buffer_usage = len(replay_buffer) / replay_buffer_size * 100
+
+            print(f"Episode: {eps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
         torch.save(policy_net.state_dict(), model_path)
 
     if args.test:
