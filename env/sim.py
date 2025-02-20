@@ -1,6 +1,6 @@
 import json
 import time
-
+import numpy as np
 from env.timetable import Timetable
 from env.bus import Bus
 from env.route import Route
@@ -268,6 +268,14 @@ class env_bus(object):
         unhealthy_all = [bus.is_unhealthy for bus in self.bus_all]
         if sum([trip.launched for trip in self.timetables]) == len(self.timetables) and sum([bus.on_route for bus in self.bus_all]) == 0:
             self.done = True
+            for bus in self.bus_all:
+                bus.trajectory.clear()  # 清空轨迹列表
+                bus.trajectory_dict.clear()  # 清空轨迹字典
+                del bus.trajectory  # 强制删除对象，帮助 GC
+                del bus.trajectory_dict
+            for station in self.stations:
+                station.waiting_passengers = np.array([])
+                station.total_passenger.clear()
         else:
             self.done = False
 
