@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MAX_PARALLEL_JOBS=16
+MAX_PARALLEL_JOBS=8
 WEIGHT_REG_VALUES="0 1e-5 1e-4 1e-3 1e-2 2e-2 3e-2 4e-2 5e-2 6e-2 7e-2 8e-2 9e-2 1e-1"
 
 # 定义清理函数

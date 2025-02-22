@@ -39,13 +39,14 @@ parser.add_argument('--test', dest='test', action='store_true', default=False)
 parser.add_argument('--use_gradient_clip', type=bool, default=True, help="Trick 1:gradient clipping")
 parser.add_argument("--use_state_norm", type=bool, default=False, help="Trick 2:state normalization")
 parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3:reward normalization")
-parser.add_argument("--use_reward_scaling", type=bool, default=True, help="Trick 4:reward scaling")
+parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
-parser.add_argument("--plot_freq", type=int, default=100, help="frequency of plotting the result")
+parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
 parser.add_argument('--weight_reg', type=float, default=0.1, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
 parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
+parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
 args = parser.parse_args()
 
 
@@ -290,7 +291,7 @@ class PolicyNetwork(nn.Module):
         return (self.action_range*a).numpy()
 
 
-def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma=0.99,soft_tau=1e-2):
+def update(batch_size, training_steps, reward_scale, auto_entropy=True, target_entropy=-1, gamma=0.99,soft_tau=1e-2):
 
     state, action, reward, next_state, done = replay_buffer.sample(batch_size)
     # print('sample:', state, action,  reward, done)
@@ -316,7 +317,7 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma
         alpha_loss.backward(retain_graph=False)
         alpha_optimizer.step()
         # 限制 alpha 的范围
-        alpha = min(max(0.01, log_alpha.exp().item()), args.maximum_alpha)  # 0.01 ≤ α ≤ 0.3
+        alpha = min(args.maximum_alpha, log_alpha.exp().item())
     else:
         alpha = 1.
         alpha_loss = 0
@@ -362,29 +363,30 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma
         torch.nn.utils.clip_grad_norm_(value_net.parameters(), max_norm=1.0)  # V 网络梯度裁剪
     value_optimizer.step()
 
-# Training Policy Function
-    ''' implementation 1 '''
-    policy_loss = (alpha * log_prob - predicted_new_q_value).mean() + args.weight_reg * reg_norm
-    ''' implementation 2 '''
-    # policy_loss = (alpha * log_prob - soft_q_net1(state, new_action)).mean() - args.weight_reg * reg_norm  # Openai Spinning Up implementation
-    ''' implementation 3 '''
-    # policy_loss = (alpha * log_prob - (predicted_new_q_value - predicted_value.detach())).mean() - args.weight_reg * reg_norm # max Advantage instead of Q to prevent the Q-value drifted high
+    if training_steps % 2 == 0:
+    #   Training Policy Function
+        ''' implementation 1 '''
+        policy_loss = (alpha * log_prob - predicted_new_q_value).mean() + args.weight_reg * reg_norm
+        ''' implementation 2 '''
+        # policy_loss = (alpha * log_prob - soft_q_net1(state, new_action)).mean() - args.weight_reg * reg_norm  # Openai Spinning Up implementation
+        ''' implementation 3 '''
+        # policy_loss = (alpha * log_prob - (predicted_new_q_value - predicted_value.detach())).mean() - args.weight_reg * reg_norm # max Advantage instead of Q to prevent the Q-value drifted high
 
-    ''' implementation 4 '''  # version of github/higgsfield
-    # log_prob_target=predicted_new_q_value - predicted_value
-    # policy_loss = (log_prob * (log_prob - log_prob_target).detach()).mean() - args.weight_reg * reg_norm
-    # mean_lambda=1e-3
-    # std_lambda=1e-3
-    # mean_loss = mean_lambda * mean.pow(2).mean()
-    # std_loss = std_lambda * log_std.pow(2).mean()
-    # policy_loss += mean_loss + std_loss - args.weight_reg * reg_norm
+        ''' implementation 4 '''  # version of github/higgsfield
+        # log_prob_target=predicted_new_q_value - predicted_value
+        # policy_loss = (log_prob * (log_prob - log_prob_target).detach()).mean() - args.weight_reg * reg_norm
+        # mean_lambda=1e-3
+        # std_lambda=1e-3
+        # mean_loss = mean_lambda * mean.pow(2).mean()
+        # std_loss = std_lambda * log_std.pow(2).mean()
+        # policy_loss += mean_loss + std_loss - args.weight_reg * reg_norm
 
 
-    policy_optimizer.zero_grad()
-    policy_loss.backward(retain_graph=False)
-    if args.use_gradient_clip:
-        torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=1.0)  # Policy 网络梯度裁剪
-    policy_optimizer.step()
+        policy_optimizer.zero_grad()
+        policy_loss.backward(retain_graph=False)
+        if args.use_gradient_clip:
+            torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=1.0)  # Policy 网络梯度裁剪
+        policy_optimizer.step()
 
     # print('value_loss: ', value_loss)
     # print('q loss: ', q_value_loss1, q_value_loss2)
@@ -401,12 +403,12 @@ def update(batch_size, reward_scale, auto_entropy=True, target_entropy=-1, gamma
     v_values.append(predicted_value.mean().item())
     reg_norms.append(args.weight_reg * reg_norm.item())
     log_probs.append(-log_prob.mean().item())
-    alpha_values.append(alpha.item())
+    alpha_values.append(alpha)
 
     return predicted_new_q_value.mean()
 
 
-def plot(rewards, training_steps):
+def plot(rewards):
     clear_output(True)
     plt.figure(figsize=(20, 5))
     plt.subplot(1, 2, 1)
@@ -496,7 +498,7 @@ soft_q_optimizer2 = optim.Adam(soft_q_net2.parameters(), lr=soft_q_lr)
 policy_optimizer = optim.Adam(policy_net.parameters(), lr=policy_lr)
 alpha_optimizer = optim.Adam([log_alpha], lr=alpha_lr)
 
-replay_buffer_size = int(1e5)
+replay_buffer_size = int(1e6)
 replay_buffer = ReplayBuffer(replay_buffer_size)
 
 # 初始化RunningMeanStd
@@ -510,10 +512,9 @@ reward_scaling = RewardScaling(shape=1, gamma=0.99)
 
 # hyper-parameters
 step = 0
-step_trained = 0
+step_trained = 0 # 因为同一个step可能会有多个数据，所以需要一个额外的计数器
 max_episodes = 1000
 frame_idx = 0
-batch_size = 512
 explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
 DETERMINISTIC = False
@@ -544,7 +545,7 @@ if __name__ == '__main__':
 
             done = False
             episode_steps = 0
-            training_steps = 0
+            training_steps = 0 # 记录已经训练了多少次
             action_dict = {key: None for key in list(range(env.max_agent_num))}
             action_dict_zero = {key: 0 for key in list(range(env.max_agent_num))}  # 全0的action，用于查看reward的上限
             action_dict_twenty = {key: 20 for key in list(range(env.max_agent_num))}  # 全20的action，用于查看reward的上限
@@ -612,10 +613,11 @@ if __name__ == '__main__':
                             print()
 
                 state_dict, reward_dict, done = env.step(action_dict, debug=debug, render=render)
-                if len(replay_buffer) > batch_size and len(replay_buffer) % args.training_freq == 0 and step_trained != step:
+                if len(replay_buffer) > args.batch_size and len(replay_buffer) % args.training_freq == 0 and step_trained != step:
                     step_trained = step
                     for i in range(update_itr):
-                        _ = update(batch_size, reward_scale=10., auto_entropy=args.auto_entropy, target_entropy=-1. * action_dim)
+                        _ = update(args.batch_size, training_steps, reward_scale=10., auto_entropy=args.auto_entropy, target_entropy=-1. * action_dim)
+
                         training_steps += 1
 
                 if done:
@@ -629,8 +631,8 @@ if __name__ == '__main__':
             log_probs_episode.append(np.mean(log_probs[-training_steps:]))
             alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
 
-            if eps % args.plot_freq == 0 and eps != 0:  # plot and model saving interval
-                plot(rewards, training_steps)
+            if eps % args.plot_freq == 0:  # plot and model saving interval
+                plot(rewards)
                 np.save('rewards', rewards)
                 torch.save(policy_net.state_dict(), model_path)
                 # snapshot = tracemalloc.take_snapshot()
