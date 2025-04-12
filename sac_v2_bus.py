@@ -5,29 +5,24 @@ add alpha loss compared with version 1
 paper: https://arxiv.org/pdf/1812.05905.pdf
 '''
 
-import math
-import random
-import copy
+import psutil,tracemalloc
 import gym
-import numpy as np
-
-from normalization import Normalization, RewardScaling, RunningMeanStd
+import copy
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Normal
+from normalization import Normalization, RewardScaling, RunningMeanStd
 
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
-from matplotlib import animation
-from IPython.display import display
-from reacher import Reacher
 from env.sim import env_bus
 import os
-
 import argparse
-import time
+import numpy as np
+import random
 
 GPU = True
 device_idx = 0
@@ -40,38 +35,51 @@ print(device)
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
 parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
+parser.add_argument('--use_gradient_clip', type=bool, default=True, help="Trick 1:gradient clipping")
 parser.add_argument("--use_state_norm", type=bool, default=False, help="Trick 2:state normalization")
 parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3:reward normalization")
 parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
-
-
+parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
+parser.add_argument('--weight_reg', type=float, default=0.1, help='weight of regularization')
+parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
+parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
+parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
 args = parser.parse_args()
 
 
 class ReplayBuffer:
-    def __init__(self, capacity):
+    def __init__(self, capacity, last_episode_step=5000):
         self.capacity = capacity
-        self.buffer = []
-        self.position = 0
+        self.last_episode_step = last_episode_step  # 预估每个 episode 的 step 数
+        self.buffer = {}
+        self.position = 0  # 用作 dict 的 key
 
     def push(self, state, action, reward, next_state, done):
-        if len(self.buffer) < self.capacity:
-            self.buffer.append(None)
+        """添加新数据"""
         self.buffer[self.position] = (state, action, reward, next_state, done)
-        self.position = int((self.position + 1) % self.capacity)  # as a ring buffer
+        self.position += 1
+
+        # 当 buffer 过大时，删除最早的 episode 数据
+        if len(self.buffer) > self.capacity:
+            keys_to_remove = list(self.buffer.keys())[:self.last_episode_step]  # 找到最早的 N 条数据
+            for key in keys_to_remove:
+                del self.buffer[key]  # 直接删除，提高性能
 
     def sample(self, batch_size):
-        batch = random.sample(self.buffer, batch_size)
-        state, action, reward, next_state, done = map(np.stack, zip(*batch))  # stack for each element
-        ''' 
-        the * serves as unpack: sum(a,b) <=> batch=(a,b), sum(*batch) ;
-        zip: a=[1,2], b=[2,3], zip(a,b) => [(1, 2), (2, 3)] ;
-        the map serves as mapping the function on each list element: map(square, [2,3]) => [4,9] ;
-        np.stack((1,2)) => array([1, 2])
-        '''
-        return state, action, reward, next_state, done
+        """随机采样 batch_size 大小的数据，确保数据格式正确"""
+        batch = random.sample(list(self.buffer.values()), batch_size)  # 直接从 dict 的值采样
+        states, actions, rewards, next_states, dones = zip(*batch)
+
+        # 确保维度正确，防止 PyTorch 计算时出现广播错误
+        states = np.stack(states)                      # (batch_size, state_dim)
+        actions = np.stack(actions)                    # (batch_size, action_dim) 或 (batch_size,)
+        rewards = np.array(rewards, dtype=np.float32)  # (batch_size,)
+        next_states = np.stack(next_states)            # (batch_size, state_dim)
+        dones = np.array(dones, dtype=np.float32)      # (batch_size,)
+
+        return states, actions, rewards, next_states, dones
 
     def __len__(self):
         return len(self.buffer)
@@ -269,7 +277,7 @@ class SAC_Trainer():
         self.state_norm = Normalization(num_categorical=self.num_cat_features, num_numerical=self.num_cont_features, running_ms=running_ms)
         self.reward_scaling = RewardScaling(shape=1, gamma=0.99)
     
-    def update(self, batch_size, reward_scale=10., auto_entropy=True, target_entropy=-2, gamma=0.99, soft_tau=1e-2):
+    def update(self, batch_size,training_steps, reward_scale=10., auto_entropy=True, target_entropy=-2, gamma=0.99, soft_tau=1e-2):
         state, action, reward, next_state, done = self.replay_buffer.sample(batch_size)
         # print('sample:', state, action,  reward, done)
 
@@ -290,36 +298,61 @@ class SAC_Trainer():
             alpha_loss = -(self.log_alpha * (log_prob + target_entropy).detach()).mean()
             # print('alpha loss: ',alpha_loss)
             self.alpha_optimizer.zero_grad()
-            alpha_loss.backward()
+            alpha_loss.backward(retain_graph=False)
             self.alpha_optimizer.step()
-            self.alpha = self.log_alpha.exp()
+            self.alpha = min(args.maximum_alpha, self.log_alpha.exp().item())
         else:
             self.alpha = 1.
             alpha_loss = 0
 
+        # 计算 reg_norm
+        reg_norm1, weight_norm1, bias_norm1 = 0, [], []
+        reg_norm2, weight_norm2, bias_norm2 = 0, [], []
+
+        for layer in self.target_soft_q_net1.children():
+            if isinstance(layer, nn.Linear):
+                weight_norm1.append(torch.norm(layer.state_dict()['weight']) ** 2)
+                bias_norm1.append(torch.norm(layer.state_dict()['bias']) ** 2)
+
+        reg_norm1 = torch.sqrt(torch.sum(torch.stack(weight_norm1)) + torch.sum(torch.stack(bias_norm1[0:-1])))
+
+        for layer in self.target_soft_q_net2.children():
+            if isinstance(layer, nn.Linear):
+                weight_norm2.append(torch.norm(layer.state_dict()['weight']) ** 2)
+                bias_norm2.append(torch.norm(layer.state_dict()['bias']) ** 2)
+
+        reg_norm2 = torch.sqrt(torch.sum(torch.stack(weight_norm2)) + torch.sum(torch.stack(bias_norm2[0:-1])))
+
+
         # Training Q Function
-        target_q_min = torch.min(self.target_soft_q_net1(next_state, new_next_action), self.target_soft_q_net2(next_state, new_next_action)) - self.alpha * next_log_prob
+        target_q_min = torch.min(self.target_soft_q_net1(next_state, new_next_action) - args.weight_reg * reg_norm1, self.target_soft_q_net2(next_state, new_next_action) - args.weight_reg * reg_norm2) - self.alpha * next_log_prob
         target_q_value = reward + (1 - done) * gamma * target_q_min  # if done==1, only reward
         q_value_loss1 = self.soft_q_criterion1(predicted_q_value1, target_q_value.detach())  # detach: no gradients for the variable
         q_value_loss2 = self.soft_q_criterion2(predicted_q_value2, target_q_value.detach())
 
         self.soft_q_optimizer1.zero_grad()
-        q_value_loss1.backward()
+        q_value_loss1.backward(retain_graph=False)
+        if args.use_gradient_clip:
+            torch.nn.utils.clip_grad_norm_(sac_trainer.soft_q_net1.parameters(), max_norm=1.0)  # Q 网络梯度裁剪
         self.soft_q_optimizer1.step()
+
         self.soft_q_optimizer2.zero_grad()
-        q_value_loss2.backward()
+        q_value_loss2.backward(retain_graph=False)
+        if args.use_gradient_clip:
+            torch.nn.utils.clip_grad_norm_(sac_trainer.soft_q_net2.parameters(), max_norm=1.0)  # Q 网络梯度裁剪
         self.soft_q_optimizer2.step()
 
+        predicted_new_q_value = torch.min(self.soft_q_net1(state, new_action) + args.weight_reg * reg_norm1, self.soft_q_net2(state, new_action) + args.weight_reg * reg_norm2)
         # Training Policy Function
-        predicted_new_q_value = torch.min(self.soft_q_net1(state, new_action), self.soft_q_net2(state, new_action))
-        policy_loss = (self.alpha * log_prob - predicted_new_q_value).mean()
+        if training_steps % 2 == 0:
+            policy_loss = (self.alpha * log_prob - predicted_new_q_value).mean()
 
-        self.policy_optimizer.zero_grad()
-        policy_loss.backward()
-        self.policy_optimizer.step()
+            self.policy_optimizer.zero_grad()
+            policy_loss.backward(retain_graph=False)
+            self.policy_optimizer.step()
 
-        # print('q loss: ', q_value_loss1, q_value_loss2)
-        # print('policy loss: ', policy_loss )
+            # print('q loss: ', q_value_loss1, q_value_loss2)
+            # print('policy loss: ', policy_loss )
 
         # Soft update the target value net
         for target_param, param in zip(self.target_soft_q_net1.parameters(), self.soft_q_net1.parameters()):
@@ -330,6 +363,13 @@ class SAC_Trainer():
             target_param.data.copy_(  # copy data value into target parameters
                 target_param.data * (1.0 - soft_tau) + param.data * soft_tau
             )
+        # 记录 Q 值和 V 值用于绘图
+        q_values.append(predicted_new_q_value.mean().item())
+        reg_norms1.append(args.weight_reg * reg_norm1.item())
+        reg_norms2.append(args.weight_reg * reg_norm2.item())
+        log_probs.append(-log_prob.mean().item())
+        alpha_values.append(self.alpha)
+
         return predicted_new_q_value.mean()
 
     def save_model(self, path):
@@ -350,9 +390,32 @@ class SAC_Trainer():
 def plot(rewards):
     clear_output(True)
     plt.figure(figsize=(20, 5))
-    plt.plot(rewards)
-    plt.savefig('sac_v2.png')
-    # plt.show()
+    plt.subplot(1, 2, 1)
+    plt.plot(rewards, label="Reward")
+    plt.legend()
+    plt.title(f"Training Reward (weight_reg={args.weight_reg}, auto_entropy={args.auto_entropy}, reward_scaling={args.use_reward_scaling}, maximum_alpha={args.maximum_alpha})")
+    plt.subplot(1, 2, 2)
+
+    plt.plot(q_values_episode, label="Q-Value")
+    plt.plot(reg_norms1_episode, label="Regularization Term1")
+    plt.plot(reg_norms2_episode, label="Regularization Term2")
+    plt.plot(log_probs_episode, label="Log Prob")
+    plt.plot(alpha_values_episode, label="Alpha")
+
+    plt.legend()
+    plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
+
+    if not os.path.exists('pic'):
+        os.makedirs('pic')
+    # Create subdirectory based on parameters except weight_reg
+    subdir_name = f'auto_entropy_{args.auto_entropy}_reward_scaling_{args.use_reward_scaling}_maximum_alpha_{args.maximum_alpha}'
+    subdir_path = os.path.join('pic', subdir_name)
+    if not os.path.exists(subdir_path):
+        os.makedirs(subdir_path)
+
+    # Save the plot in the subdirectory
+    plt.savefig(os.path.join(subdir_path, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
+    plt.close()
 
 replay_buffer_size = 1e6
 replay_buffer = ReplayBuffer(replay_buffer_size)
@@ -372,14 +435,27 @@ step = 0
 step_trained = 0
 max_episodes = 1000
 frame_idx = 0
-batch_size = 2048
 explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
 AUTO_ENTROPY = True
 DETERMINISTIC = False
 hidden_dim = 32
-rewards = []
+
+rewards = []    # 记录奖励
+q_values = []  # 记录 Q 值变化
+reg_norms1 = []  # 记录正则化项1
+reg_norms2 = []  # 记录正则化项2
+log_probs = []  # 记录 log_prob
+alpha_values = []  # 记录 alpha 值
+
+q_values_episode = []  # 记录每个 episode 的 Q 值
+reg_norms1_episode = []  # 记录每个 episode 的正则化项1
+reg_norms2_episode = []  # 记录每个 episode 的正则化项2
+log_probs_episode = []  # 记录每个 episode 的 log_prob
+alpha_values_episode = []  # 记录每个 episode 的 alpha 值
+
 model_path = './model/sac_v2'
+tracemalloc.start()
 
 sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range)
 
@@ -393,6 +469,7 @@ if __name__ == '__main__':
 
             done = False
             episode_steps = 0
+            training_steps = 0 # 记录已经训练了多少次
             action_dict = {key: None for key in list(range(env.max_agent_num))}
             action_dict_zero = {key: 0 for key in list(range(env.max_agent_num))}  # 全0的action，用于查看reward的上限
             action_dict_twenty = {key: 20 for key in list(range(env.max_agent_num))}  # 全20的action，用于查看reward的上限
@@ -408,11 +485,10 @@ if __name__ == '__main__':
                     if len(state_dict[key]) == 1:
                         if action_dict[key] is None:
                             if args.use_state_norm:
-                                state_input = sac_trainer.state_norm(copy.deepcopy(np.array(state_dict[key][0])))
+                                state_input = sac_trainer.state_norm(np.array(state_dict[key][0]))
                             else:
                                 state_input = np.array(state_dict[key][0])
                             a = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
-
                             action_dict[key] = a
 
                             if key == 2 and debug:
@@ -425,8 +501,8 @@ if __name__ == '__main__':
                             # print(state_dict[key][0], action_dict[key], reward_dict[key], state_dict[key][1], prob_dict[key], v_dict[key], done)
 
                             if args.use_state_norm:
-                                state = sac_trainer.state_norm(copy.deepcopy(np.array(state_dict[key][0])))
-                                next_state = sac_trainer.state_norm(copy.deepcopy(np.array(state_dict[key][1])))
+                                state = sac_trainer.state_norm(np.array(state_dict[key][0]))
+                                next_state = sac_trainer.state_norm(np.array(state_dict[key][1]))
                             else:
                                 state = np.array(state_dict[key][0])
                                 next_state = np.array(state_dict[key][1])
@@ -448,7 +524,7 @@ if __name__ == '__main__':
                             #     print('Bus id: ',key,' , station id is: ' , state_dict[key][1][1],' ,current time is: ', env.current_time)
                         state_dict[key] = state_dict[key][1:]
                         if args.use_state_norm:
-                            state_input = sac_trainer.state_norm(copy.deepcopy(np.array(state_dict[key][0])))
+                            state_input = sac_trainer.state_norm(np.array(state_dict[key][0]))
                         else:
                             state_input = np.array(state_dict[key][0])
 
@@ -461,24 +537,38 @@ if __name__ == '__main__':
                             print()
 
                 state_dict, reward_dict, done = env.step(action_dict, debug=debug, render=render)
-                if len(replay_buffer) > batch_size and len(replay_buffer) % args.training_freq == 0 and step_trained != step:
+                if len(replay_buffer) > args.batch_size and len(replay_buffer) % args.training_freq == 0 and step_trained != step:
                     step_trained = step
                     for i in range(update_itr):
-                        _ = sac_trainer.update(batch_size, reward_scale=10., auto_entropy=AUTO_ENTROPY, target_entropy=-1. * action_dim)
+                        _ = sac_trainer.update(args.batch_size, training_steps, reward_scale=10., auto_entropy=args.auto_entropy, target_entropy=-1. * action_dim)
+                        training_steps += 1
 
                 if done:
+                    replay_buffer.last_episode_step = episode_steps
                     break
+            # 计算每个 episode 的平均 Q 值
+            rewards.append(episode_reward)
+            q_values_episode.append(np.mean(q_values[-training_steps:]))
+            reg_norms1_episode.append(np.mean(reg_norms1[-training_steps:]))
+            reg_norms2_episode.append(np.mean(reg_norms2[-training_steps:]))
+            log_probs_episode.append(np.mean(log_probs[-training_steps:]))
+            alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
 
-            if eps % 20 == 0 and eps > 0:  # plot and model saving interval
+            if eps % args.plot_freq == 0:  # plot and model saving interval
                 plot(rewards)
                 np.save('rewards', rewards)
-                sac_trainer.save_model(model_path)
-            print('Episode: ', eps, '| Episode Reward: ', episode_reward)
-            rewards.append(episode_reward)
-        sac_trainer.save_model(model_path)
+                torch.save(sac_trainer.policy_net.state_dict(), model_path)
+                # snapshot = tracemalloc.take_snapshot()
+                # for stat in snapshot.statistics('lineno')[:10]:
+                #     print(stat)  # 显示内存占用最大的10行
+            replay_buffer_usage = len(replay_buffer) / replay_buffer_size * 100
+
+            print(
+                f"Episode: {eps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
+        torch.save(sac_trainer.policy_net.state_dict(), model_path)
 
     if args.test:
-        sac_trainer.load_model(model_path)
+        sac_trainer.policy_net.load_state_dict(torch.load(model_path))
         for eps in range(10):
 
             done = False
@@ -497,13 +587,13 @@ if __name__ == '__main__':
                     elif len(state_dict[key]) == 2:
                         if state_dict[key][0][1] != state_dict[key][1][1]:
                             episode_reward += reward_dict[key]
-                            
+
                         state_dict[key] = state_dict[key][1:]
-                        
+
                         state_input = np.array(state_dict[key][0])
-                        
+
                         action_dict[key] = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
-                        
+
                 state_dict, reward_dict, done = env.step(action_dict)
                 # env.render()
             print('Episode: ', eps, '| Episode Reward: ', episode_reward)

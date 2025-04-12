@@ -24,9 +24,9 @@ import json
 
 class env_bus(object):
     
-    def __init__(self, path, debug=False):
-        
-        pygame.init()
+    def __init__(self, path, debug=False, render=False):
+        if render:
+            pygame.init()
 
         self.path = path
         sys.path.append(os.path.abspath(os.path.join(os.getcwd())))
@@ -64,6 +64,9 @@ class env_bus(object):
             self.summary_reward = pd.DataFrame(columns=['bus_id', 'station_id', 'trip_id', 'forward_headway',
                                                     'backward_headway', 'reward', 'time'])
 
+        self.stations = self.set_stations()
+        self.routes = self.set_routes()
+        self.timetables = self.set_timetables()
 
     # def save_snapshot(self):
     #     snapshot = {

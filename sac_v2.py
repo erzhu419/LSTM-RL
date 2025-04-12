@@ -347,7 +347,7 @@ if ENV == 'Reacher':
     SCREEN_SHOT=False
     action_range = 10.0
     env=Reacher(screen_size=SCREEN_SIZE, num_joints=NUM_JOINTS, link_lengths = LINK_LENGTH, \
-    ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=False, change_goal=False)
+    ini_joint_angles=INI_JOING_ANGLES, target_pos = [369,430], render=True, change_goal=False)
     action_dim = env.num_actions
     state_dim  = env.num_observations
 else:
@@ -398,7 +398,7 @@ if __name__ == '__main__':
                     next_state, reward, done, _ = env.step(action, SPARSE_REWARD, SCREEN_SHOT)
                 else:
                     next_state, reward, done, _ = env.step(action)
-                    # env.render()       
+                    env.render()
                     
                 replay_buffer.push(state, action, reward, next_state, done)
                 
@@ -437,7 +437,7 @@ if __name__ == '__main__':
                     next_state, reward, done, _ = env.step(action, SPARSE_REWARD, SCREEN_SHOT)
                 else:
                     next_state, reward, done, _ = env.step(action)
-                    # env.render()   
+                    env.render()
 
 
                 episode_reward += reward
