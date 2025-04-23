@@ -23,7 +23,7 @@ import os
 import argparse
 import numpy as np
 import random
-
+from copy import deepcopy
 GPU = True
 device_idx = 0
 if GPU:
@@ -42,10 +42,15 @@ parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Tric
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
 parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
-parser.add_argument('--weight_reg', type=float, default=0.1, help='weight of regularization')
+parser.add_argument('--weight_reg', type=float, default=0, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
 parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
+#TODO 可以看到这里把beta相关的三个参数降低之后，收敛性好很多，继续调参
+parser.add_argument("--beta_bc", type=float, default=0.001, help="weight of behavior cloning loss")
+# beta这个参数在源代码中是负数(我开始也奇怪为什么下面代码关于ood_std是+,原来是因为这里是负数)
+parser.add_argument("--beta", type=float, default=-2, help="weight of variance")
+parser.add_argument("--beta_ood", type=float, default=0.01, help="weight of OOD loss")
 args = parser.parse_args()
 
 
@@ -134,8 +139,9 @@ class VectorizedLinear(nn.Module):
 
 
 class VectorizedCritic(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_dim, num_critics):
+    def __init__(self, state_dim, action_dim, hidden_dim, num_critics, embedding_layer):
         super().__init__()
+        self.embedding_layer = embedding_layer # EmbeddingLayer initialization
         self.critic = nn.Sequential(
             VectorizedLinear(state_dim + action_dim, hidden_dim, num_critics),
             nn.ReLU(),
@@ -165,9 +171,9 @@ class SoftQNetwork(VectorizedCritic):
             action_dim=action_dim,
             hidden_dim=hidden_dim,
             num_critics=ensemble_size,
+            embedding_layer=embedding_layer
         )
 
-        self.embedding_layer = embedding_layer
         self.ensemble_size = ensemble_size
 
     def forward(self, state, action):
@@ -246,7 +252,7 @@ class PolicyNetwork(nn.Module):
         # both dims of normal.log_prob and -log(1-a**2) are (N,dim_of_action);
         # the Normal.log_prob outputs the same dim of input features instead of 1 dim probability,
         # needs sum up across the features dim to get 1 dim prob; or else use Multivariate Normal.
-        log_prob = log_prob.sum(dim=1, keepdim=True)
+        log_prob = log_prob.sum(dim=1)
         return action, log_prob, z, mean, log_std
 
     def get_action(self, state, deterministic):
@@ -284,15 +290,11 @@ class SAC_Trainer():
         self.replay_buffer = replay_buffer
 
         self.soft_q_net = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
-        self.target_soft_q_net = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
+        self.target_soft_q_net = deepcopy(self.soft_q_net)
         self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_layer, action_range).to(device)
         self.log_alpha = torch.zeros(1, dtype=torch.float32, requires_grad=True, device=device)
         print('Soft Q Network: ', self.soft_q_net)
         print('Policy Network: ', self.policy_net)
-
-        for target_param, param in zip(self.target_soft_q_net.parameters(), self.soft_q_net.parameters()):
-            target_param.data.copy_(param.data)
-
 
         self.soft_q_criterion = nn.MSELoss()
 
@@ -313,25 +315,85 @@ class SAC_Trainer():
         self.state_norm = Normalization(num_categorical=self.num_cat_features, num_numerical=self.num_cont_features, running_ms=running_ms)
         self.reward_scaling = RewardScaling(shape=1, gamma=0.99)
 
+    # Q loss computation
+    def compute_q_loss(self, state, action, reward, next_state, done, new_next_action, next_log_prob, reg_norm, gamma):
+        predicted_q_value = self.soft_q_net(state, action)  # shape: [ensemble_size, batch, 1]
+        # with torch.no_grad():
+        target_q_next = self.target_soft_q_net(next_state, new_next_action)  # shape: [ensemble_size, batch, 1]
+        next_log_prob = next_log_prob.unsqueeze(0).repeat(self.soft_q_net.num_critics, 1)  # Expand and repeat for ensemble_size
+        reg_norm = reg_norm.unsqueeze(-1).repeat(1, args.batch_size)  # Adjust shape to match target_q_next
+        target_q_next = target_q_next - self.alpha * next_log_prob + args.weight_reg * reg_norm  # shape: [ensemble_size, batch, 1]
+        target_q_value = reward + (1 - done) * gamma * target_q_next.unsqueeze(-1)
+
+        ood_loss = args.beta_ood * predicted_q_value.std(0).mean()
+        q_value_loss = self.soft_q_criterion(predicted_q_value, target_q_value.squeeze(-1).detach())
+        loss = q_value_loss + ood_loss
+        return loss, predicted_q_value
+
+    # Policy loss computation
+    def compute_policy_loss(self, state, action, new_action, log_prob, reg_norm):
+
+        reg_norm = reg_norm.unsqueeze(-1).repeat(1, args.batch_size)  # Adjust shape to match target_q_next
+
+        q_values_dist = self.soft_q_net(state, new_action) + args.weight_reg * reg_norm - self.alpha * log_prob
+
+        q_mean = q_values_dist.mean(dim=0)
+        q_std = q_values_dist.std(dim=0)
+        q_loss = -(q_mean + args.beta * q_std).mean()
+
+        bc_loss = F.mse_loss(new_action, action)
+        # smooth_loss = self.get_policy_smooth_loss(state)
+
+        policy_loss = args.beta_bc * bc_loss + q_loss
+
+        return policy_loss, q_loss, bc_loss
+
+    # Smooth loss regularization (based on LCB get_policy_loss style)
+    # def get_policy_smooth_loss(self, state, noise_std=0.2):
+    #     obs_repeat = state.unsqueeze(0).repeat(self.soft_q_net.ensemble_size, 1, 1)  # [ensemble, batch, state_dim]
+    #     obs_flat = obs_repeat.view(-1, state.shape[1])
+    #     pi_action, _, _, _ = self.policy_net(obs_flat)
+    #     pi_action = pi_action.view(self.soft_q_net.ensemble_size, -1, pi_action.shape[-1])
+    #
+    #     noise = noise_std * torch.randn_like(pi_action)
+    #     noisy_action = torch.clamp(pi_action + noise, -1.0, 1.0)
+    #
+    #     smooth_loss = F.mse_loss(pi_action, noisy_action)
+    #     return smooth_loss
+
+    # Alpha loss computation (entropy regularization)
+    def compute_alpha_loss(self, log_prob, target_entropy):
+        alpha_loss = -(self.log_alpha * (log_prob + target_entropy).detach()).mean()
+        return alpha_loss
+
+    # Regularization term computation
+    def compute_reg_norm(self, model):
+        weight_norm, bias_norm = [], []
+        for name, param in model.named_parameters():
+            if 'critic' in name:  # Only include parameters from the critic
+                if 'weight' in name:
+                    weight_norm.append(torch.norm(param, p=2, dim=[1,2]) ** 2)  # Keep the first dimension (10,)
+                elif 'bias' in name:
+                    bias_norm.append(torch.norm(param, p=2, dim=[1,2]) ** 2)  # Keep the first dimension (10,)
+        reg_norm = torch.sqrt(
+            torch.sum(torch.stack(weight_norm), dim=0) + torch.sum(torch.stack(bias_norm[:-1]), dim=0))  # Final shape [10,]
+        return reg_norm
+
     def update(self, batch_size, training_steps, reward_scale=10., auto_entropy=True, target_entropy=-2, gamma=0.99, soft_tau=1e-2):
         state, action, reward, next_state, done = self.replay_buffer.sample(batch_size)
-        # print('sample:', state, action,  reward, done)
-
         state = torch.FloatTensor(state).to(device)
         next_state = torch.FloatTensor(next_state).to(device)
         action = torch.FloatTensor(action).to(device)
         reward = torch.FloatTensor(reward).unsqueeze(1).to(device)  # reward is single value, unsqueeze() to add one dim to be [reward] at the sample dim;
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
 
-        predicted_q_value = self.soft_q_net(state, action)
         new_action, log_prob, z, mean, log_std = self.policy_net.evaluate(state)
         new_next_action, next_log_prob, _, _, _ = self.policy_net.evaluate(next_state)
-        reward = reward_scale * (reward - reward.mean(dim=0)) / (reward.std(dim=0) + 1e-6)  # normalize with batch mean and std; plus a small number to prevent numerical problem
+        reward = reward_scale * (reward - reward.mean(dim=0)) / (reward.std(dim=0) + 1e-6)
         # Updating alpha wrt entropy
         # alpha = 0.0  # trade-off between exploration (max entropy) and exploitation (max Q)
-        if auto_entropy is True:
-            alpha_loss = -(self.log_alpha * (log_prob + target_entropy).detach()).mean()
-            # print('alpha loss: ',alpha_loss)
+        if auto_entropy:
+            alpha_loss = self.compute_alpha_loss(log_prob, target_entropy)
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward(retain_graph=False)
             self.alpha_optimizer.step()
@@ -340,57 +402,31 @@ class SAC_Trainer():
             self.alpha = 1.
             alpha_loss = 0
 
-        # 计算 reg_norm
-        reg_norm, weight_norm, bias_norm = 0, [], []
+        reg_norm = self.compute_reg_norm(self.target_soft_q_net)
 
-        for name, param in self.target_soft_q_net.named_parameters():
-            if 'weight' in name:
-                weight_norm.append(torch.norm(param, p=2) ** 2)
-            elif 'bias' in name:
-                bias_norm.append(torch.norm(param, p=2) ** 2)
-
-        reg_norm = torch.sqrt(torch.sum(torch.stack(weight_norm)) + torch.sum(torch.stack(bias_norm[0:-1])))
-
-
-
-        # Training Q Function
-        target_q_min = torch.min(self.target_soft_q_net(next_state, new_next_action) - args.weight_reg * reg_norm) - self.alpha * next_log_prob
-        target_q_value = reward + (1 - done) * gamma * target_q_min  # if done==1, only reward
-        q_value_loss = self.soft_q_criterion(predicted_q_value, target_q_value.detach())  # detach: no gradients for the variable
-
+        q_value_loss, predicted_q_value = self.compute_q_loss(state, action, reward, next_state, done, new_next_action, next_log_prob, reg_norm, gamma)
         self.soft_q_optimizer.zero_grad()
         q_value_loss.backward(retain_graph=False)
         if args.use_gradient_clip:
-            torch.nn.utils.clip_grad_norm_(sac_trainer.soft_q_net.parameters(), max_norm=1.0)  # Q 网络梯度裁剪
+            torch.nn.utils.clip_grad_norm_(self.soft_q_net.parameters(), max_norm=1.0)
         self.soft_q_optimizer.step()
 
-
-
-        predicted_new_q_value = torch.min(self.soft_q_net(state, new_action) + args.weight_reg * reg_norm)
-        # Training Policy Function
         if training_steps % 2 == 0:
-            policy_loss = (self.alpha * log_prob - predicted_new_q_value).mean()
-
+            policy_loss, predicted_new_q_value,_= self.compute_policy_loss(state, action, new_action, log_prob, reg_norm)
             self.policy_optimizer.zero_grad()
+
             policy_loss.backward(retain_graph=False)
             self.policy_optimizer.step()
 
-            # print('q loss: ', q_value_loss1, q_value_loss2)
-            # print('policy loss: ', policy_loss )
-
-        # Soft update the target value net
         for target_param, param in zip(self.target_soft_q_net.parameters(), self.soft_q_net.parameters()):
-            target_param.data.copy_(  # copy data value into target parameters
-                target_param.data * (1.0 - soft_tau) + param.data * soft_tau
-            )
+            target_param.data.copy_(target_param.data * (1.0 - soft_tau) + param.data * soft_tau)
 
-        # 记录 Q 值和 V 值用于绘图
-        q_values.append(predicted_new_q_value.mean().item())
-        reg_norms1.append(args.weight_reg * reg_norm.item())
+        q_values.append(predicted_q_value.mean().item())
+        reg_norms.append(args.weight_reg * reg_norm.mean().item())
         log_probs.append(-log_prob.mean().item())
         alpha_values.append(self.alpha)
 
-        return predicted_new_q_value.mean()
+        return predicted_q_value.mean()
 
     def save_model(self, path):
         torch.save(self.soft_q_net.state_dict(), path + '_q')
@@ -414,8 +450,7 @@ def plot(rewards):
     plt.subplot(1, 2, 2)
 
     plt.plot(q_values_episode, label="Q-Value")
-    plt.plot(reg_norms1_episode, label="Regularization Term1")
-    plt.plot(reg_norms2_episode, label="Regularization Term2")
+    plt.plot(reg_norms_episode, label="Regularization Term")
     plt.plot(log_probs_episode, label="Log Prob")
     plt.plot(alpha_values_episode, label="Alpha")
 
@@ -457,18 +492,16 @@ explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
 AUTO_ENTROPY = True
 DETERMINISTIC = False
-hidden_dim = 32
+hidden_dim = 64
 
 rewards = []  # 记录奖励
 q_values = []  # 记录 Q 值变化
-reg_norms1 = []  # 记录正则化项1
-reg_norms2 = []  # 记录正则化项2
+reg_norms = []  # 记录正则化项1
 log_probs = []  # 记录 log_prob
 alpha_values = []  # 记录 alpha 值
 
 q_values_episode = []  # 记录每个 episode 的 Q 值
-reg_norms1_episode = []  # 记录每个 episode 的正则化项1
-reg_norms2_episode = []  # 记录每个 episode 的正则化项2
+reg_norms_episode = []  # 记录每个 episode 的正则化项1
 log_probs_episode = []  # 记录每个 episode 的 log_prob
 alpha_values_episode = []  # 记录每个 episode 的 alpha 值
 
@@ -567,8 +600,7 @@ if __name__ == '__main__':
             # 计算每个 episode 的平均 Q 值
             rewards.append(episode_reward)
             q_values_episode.append(np.mean(q_values[-training_steps:]))
-            reg_norms1_episode.append(np.mean(reg_norms1[-training_steps:]))
-            reg_norms2_episode.append(np.mean(reg_norms2[-training_steps:]))
+            reg_norms_episode.append(np.mean(reg_norms[-training_steps:]))
             log_probs_episode.append(np.mean(log_probs[-training_steps:]))
             alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
 
