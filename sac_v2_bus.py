@@ -325,7 +325,8 @@ class SAC_Trainer():
 
 
         # Training Q Function
-        target_q_min = torch.min(self.target_soft_q_net1(next_state, new_next_action) - args.weight_reg * reg_norm1, self.target_soft_q_net2(next_state, new_next_action) - args.weight_reg * reg_norm2) - self.alpha * next_log_prob
+        target_q_min = torch.min(self.target_soft_q_net1(next_state, new_next_action) - args.weight_reg * reg_norm1,
+                                 self.target_soft_q_net2(next_state, new_next_action) - args.weight_reg * reg_norm2) - self.alpha * next_log_prob
         target_q_value = reward + (1 - done) * gamma * target_q_min  # if done==1, only reward
         q_value_loss1 = self.soft_q_criterion1(predicted_q_value1, target_q_value.detach())  # detach: no gradients for the variable
         q_value_loss2 = self.soft_q_criterion2(predicted_q_value2, target_q_value.detach())
@@ -342,7 +343,8 @@ class SAC_Trainer():
             torch.nn.utils.clip_grad_norm_(sac_trainer.soft_q_net2.parameters(), max_norm=1.0)  # Q 网络梯度裁剪
         self.soft_q_optimizer2.step()
 
-        predicted_new_q_value = torch.min(self.soft_q_net1(state, new_action) + args.weight_reg * reg_norm1, self.soft_q_net2(state, new_action) + args.weight_reg * reg_norm2)
+        predicted_new_q_value = torch.min(self.soft_q_net1(state, new_action) + args.weight_reg * reg_norm1, self.soft_q_net2(state, new_action)
+                                          + args.weight_reg * reg_norm2)
         # Training Policy Function
         if training_steps % 2 == 0:
             policy_loss = (self.alpha * log_prob - predicted_new_q_value).mean()
