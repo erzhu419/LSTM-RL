@@ -42,53 +42,104 @@ parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Tric
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
 parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
-parser.add_argument('--weight_reg', type=float, default=0, help='weight of regularization')
+parser.add_argument('--weight_reg', type=float, default=0.1, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
-parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
+parser.add_argument("--maximum_alpha", type=float, default=0.6, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
 #TODO 可以看到这里把beta相关的三个参数降低之后，收敛性好很多，继续调参
-parser.add_argument("--beta_bc", type=float, default=0.001, help="weight of behavior cloning loss")
+parser.add_argument("--beta_bc", type=float, default=10, help="weight of behavior cloning loss")
 # beta这个参数在源代码中是负数(我开始也奇怪为什么下面代码关于ood_std是+,原来是因为这里是负数)
-parser.add_argument("--beta", type=float, default=-2, help="weight of variance")
-parser.add_argument("--beta_ood", type=float, default=0.01, help="weight of OOD loss")
+parser.add_argument("--beta", type=float, default=-10, help="weight of variance")
+parser.add_argument("--beta_ood", type=float, default=0.1, help="weight of OOD loss")
+parser.add_argument("--embedding_size", type=int, default=40, help="embedding size")
 args = parser.parse_args()
 
 
-class ReplayBuffer:
-    def __init__(self, capacity, last_episode_step=5000):
+class PrioritizedReplayBuffer:
+    def __init__(self, capacity, alpha=0.6):
         self.capacity = capacity
-        self.last_episode_step = last_episode_step  # 预估每个 episode 的 step 数
         self.buffer = {}
-        self.position = 0  # 用作 dict 的 key
+        self.priorities = {}
+        self.alpha = alpha  # Priority exponent (controls how much prioritization is used)
+        self.position = 0
+        self.max_priority = 1.0  # Initial max priority for new samples
 
     def push(self, state, action, reward, next_state, done):
-        """添加新数据"""
+        # Store with max priority for new experiences
         self.buffer[self.position] = (state, action, reward, next_state, done)
+        self.priorities[self.position] = self.max_priority
         self.position += 1
 
-        # 当 buffer 过大时，删除最早的 episode 数据
+        # If buffer exceeds capacity, remove lowest priority experiences
         if len(self.buffer) > self.capacity:
-            keys_to_remove = list(self.buffer.keys())[:self.last_episode_step]  # 找到最早的 N 条数据
+            # Find the lowest priority items
+            priorities_list = list(self.priorities.items())
+            priorities_list.sort(key=lambda x: x[1])  # Sort by priority
+            keys_to_remove = [k for k, _ in priorities_list[:len(priorities_list) - self.capacity]]
+
             for key in keys_to_remove:
-                del self.buffer[key]  # 直接删除，提高性能
+                del self.buffer[key]
+                del self.priorities[key]
 
-    def sample(self, batch_size):
-        """随机采样 batch_size 大小的数据，确保数据格式正确"""
-        batch = random.sample(list(self.buffer.values()), batch_size)  # 直接从 dict 的值采样
-        states, actions, rewards, next_states, dones = zip(*batch)
+    def sample(self, batch_size, beta=0.4):
+        # Beta controls importance sampling weights
+        if len(self.buffer) < batch_size:
+            batch_keys = list(self.buffer.keys())
+        else:
+            # Convert keys to a list first
+            key_list = list(self.buffer.keys())
 
-        # 确保维度正确，防止 PyTorch 计算时出现广播错误
-        states = np.stack(states)  # (batch_size, state_dim)
-        actions = np.stack(actions)  # (batch_size, action_dim) 或 (batch_size,)
-        rewards = np.array(rewards, dtype=np.float32)  # (batch_size,)
-        next_states = np.stack(next_states)  # (batch_size, state_dim)
-        dones = np.array(dones, dtype=np.float32)  # (batch_size,)
+            # Sample according to priorities
+            priorities = np.array(list(self.priorities.values()))
+            probs = priorities ** self.alpha
+            probs /= probs.sum()
 
-        return states, actions, rewards, next_states, dones
+            # Sample indices with replacement according to priority
+            indices = np.random.choice(len(key_list), batch_size, p=probs)
+
+            # Get the actual keys using the indices
+            batch_keys = [key_list[i] for i in indices]
+
+        # Get the batch data
+        states, actions, rewards, next_states, dones = zip(*[self.buffer[key] for key in batch_keys])
+
+        # Calculate importance sampling weights
+        weights = []
+        total = len(self.buffer)
+        for key in batch_keys:
+            # Priority of experience i, normalized by max priority
+            p = self.priorities[key] / self.max_priority
+            # Weight calculation with beta parameter
+            weight = (total * p) ** (-beta)
+            weights.append(weight)
+
+        # Normalize weights to be between 0 and 1
+        weights = np.array(weights) / max(weights) if weights else np.ones(len(batch_keys))
+
+        # Return batch with weights and keys (for priority updates)
+        return (np.stack(states), np.stack(actions), np.array(rewards, dtype=np.float32),
+                np.stack(next_states), np.array(dones, dtype=np.float32),
+                np.array(weights, dtype=np.float32), batch_keys)
+
+    def update_priorities(self, keys, priorities):
+        # Convert priorities to a numpy array if it's a tensor
+        if isinstance(priorities, torch.Tensor):
+            priorities = priorities.detach().cpu().numpy()
+
+        # Handle case where priorities is a scalar
+        if np.isscalar(priorities) or (isinstance(priorities, np.ndarray) and priorities.ndim == 0):
+            # If it's a scalar, use the same priority for all keys
+            for key in keys:
+                self.priorities[key] = float(priorities)
+                self.max_priority = max(self.max_priority, float(priorities))
+        else:
+            # Normal case: iterate through both keys and priorities
+            for key, priority in zip(keys, priorities):
+                self.priorities[key] = float(priority)  # Convert to Python float
+                self.max_priority = max(self.max_priority, float(priority))
 
     def __len__(self):
         return len(self.buffer)
-
 
 class EmbeddingLayer(nn.Module):
     def __init__(self, cat_code_dict, cat_cols):
@@ -163,7 +214,7 @@ class VectorizedCritic(nn.Module):
 
 # Replace original SoftQNetwork with vectorized version
 class SoftQNetwork(VectorizedCritic):
-    def __init__(self, state_dim, action_dim, hidden_dim, embedding_layer, ensemble_size=10):
+    def __init__(self, state_dim, action_dim, hidden_dim, embedding_layer, ensemble_size):
         # compute input dim after embedding
 
         super().__init__(
@@ -289,7 +340,7 @@ class SAC_Trainer():
 
         self.replay_buffer = replay_buffer
 
-        self.soft_q_net = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
+        self.soft_q_net = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer, args.embedding_size).to(device)
         self.target_soft_q_net = deepcopy(self.soft_q_net)
         self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_layer, action_range).to(device)
         self.log_alpha = torch.zeros(1, dtype=torch.float32, requires_grad=True, device=device)
@@ -328,7 +379,7 @@ class SAC_Trainer():
         ood_loss = args.beta_ood * predicted_q_value.std(0).mean()
         q_value_loss = self.soft_q_criterion(predicted_q_value, target_q_value.squeeze(-1).detach())
         loss = q_value_loss + ood_loss
-        return loss, predicted_q_value
+        return loss, predicted_q_value, predicted_q_value.std(0).mean(), q_value_loss
 
     # Policy loss computation
     def compute_policy_loss(self, state, action, new_action, log_prob, reg_norm):
@@ -380,12 +431,13 @@ class SAC_Trainer():
         return reg_norm
 
     def update(self, batch_size, training_steps, reward_scale=10., auto_entropy=True, target_entropy=-2, gamma=0.99, soft_tau=1e-2):
-        state, action, reward, next_state, done = self.replay_buffer.sample(batch_size)
+        state, action, reward, next_state, done, weights, batch_keys = self.replay_buffer.sample(batch_size)
         state = torch.FloatTensor(state).to(device)
         next_state = torch.FloatTensor(next_state).to(device)
         action = torch.FloatTensor(action).to(device)
         reward = torch.FloatTensor(reward).unsqueeze(1).to(device)  # reward is single value, unsqueeze() to add one dim to be [reward] at the sample dim;
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
+        weights = torch.FloatTensor(weights).unsqueeze(1).to(device)  # Add importance sampling weights
 
         new_action, log_prob, z, mean, log_std = self.policy_net.evaluate(state)
         new_next_action, next_log_prob, _, _, _ = self.policy_net.evaluate(next_state)
@@ -404,7 +456,9 @@ class SAC_Trainer():
 
         reg_norm = self.compute_reg_norm(self.target_soft_q_net)
 
-        q_value_loss, predicted_q_value = self.compute_q_loss(state, action, reward, next_state, done, new_next_action, next_log_prob, reg_norm, gamma)
+        q_value_loss, predicted_q_value, ood_std, td_errors = self.compute_q_loss(state, action, reward, next_state, done, new_next_action, next_log_prob, reg_norm, gamma)
+        new_priorities = td_errors + 0.1 * ood_std + 1e-6
+        self.replay_buffer.update_priorities(batch_keys, new_priorities)
         self.soft_q_optimizer.zero_grad()
         q_value_loss.backward(retain_graph=False)
         if args.use_gradient_clip:
@@ -425,6 +479,7 @@ class SAC_Trainer():
         reg_norms.append(args.weight_reg * reg_norm.mean().item())
         log_probs.append(-log_prob.mean().item())
         alpha_values.append(self.alpha)
+        ood_stds.append(ood_std.item())
 
         return predicted_q_value.mean()
 
@@ -453,6 +508,7 @@ def plot(rewards):
     plt.plot(reg_norms_episode, label="Regularization Term")
     plt.plot(log_probs_episode, label="Log Prob")
     plt.plot(alpha_values_episode, label="Alpha")
+    plt.plot(ood_stds_episode, label="OOD_std")
 
     plt.legend()
     plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
@@ -470,8 +526,8 @@ def plot(rewards):
     plt.close()
 
 
-replay_buffer_size = 1e6
-replay_buffer = ReplayBuffer(replay_buffer_size)
+replay_buffer_size = 3e5
+replay_buffer = PrioritizedReplayBuffer(replay_buffer_size)
 
 debug = False
 render = False
@@ -492,18 +548,20 @@ explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
 AUTO_ENTROPY = True
 DETERMINISTIC = False
-hidden_dim = 64
+hidden_dim = 128
 
 rewards = []  # 记录奖励
 q_values = []  # 记录 Q 值变化
 reg_norms = []  # 记录正则化项1
 log_probs = []  # 记录 log_prob
 alpha_values = []  # 记录 alpha 值
+ood_stds = []  # 记录 OOD loss
 
 q_values_episode = []  # 记录每个 episode 的 Q 值
 reg_norms_episode = []  # 记录每个 episode 的正则化项1
 log_probs_episode = []  # 记录每个 episode 的 log_prob
 alpha_values_episode = []  # 记录每个 episode 的 alpha 值
+ood_stds_episode = []  # 记录每个 episode 的 OOD 标准差
 
 model_path = './model/sac_v2'
 tracemalloc.start()
@@ -603,6 +661,7 @@ if __name__ == '__main__':
             reg_norms_episode.append(np.mean(reg_norms[-training_steps:]))
             log_probs_episode.append(np.mean(log_probs[-training_steps:]))
             alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
+            ood_stds_episode.append(np.mean(ood_stds[-training_steps:]))
 
             if eps % args.plot_freq == 0:  # plot and model saving interval
                 plot(rewards)
