@@ -55,7 +55,6 @@ class env_bus(object):
         self.effective_station_name = sorted(set([self.od.index[i][0] for i in range(self.od.shape[0])]))
         self.effective_period = sorted(list(set([self.od.index[i][1] for i in range(self.od.shape[0])])))
 
-        self.state_dim = 7
         self.action_space = Box(0, 60, shape=(1,))
 
         if debug:
@@ -67,6 +66,8 @@ class env_bus(object):
         self.stations = self.set_stations()
         self.routes = self.set_routes()
         self.timetables = self.set_timetables()
+
+        self.state_dim = 7 + len(self.routes)//2
 
     # def save_snapshot(self):
     #     snapshot = {

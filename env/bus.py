@@ -145,8 +145,8 @@ class Bus(object):
 
     def drive(self, current_time, action, bus_all, debug):
         # absolute_distance & last_station_dis is divided by 1000 as kilometers rather than meters. forward_headway & backward_headway
-        # is divided by 60 as minutes rather than seconds. passenger on bus, boarding passengers & alighting passengers are divided by self.capacity
-        # step_length = 0, which means how long a bus move in a time step, calculated by accelerate and original velocity.
+        # is divided by 60 minutes rather than seconds. passengers on bus, boarding passengers and alighting passengers are divided by self.capacity
+        # step_length = 0, which means how long a bus moves in a time step, calculated by speeding up and original velocity.
 
         if self.next_station_dis <= self.current_speed and not self.holding and not self.dwelling:
             # when bus is arriving at station first time, set self.holding = True
@@ -218,7 +218,9 @@ class Bus(object):
                                     self.forward_headway, self.backward_headway,
                                     len(self.next_station.waiting_passengers) * 1.5 +
                                     self.current_route.distance/self.current_route.speed_limit]
-
+                        all_route = self.routes_list[:len(self.routes_list)//2] if self.direction else self.routes_list[len(self.routes_list)//2:]
+                        speed_list = [all_route[i].speed_limit for i in range(len(all_route))]
+                        self.obs.extend(speed_list)
                         # 计算 forward 和 backward 头时距的奖励 TODO: 可视化很奇怪，远不如默认的-(abs(headway - 360)),后面根据实验效果修改
                         # def headway_reward(headway):
                         #     if abs(headway - 360) <= 10:

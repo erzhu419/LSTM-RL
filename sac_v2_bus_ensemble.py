@@ -33,6 +33,7 @@ else:
 print(device)
 
 parser = argparse.ArgumentParser(description='Train or test neural net motor controller.')
+parser.add_argument('--max_episodes', type=int, default=500, help='number of episodes to train')
 parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='test', action='store_true', default=False)
 parser.add_argument('--use_gradient_clip', type=bool, default=True, help="Trick 1:gradient clipping")
@@ -42,15 +43,17 @@ parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Tric
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
 parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
-parser.add_argument('--weight_reg', type=float, default=0, help='weight of regularization')
+parser.add_argument('--weight_reg', type=float, default=0.01, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
-parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
+parser.add_argument("--maximum_alpha", type=float, default=2, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
 #TODO 可以看到这里把beta相关的三个参数降低之后，收敛性好很多，继续调参
 parser.add_argument("--beta_bc", type=float, default=0.001, help="weight of behavior cloning loss")
 # beta这个参数在源代码中是负数(我开始也奇怪为什么下面代码关于ood_std是+,原来是因为这里是负数)
 parser.add_argument("--beta", type=float, default=-2, help="weight of variance")
 parser.add_argument("--beta_ood", type=float, default=0.01, help="weight of OOD loss")
+parser.add_argument('--critic_actor_ratio', type=int, default=10, help="ratio of critic and actor training")
+parser.add_argument('--replay_buffer_size', type=int, default=int(1e5), help="buffer size")
 args = parser.parse_args()
 
 
@@ -325,10 +328,10 @@ class SAC_Trainer():
         target_q_next = target_q_next - self.alpha * next_log_prob + args.weight_reg * reg_norm  # shape: [ensemble_size, batch, 1]
         target_q_value = reward + (1 - done) * gamma * target_q_next.unsqueeze(-1)
 
-        ood_loss = args.beta_ood * predicted_q_value.std(0).mean()
+        ood_loss = predicted_q_value.std(0).mean()
         q_value_loss = self.soft_q_criterion(predicted_q_value, target_q_value.squeeze(-1).detach())
-        loss = q_value_loss + ood_loss
-        return loss, predicted_q_value
+        loss = q_value_loss + args.beta_ood * ood_loss
+        return loss, predicted_q_value, ood_loss
 
     # Policy loss computation
     def compute_policy_loss(self, state, action, new_action, log_prob, reg_norm):
@@ -344,9 +347,9 @@ class SAC_Trainer():
         bc_loss = F.mse_loss(new_action, action)
         # smooth_loss = self.get_policy_smooth_loss(state)
 
-        policy_loss = args.beta_bc * bc_loss + q_loss
+        loss = args.beta_bc * bc_loss + q_loss
 
-        return policy_loss, q_loss, bc_loss
+        return loss, q_loss, q_std
 
     # Smooth loss regularization (based on LCB get_policy_loss style)
     # def get_policy_smooth_loss(self, state, noise_std=0.2):
@@ -372,14 +375,14 @@ class SAC_Trainer():
         for name, param in model.named_parameters():
             if 'critic' in name:  # Only include parameters from the critic
                 if 'weight' in name:
-                    weight_norm.append(torch.norm(param, p=2, dim=[1,2]) ** 2)  # Keep the first dimension (10,)
+                    weight_norm.append(torch.norm(param, p=1, dim=[1, 2]))  # Keep the first dimension (10,)
                 elif 'bias' in name:
-                    bias_norm.append(torch.norm(param, p=2, dim=[1,2]) ** 2)  # Keep the first dimension (10,)
-        reg_norm = torch.sqrt(
-            torch.sum(torch.stack(weight_norm), dim=0) + torch.sum(torch.stack(bias_norm[:-1]), dim=0))  # Final shape [10,]
+                    bias_norm.append(torch.norm(param, p=1, dim=[1, 2]))  # Keep the first dimension (10,)
+        reg_norm = torch.sum(torch.stack(weight_norm), dim=0) + torch.sum(torch.stack(bias_norm[:-1]), dim=0)  # Final shape [10,]
         return reg_norm
 
     def update(self, batch_size, training_steps, reward_scale=10., auto_entropy=True, target_entropy=-2, gamma=0.99, soft_tau=1e-2):
+        global q_values
         state, action, reward, next_state, done = self.replay_buffer.sample(batch_size)
         state = torch.FloatTensor(state).to(device)
         next_state = torch.FloatTensor(next_state).to(device)
@@ -404,15 +407,17 @@ class SAC_Trainer():
 
         reg_norm = self.compute_reg_norm(self.target_soft_q_net)
 
-        q_value_loss, predicted_q_value = self.compute_q_loss(state, action, reward, next_state, done, new_next_action, next_log_prob, reg_norm, gamma)
+        q_value_loss, predicted_q_value, ood_loss = self.compute_q_loss(state, action, reward, next_state, done, new_next_action, next_log_prob, reg_norm, gamma)
         self.soft_q_optimizer.zero_grad()
         q_value_loss.backward(retain_graph=False)
         if args.use_gradient_clip:
             torch.nn.utils.clip_grad_norm_(self.soft_q_net.parameters(), max_norm=1.0)
         self.soft_q_optimizer.step()
 
-        if training_steps % 2 == 0:
-            policy_loss, predicted_new_q_value,_= self.compute_policy_loss(state, action, new_action, log_prob, reg_norm)
+        if training_steps % args.critic_actor_ratio == 0:
+            policy_loss, predicted_new_q_value, q_std= self.compute_policy_loss(state, action, new_action, log_prob, reg_norm)
+            q_stds.append(q_std.mean().item())
+
             self.policy_optimizer.zero_grad()
 
             policy_loss.backward(retain_graph=False)
@@ -420,11 +425,15 @@ class SAC_Trainer():
 
         for target_param, param in zip(self.target_soft_q_net.parameters(), self.soft_q_net.parameters()):
             target_param.data.copy_(target_param.data * (1.0 - soft_tau) + param.data * soft_tau)
-
-        q_values.append(predicted_q_value.mean().item())
+        # 把q_value分开花
+        if len(q_values) == 0:
+            q_values = predicted_q_value.mean(1).cpu().detach().numpy().reshape(-1,1)
+        else:
+            q_values = np.concatenate((q_values, predicted_q_value.mean(1).cpu().detach().numpy().reshape(-1,1)), axis=1)
         reg_norms.append(args.weight_reg * reg_norm.mean().item())
         log_probs.append(-log_prob.mean().item())
         alpha_values.append(self.alpha)
+        ood_losses.append(ood_loss.item())
 
         return predicted_q_value.mean()
 
@@ -449,10 +458,14 @@ def plot(rewards):
     plt.title(f"Training Reward (weight_reg={args.weight_reg}, auto_entropy={args.auto_entropy}, reward_scaling={args.use_reward_scaling}, maximum_alpha={args.maximum_alpha})")
     plt.subplot(1, 2, 2)
 
-    plt.plot(q_values_episode, label="Q-Value")
+    for i in range(q_values_episode.shape[0]):
+        # 给Q值做了缩放，方便画图
+        plt.plot(q_values_episode[i]/50, label=f"Q-Value {i + 1}", color=f"C{i % 10}")
     plt.plot(reg_norms_episode, label="Regularization Term")
     plt.plot(log_probs_episode, label="Log Prob")
     plt.plot(alpha_values_episode, label="Alpha")
+    plt.plot(ood_losses_episode, label="OOD Loss")
+    plt.plot(q_stds_episode, label="Q Std")
 
     plt.legend()
     plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
@@ -460,7 +473,7 @@ def plot(rewards):
     if not os.path.exists('pic'):
         os.makedirs('pic')
     # Create subdirectory based on parameters except weight_reg
-    subdir_name = f'auto_entropy_{args.auto_entropy}_reward_scaling_{args.use_reward_scaling}_maximum_alpha_{args.maximum_alpha}'
+    subdir_name = f"replay_buffer_size_{args.replay_buffer_size}/critic_actor_ratio_{args.critic_actor_ratio}/maximum_alpha_{args.maximum_alpha}/weight_reg_{args.weight_reg}"
     subdir_path = os.path.join('pic', subdir_name)
     if not os.path.exists(subdir_path):
         os.makedirs(subdir_path)
@@ -469,9 +482,7 @@ def plot(rewards):
     plt.savefig(os.path.join(subdir_path, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
     plt.close()
 
-
-replay_buffer_size = 1e6
-replay_buffer = ReplayBuffer(replay_buffer_size)
+replay_buffer = ReplayBuffer(args.replay_buffer_size)
 
 debug = False
 render = False
@@ -486,7 +497,6 @@ action_range = env.action_space.high[0]
 
 step = 0
 step_trained = 0
-max_episodes = 1000
 frame_idx = 0
 explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
@@ -495,17 +505,22 @@ DETERMINISTIC = False
 hidden_dim = 64
 
 rewards = []  # 记录奖励
-q_values = []  # 记录 Q 值变化
+q_values = np.array([], dtype=np.float32)  # 记录 Q 值变化
 reg_norms = []  # 记录正则化项1
 log_probs = []  # 记录 log_prob
 alpha_values = []  # 记录 alpha 值
+ood_losses = []
+q_stds = []  # 记录 Q 值的标准差
 
-q_values_episode = []  # 记录每个 episode 的 Q 值
+q_values_episode = np.array([],dtype=np.float32)  # 记录每个 episode 的 Q 值
 reg_norms_episode = []  # 记录每个 episode 的正则化项1
 log_probs_episode = []  # 记录每个 episode 的 log_prob
 alpha_values_episode = []  # 记录每个 episode 的 alpha 值
+ood_losses_episode = []
+q_stds_episode = []  # 记录每个 episode 的 Q 值的标准差
 
-model_path = './model/sac_v2'
+model_path = f"./model/sac_v2_bus_ensemble/replay_buffer_size_{args.replay_buffer_size}/critic_actor_ratio_{args.critic_actor_ratio}/maximum_alpha_{args.maximum_alpha}/weight_reg_{args.weight_reg}"
+os.makedirs(model_path, exist_ok=True)
 tracemalloc.start()
 
 sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range)
@@ -513,7 +528,7 @@ sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_rang
 if __name__ == '__main__':
     if args.train:
         # training loop
-        for eps in range(max_episodes):
+        for eps in range(args.max_episodes):
             if eps != 0:
                 env.reset()
             state_dict, reward_dict, _ = env.initialize_state(render=render)
@@ -599,19 +614,26 @@ if __name__ == '__main__':
                     break
             # 计算每个 episode 的平均 Q 值
             rewards.append(episode_reward)
-            q_values_episode.append(np.mean(q_values[-training_steps:]))
+            # q_values_episode.append(np.mean(q_values[:,-training_steps:],axis=1))
+            if len(q_values_episode) == 0:
+                q_values_episode = np.mean(q_values[:,-training_steps:],axis=1).reshape(-1,1)
+            else:
+                q_values_episode = np.concatenate((q_values_episode, np.mean(q_values[:,-training_steps:], axis=1).reshape(-1,1)), axis=1)
+
             reg_norms_episode.append(np.mean(reg_norms[-training_steps:]))
             log_probs_episode.append(np.mean(log_probs[-training_steps:]))
             alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
+            ood_losses_episode.append(np.mean(ood_losses[-training_steps:]))
+            q_stds_episode.append(np.mean(q_stds[-training_steps:])) if len(q_stds) > 0 else None
 
             if eps % args.plot_freq == 0:  # plot and model saving interval
                 plot(rewards)
                 np.save('rewards', rewards)
-                torch.save(sac_trainer.policy_net.state_dict(), model_path)
+                torch.save(sac_trainer.policy_net.state_dict(), model_path + ' ' + str(eps))
                 # snapshot = tracemalloc.take_snapshot()
                 # for stat in snapshot.statistics('lineno')[:10]:
                 #     print(stat)  # 显示内存占用最大的10行
-            replay_buffer_usage = len(replay_buffer) / replay_buffer_size * 100
+            replay_buffer_usage = len(replay_buffer) / args.replay_buffer_size * 100
 
             print(
                 f"Episode: {eps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
