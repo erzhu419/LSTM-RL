@@ -43,17 +43,17 @@ parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Tric
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
 parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
-parser.add_argument('--weight_reg', type=float, default=0.01, help='weight of regularization')
+parser.add_argument('--weight_reg', type=float, default=0.03, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
-parser.add_argument("--maximum_alpha", type=float, default=2, help="max entropy weight")
+parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
 #TODO 可以看到这里把beta相关的三个参数降低之后，收敛性好很多，继续调参
 parser.add_argument("--beta_bc", type=float, default=0.001, help="weight of behavior cloning loss")
 # beta这个参数在源代码中是负数(我开始也奇怪为什么下面代码关于ood_std是+,原来是因为这里是负数)
 parser.add_argument("--beta", type=float, default=-2, help="weight of variance")
 parser.add_argument("--beta_ood", type=float, default=0.01, help="weight of OOD loss")
-parser.add_argument('--critic_actor_ratio', type=int, default=10, help="ratio of critic and actor training")
-parser.add_argument('--replay_buffer_size', type=int, default=int(1e5), help="buffer size")
+parser.add_argument('--critic_actor_ratio', type=int, default=2, help="ratio of critic and actor training")
+parser.add_argument('--replay_buffer_size', type=int, default=int(1e6), help="buffer size")
 args = parser.parse_args()
 
 
