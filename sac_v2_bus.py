@@ -40,12 +40,13 @@ parser.add_argument("--use_state_norm", type=bool, default=False, help="Trick 2:
 parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3:reward normalization")
 parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
-parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
+parser.add_argument("--training_freq", type=int, default=10, help="frequency of training the network")
 parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
 parser.add_argument('--weight_reg', type=float, default=0.1, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
 parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
+parser.add_argument("--max_episodes", type=int, default=500, help="max episodes")
 args = parser.parse_args()
 
 
@@ -385,8 +386,57 @@ class SAC_Trainer():
         self.policy_net.load_state_dict(torch.load(path + '_policy',weights_only=True))
 
         self.soft_q_net1.eval()
+        self.soft_q_net1.eval()
         self.soft_q_net2.eval()
         self.policy_net.eval()
+
+
+def evaluate_policy(sac_trainer, env, num_eval_episodes=5, deterministic=True):
+    """
+    评估当前策略，返回多次评估的平均奖励和方差
+    :param sac_trainer: SAC_Trainer实例
+    :param env: 环境
+    :param num_eval_episodes: 评估的episode数量
+    :param deterministic: 是否使用确定性策略
+    :return: (平均奖励, 奖励方差)
+    """
+    eval_rewards = []
+    
+    for eval_ep in range(num_eval_episodes):
+        env.reset()
+        state_dict, reward_dict, _ = env.initialize_state(render=False)
+        
+        done = False
+        episode_reward = 0
+        action_dict = {key: None for key in list(range(env.max_agent_num))}
+        
+        while not done:
+            # 完全遵循训练代码中的逻辑处理每个agent
+            for key in state_dict:
+                if len(state_dict[key]) == 1:
+                    if action_dict[key] is None:
+                        state_input = np.array(state_dict[key][0])
+                        a = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=deterministic)
+                        action_dict[key] = a
+                        
+                elif len(state_dict[key]) == 2:
+                    if state_dict[key][0][1] != state_dict[key][1][1]:
+                        # 累加奖励，这是关键部分
+                        episode_reward += reward_dict[key]
+                    
+                    state_dict[key] = state_dict[key][1:]
+                    state_input = np.array(state_dict[key][0])
+                    action_dict[key] = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=deterministic)
+            
+            # 执行动作
+            state_dict, reward_dict, done = env.step(action_dict, render=False)
+        
+        eval_rewards.append(episode_reward)
+    
+    mean_reward = np.mean(eval_rewards)
+    reward_std = np.std(eval_rewards)
+    
+    return mean_reward, reward_std
 
 
 def plot(rewards):
@@ -407,16 +457,13 @@ def plot(rewards):
     plt.legend()
     plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
 
-    if not os.path.exists('pic'):
-        os.makedirs('pic')
-    # Create subdirectory based on parameters except weight_reg
-    subdir_name = f'auto_entropy_{args.auto_entropy}_reward_scaling_{args.use_reward_scaling}_maximum_alpha_{args.maximum_alpha}'
-    subdir_path = os.path.join('pic', subdir_name)
-    if not os.path.exists(subdir_path):
-        os.makedirs(subdir_path)
+    # 获取当前.py文件名（不带扩展名）
+    script_name = os.path.splitext(os.path.basename(__file__))[0]
+    pic_dir = os.path.join('pic', script_name)
+    if not os.path.exists(pic_dir):
+        os.makedirs(pic_dir)
 
-    # Save the plot in the subdirectory
-    plt.savefig(os.path.join(subdir_path, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
+    plt.savefig(os.path.join(pic_dir, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
     plt.close()
 
 replay_buffer_size = 1e6
@@ -435,7 +482,6 @@ action_range = env.action_space.high[0]
 
 step = 0
 step_trained = 0
-max_episodes = 1000
 frame_idx = 0
 explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
@@ -456,7 +502,17 @@ reg_norms2_episode = []  # 记录每个 episode 的正则化项2
 log_probs_episode = []  # 记录每个 episode 的 log_prob
 alpha_values_episode = []  # 记录每个 episode 的 alpha 值
 
-model_path = './model/sac_v2'
+# 创建用于存储评估结果的列表
+eval_episodes = []      # 记录进行评估的 episode 编号
+eval_mean_rewards = []  # 记录评估的平均奖励
+eval_reward_stds = []   # 记录评估的奖励标准差
+
+# 修改模型保存路径
+model_path = './model/sac_v2_bus/sac_v2_bus'
+log_dir = './model/sac_v2_bus'
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 tracemalloc.start()
 
 sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range)
@@ -464,7 +520,7 @@ sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_rang
 if __name__ == '__main__':
     if args.train:
         # training loop
-        for eps in range(max_episodes):
+        for eps in range(args.max_episodes):
             if eps != 0:
                 env.reset()
             state_dict, reward_dict, _ = env.initialize_state(render=render)
@@ -557,17 +613,73 @@ if __name__ == '__main__':
             alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
 
             if eps % args.plot_freq == 0:  # plot and model saving interval
+                # 获取当前.py文件名（不带扩展名）                script_name = os.path.splitext(os.path.basename(__file__))[0]                log_dir = os.path.join('logs', script_name)
+                if not os.path.exists(log_dir):
+                    os.makedirs(log_dir)
+                    
                 plot(rewards)
-                np.save('rewards', rewards)
-                torch.save(sac_trainer.policy_net.state_dict(), model_path)
+                np.save(os.path.join(log_dir, 'rewards.npy'), rewards)
+                np.save(os.path.join(log_dir, 'q_values.npy'), q_values_episode)
+                np.save(os.path.join(log_dir, 'reg_norms1_episode.npy'), reg_norms1_episode)
+                np.save(os.path.join(log_dir, 'reg_norms2_episode.npy'), reg_norms2_episode)
+                np.save(os.path.join(log_dir, 'log_probs_episode.npy'), log_probs_episode)
+                np.save(os.path.join(log_dir, 'alpha_values_episode.npy'), alpha_values_episode)
+                
+                # 评估当前策略
+                mean_reward, reward_std = evaluate_policy(sac_trainer, env, num_eval_episodes=15, deterministic=True)
+                print(f"评估结果 (Episode {eps}): 平均奖励 = {mean_reward:.2f}, 标准差 = {reward_std:.2f}")
+                
+                # 记录评估结果
+                eval_episodes.append(eps)
+                eval_mean_rewards.append(mean_reward)
+                eval_reward_stds.append(reward_std)
+                
+                # 保存评估结果
+                np.save(os.path.join(log_dir, 'eval_episodes.npy'), eval_episodes)
+                np.save(os.path.join(log_dir, 'eval_mean_rewards.npy'), eval_mean_rewards)
+                np.save(os.path.join(log_dir, 'eval_reward_stds.npy'), eval_reward_stds)
+                
+                # 保存带有episode信息的模型
+                model_name = f"{model_path}_episode_{eps}"
+                sac_trainer.save_model(os.path.join(log_dir, f'sac_v2_episode_{eps}'))
+                sac_trainer.save_model(model_name)
                 # snapshot = tracemalloc.take_snapshot()
                 # for stat in snapshot.statistics('lineno')[:10]:
                 #     print(stat)  # 显示内存占用最大的10行
             replay_buffer_usage = len(replay_buffer) / replay_buffer_size * 100
-
+            
             print(
-                f"Episode: {eps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
-        torch.save(sac_trainer.policy_net.state_dict(), model_path)
+                f"Episode: {eps} | Episode Reward: {episode_reward} "
+                f"| CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | "
+                f"GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | "
+                f"Replay Buffer Usage: {replay_buffer_usage:.2f}%")
+          # 在训练结束时保存完整模型（包括critic和actor）
+        sac_trainer.save_model(model_path)
+        
+        # 评估最终策略
+        mean_reward, reward_std = evaluate_policy(sac_trainer, env, num_eval_episodes=15, deterministic=True)
+        print(f"最终评估结果: 平均奖励 = {mean_reward:.2f}, 标准差 = {reward_std:.2f}")
+        
+        # 记录最终评估结果
+        final_eval_episode = args.max_episodes - 1
+        eval_episodes.append(final_eval_episode)
+        eval_mean_rewards.append(mean_reward)
+        eval_reward_stds.append(reward_std)
+        
+        # 保存最终评估结果
+        script_name = os.path.splitext(os.path.basename(__file__))[0]
+        final_log_dir = os.path.join('logs', script_name)
+        if not os.path.exists(final_log_dir):
+            os.makedirs(final_log_dir)
+            
+        np.save(os.path.join(final_log_dir, 'eval_episodes.npy'), eval_episodes)
+        np.save(os.path.join(final_log_dir, 'eval_mean_rewards.npy'), eval_mean_rewards)
+        np.save(os.path.join(final_log_dir, 'eval_reward_stds.npy'), eval_reward_stds)
+        
+        # 保存带有最终episode信息的模型
+        final_model_name = f"{model_path}_episode_final"
+        sac_trainer.save_model(os.path.join(final_log_dir, 'sac_v2_episode_final'))
+        sac_trainer.save_model(final_model_name)
 
     if args.test:
         sac_trainer.policy_net.load_state_dict(torch.load(model_path))
