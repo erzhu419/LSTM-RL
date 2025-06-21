@@ -13,13 +13,6 @@ import copy
 import os, sys
 import pygame
 import json
-# TODO 归一化
-# TODO 对站点标签进行one-hot处理
-# TODO 是否会因为最后一个agent经常不发生作用而不被训练的充分，然后出问题？参考下秦伟志的
-# TODO 对站点和direction进行one-hot
-# TODO 增加一个提前结束的条件
-# 已经把relu换成relu6
-# 已经归一化state，
 
 
 class env_bus(object):
@@ -304,7 +297,8 @@ class env_bus(object):
 if __name__ == '__main__':
     debug = True
     render = True
-
+    if render:
+        pygame.init()
     config_path = os.path.join(os.path.dirname(__file__), 'config.json')
 
     env = env_bus(os.getcwd(), debug=debug)

@@ -513,7 +513,7 @@ reward_scaling = RewardScaling(shape=1, gamma=0.99)
 # hyper-parameters
 step = 0
 step_trained = 0 # 因为同一个step可能会有多个数据，所以需要一个额外的计数器
-max_episodes = 1000
+max_episodes = 5
 frame_idx = 0
 explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
@@ -603,7 +603,8 @@ if __name__ == '__main__':
                             state_input = state_norm(np.array(state_dict[key][0]))
                         else:
                             state_input = np.array(state_dict[key][0])
-
+                        # 这里之所以要把get_action放在最后，就是因为当到达某个站点的时候，要先存储(s,a,r,s')
+                        # 如果先调用get_action的话，就会把a'存储进replay_buffer，而不是a
                         action_dict[key]= policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=DETERMINISTIC)
                         # print(action_dict[key])
                         # print info like before
@@ -640,7 +641,7 @@ if __name__ == '__main__':
                 #     print(stat)  # 显示内存占用最大的10行
             replay_buffer_usage = len(replay_buffer) / replay_buffer_size * 100
 
-            print(f"Episode: {eps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
+            print(f"Episode: {eps} | Episode Steps: {episode_steps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
         torch.save(policy_net.state_dict(), model_path)
 
     if args.test:

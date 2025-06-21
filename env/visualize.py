@@ -132,6 +132,10 @@ class visualize(object):
         
         self.bus_color = np.random.choice(list(self.cnames.keys()), env.max_agent_num)
         
+        self.screen_width = 2100
+        self.screen_length = 1600
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_length))
+        
     def draw_bus(self, surface, x, y, color, scale=1):
             # Scale dimensions with minimum size constraints
         bus_width = max(100 * scale, 20)  # Minimum width of 20
@@ -197,10 +201,7 @@ class visualize(object):
 
     def render(self):
         
-        screen_width = 2100
-        screen_length = 1600
-        screen = pygame.display.set_mode((screen_width, screen_length))
-        
+        screen = self.screen
         pygame.display.set_caption("Bus Simulation")
         
         font = pygame.font.Font(None, 36)
@@ -217,8 +218,8 @@ class visualize(object):
         time_surface = font.render(current_time, True, text_color)
         
         # define the upper and lower line y position of the bus
-        upper_direction_y = screen_length/2 - 70
-        lower_direction_y = screen_length/2 + 70        
+        upper_direction_y = self.screen_length/2 - 70
+        lower_direction_y = self.screen_length/2 + 70        
                 
         pygame_station_interval = 100
         pygame_simulation_distance_ratio = self.env.routes[0].distance / pygame_station_interval
