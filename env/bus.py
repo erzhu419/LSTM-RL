@@ -55,6 +55,11 @@ class Bus(object):
         self.headway_dif = []
         self.is_unhealthy = False # False if the bus is healthy, True if the bus is unhealthy, then terminate env early
 
+        # record of stop intervals [station_name, start_time, end_time]
+        self.stop_records = []
+        self._stop_start_time = None
+        self._stop_station = None
+
     @property
     def occupancy(self):
         return str(len(self.passengers)) + '/' + str(self.capacity)
@@ -193,6 +198,14 @@ class Bus(object):
                 # 作为在站内的最后一秒，返回奖励值，更新车辆状态
                 self.dwelling = False
                 self.in_station = False
+                if self._stop_start_time is not None:
+                    self.stop_records.append([
+                        self._stop_station,
+                        self._stop_start_time,
+                        current_time
+                    ])
+                    self._stop_start_time = None
+                    self._stop_station = None
                 # if self.trip_id not in [0, 1] and self.next_station in self.effective_station[3:-1]:
                 #     self.reward = np.exp(-abs(self.forward_headway - 360)) if len(self.forward_bus) != 0 else None
                 #
@@ -288,6 +301,11 @@ class Bus(object):
         # Because we have to use the self.holding_time later, so we exchange passenger first when arrived a station
         # self.exchange_passengers(current_time) # self.holding_time is set in this function
         # Update forward_bus backward_bus and relative reward when a bus is arrived a station(except terminal)
+
+        # record the start time and station when the bus stops
+        self.current_speed = 0
+        self._stop_start_time = current_time
+        self._stop_station = self.next_station.station_name
 
         self.forward_bus = list(filter(lambda x: self.trip_id - 2 in x.trip_id_list, bus_all))
         if len(self.forward_bus) != 0:
