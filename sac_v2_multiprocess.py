@@ -509,7 +509,7 @@ if __name__ == '__main__':
 
         rewards_queue=mp.Queue()  # used for get rewards from all processes and plot the curve
 
-        num_workers=mp.cpu_count()//2  # or: mp.cpu_count()
+        num_workers= 1  # or: mp.cpu_count()
         processes=[]
         rewards=[]
 
@@ -520,7 +520,7 @@ if __name__ == '__main__':
             processes.append(process)
 
         [p.start() for p in processes]
-        while True:  # keep geting the episode reward from the queue
+        while True:  # keep getting the episode reward from the queue
             r = rewards_queue.get()
             if r is not None:
                 rewards.append(r)
