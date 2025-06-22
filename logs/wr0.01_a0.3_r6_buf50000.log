@@ -1,0 +1,491 @@
+pygame 2.6.1 (SDL 2.28.4, Python 3.8.20)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+cuda:0
+[33mWARN: gym.spaces.Box autodetected dtype as <class 'numpy.float32'>. Please provide explicit dtype.[0m
+Soft Q Network:  SoftQNetwork(
+  (embedding_layer): EmbeddingLayer(
+    (embeddings): ModuleDict(
+      (bus_id): Embedding(25, 12)
+      (station_id): Embedding(22, 11)
+      (time_period): Embedding(15, 7)
+      (direction): Embedding(2, 1)
+    )
+  )
+  (critic): Sequential(
+    (0): VectorizedLinear()
+    (1): ReLU()
+    (2): VectorizedLinear()
+    (3): ReLU()
+    (4): VectorizedLinear()
+    (5): ReLU()
+    (6): VectorizedLinear()
+  )
+)
+Policy Network:  PolicyNetwork(
+  (embedding_layer): EmbeddingLayer(
+    (embeddings): ModuleDict(
+      (bus_id): Embedding(25, 12)
+      (station_id): Embedding(22, 11)
+      (time_period): Embedding(15, 7)
+      (direction): Embedding(2, 1)
+    )
+  )
+  (linear1): Linear(in_features=55, out_features=64, bias=True)
+  (linear2): Linear(in_features=64, out_features=64, bias=True)
+  (linear3): Linear(in_features=64, out_features=64, bias=True)
+  (linear4): Linear(in_features=64, out_features=64, bias=True)
+  (mean_linear): Linear(in_features=64, out_features=1, bias=True)
+  (log_std_linear): Linear(in_features=64, out_features=1, bias=True)
+)
+[2K[2KEpisode: 0 | Episode Reward: -1192995.765011356 | CPU Memory: 1626.88 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 9.94%
+[2K[2KEpisode: 1 | Episode Reward: -1050675.7490824773 | CPU Memory: 1668.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 19.89%
+[2K[2KEpisode: 2 | Episode Reward: -1016331.8066737542 | CPU Memory: 1709.51 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 29.83%
+[2K[2KEpisode: 3 | Episode Reward: -717706.8750712734 | CPU Memory: 1708.87 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 39.77%
+[2K[2KEpisode: 4 | Episode Reward: -509873.2468281541 | CPU Memory: 1709.90 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 49.71%
+[2K[2KEpisode: 5 | Episode Reward: -485255.8931250594 | CPU Memory: 1710.03 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 59.65%
+[2K[2KEpisode: 6 | Episode Reward: -465615.44412088965 | CPU Memory: 1750.66 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 69.60%
+[2K[2KEpisode: 7 | Episode Reward: -459714.3371394321 | CPU Memory: 1753.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 79.54%
+[2K[2KEpisode: 8 | Episode Reward: -464779.86035746004 | CPU Memory: 1764.70 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 89.48%
+[2K[2KEpisode: 9 | Episode Reward: -449482.41670281335 | CPU Memory: 1790.01 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 10 | Episode Reward: -474975.2085288428 | CPU Memory: 1790.01 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 11 | Episode Reward: -454537.2283136005 | CPU Memory: 1804.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 12 | Episode Reward: -467632.5650833691 | CPU Memory: 1824.25 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 13 | Episode Reward: -461057.3005026296 | CPU Memory: 1824.07 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 14 | Episode Reward: -489011.1768758006 | CPU Memory: 1825.45 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 15 | Episode Reward: -454733.46282050846 | CPU Memory: 1826.16 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 16 | Episode Reward: -475147.47896652645 | CPU Memory: 1827.75 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 17 | Episode Reward: -489375.84835086315 | CPU Memory: 1833.36 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 18 | Episode Reward: -482913.51074129826 | CPU Memory: 1836.36 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 19 | Episode Reward: -502959.09134124697 | CPU Memory: 1837.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 20 | Episode Reward: -486175.34487600863 | CPU Memory: 1839.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 21 | Episode Reward: -513776.02562497905 | CPU Memory: 1847.10 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 22 | Episode Reward: -524076.4618821126 | CPU Memory: 1848.63 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 23 | Episode Reward: -527603.8814484399 | CPU Memory: 1853.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 24 | Episode Reward: -563955.4236513273 | CPU Memory: 1852.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 25 | Episode Reward: -561281.575252521 | CPU Memory: 1877.44 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 26 | Episode Reward: -572797.5005382242 | CPU Memory: 1877.44 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 27 | Episode Reward: -620520.8705509533 | CPU Memory: 1878.01 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 28 | Episode Reward: -645563.1037697702 | CPU Memory: 1878.01 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 29 | Episode Reward: -655537.1338222183 | CPU Memory: 1883.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 30 | Episode Reward: -682158.9935331859 | CPU Memory: 1884.71 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 31 | Episode Reward: -713629.4782093671 | CPU Memory: 1887.28 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 32 | Episode Reward: -721717.2571702247 | CPU Memory: 1887.28 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 33 | Episode Reward: -733783.2378182873 | CPU Memory: 1890.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 34 | Episode Reward: -749472.9284681879 | CPU Memory: 1892.08 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 35 | Episode Reward: -835946.0571192078 | CPU Memory: 1892.94 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 36 | Episode Reward: -799953.3053851018 | CPU Memory: 1899.59 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 37 | Episode Reward: -808456.2893691151 | CPU Memory: 1900.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 38 | Episode Reward: -818340.8171100357 | CPU Memory: 1899.76 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 39 | Episode Reward: -821947.3804729402 | CPU Memory: 1900.02 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 40 | Episode Reward: -888028.8461493102 | CPU Memory: 1903.30 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 41 | Episode Reward: -853397.4263866977 | CPU Memory: 1903.56 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 42 | Episode Reward: -868171.9359404545 | CPU Memory: 1908.05 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 43 | Episode Reward: -886635.9428973885 | CPU Memory: 1916.89 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 44 | Episode Reward: -883168.6594890904 | CPU Memory: 1966.54 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 45 | Episode Reward: -892237.8398385061 | CPU Memory: 1985.98 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 46 | Episode Reward: -900900.4788456692 | CPU Memory: 2000.61 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 47 | Episode Reward: -889575.3769466915 | CPU Memory: 2034.17 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 48 | Episode Reward: -890742.47268569 | CPU Memory: 2065.98 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 49 | Episode Reward: -954208.8252238687 | CPU Memory: 2087.55 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 50 | Episode Reward: -897475.9509712774 | CPU Memory: 2087.32 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 51 | Episode Reward: -873971.2310068301 | CPU Memory: 2087.32 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 52 | Episode Reward: -898240.400334583 | CPU Memory: 2089.60 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 53 | Episode Reward: -943223.8574280421 | CPU Memory: 2107.65 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 54 | Episode Reward: -914855.7006837191 | CPU Memory: 2125.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 55 | Episode Reward: -959081.5281391108 | CPU Memory: 2125.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 56 | Episode Reward: -1004048.0010436656 | CPU Memory: 2126.99 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 57 | Episode Reward: -977951.6100277824 | CPU Memory: 2130.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 58 | Episode Reward: -973100.8127731615 | CPU Memory: 2130.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 59 | Episode Reward: -988645.0113084259 | CPU Memory: 2130.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 60 | Episode Reward: -894710.9285867215 | CPU Memory: 2130.62 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 61 | Episode Reward: -910417.2732579819 | CPU Memory: 2132.02 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 62 | Episode Reward: -996406.053840895 | CPU Memory: 2134.35 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 63 | Episode Reward: -896514.5986653678 | CPU Memory: 2134.30 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 64 | Episode Reward: -925006.345290169 | CPU Memory: 2136.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 65 | Episode Reward: -999717.3411768267 | CPU Memory: 2139.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 66 | Episode Reward: -1006673.1387787577 | CPU Memory: 2138.72 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 67 | Episode Reward: -901946.6060560561 | CPU Memory: 2138.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 68 | Episode Reward: -964195.43860534 | CPU Memory: 2138.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 69 | Episode Reward: -921748.3308343904 | CPU Memory: 2141.33 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 70 | Episode Reward: -933897.8214710816 | CPU Memory: 2145.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 71 | Episode Reward: -991572.5278542311 | CPU Memory: 2144.48 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 72 | Episode Reward: -977419.5959331355 | CPU Memory: 2145.04 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 73 | Episode Reward: -951017.4615407971 | CPU Memory: 2144.54 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 74 | Episode Reward: -896287.2860076803 | CPU Memory: 2144.48 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 75 | Episode Reward: -921152.5889789386 | CPU Memory: 2145.99 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 76 | Episode Reward: -932996.5419860685 | CPU Memory: 2146.00 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 77 | Episode Reward: -908201.355489973 | CPU Memory: 2145.78 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 78 | Episode Reward: -954349.2796940805 | CPU Memory: 2145.78 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 79 | Episode Reward: -975561.0647323813 | CPU Memory: 2161.79 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 80 | Episode Reward: -942711.8664728536 | CPU Memory: 2165.20 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 81 | Episode Reward: -952569.0012099945 | CPU Memory: 2165.20 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 82 | Episode Reward: -983139.02024333 | CPU Memory: 2164.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 83 | Episode Reward: -984076.4430085862 | CPU Memory: 2164.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 84 | Episode Reward: -932966.9216375673 | CPU Memory: 2165.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 85 | Episode Reward: -914101.445054591 | CPU Memory: 2165.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 86 | Episode Reward: -937134.2427465888 | CPU Memory: 2165.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 87 | Episode Reward: -916934.2502238951 | CPU Memory: 2165.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 88 | Episode Reward: -953409.6147101278 | CPU Memory: 2165.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 89 | Episode Reward: -913747.2857882616 | CPU Memory: 2165.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 90 | Episode Reward: -970687.6335322103 | CPU Memory: 2165.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 91 | Episode Reward: -948967.5970261358 | CPU Memory: 2165.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 92 | Episode Reward: -967273.470019321 | CPU Memory: 2165.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 93 | Episode Reward: -933199.6717710281 | CPU Memory: 2167.83 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 94 | Episode Reward: -974719.296599298 | CPU Memory: 2167.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 95 | Episode Reward: -947481.6973162692 | CPU Memory: 2167.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 96 | Episode Reward: -939776.8405985661 | CPU Memory: 2167.09 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 97 | Episode Reward: -961941.7609953508 | CPU Memory: 2167.09 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 98 | Episode Reward: -903065.2795525877 | CPU Memory: 2167.09 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 99 | Episode Reward: -938703.5842314532 | CPU Memory: 2167.09 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 100 | Episode Reward: -897818.0955561323 | CPU Memory: 2169.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 101 | Episode Reward: -910716.9020236834 | CPU Memory: 2169.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 102 | Episode Reward: -899354.5605387513 | CPU Memory: 2169.56 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 103 | Episode Reward: -935077.1767670186 | CPU Memory: 2169.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 104 | Episode Reward: -875033.18903729 | CPU Memory: 2173.52 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 105 | Episode Reward: -855192.282217143 | CPU Memory: 2173.52 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 106 | Episode Reward: -934924.6193084376 | CPU Memory: 2173.52 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 107 | Episode Reward: -944278.4778402032 | CPU Memory: 2173.52 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 108 | Episode Reward: -873031.7773798732 | CPU Memory: 2173.52 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 109 | Episode Reward: -896872.6655422352 | CPU Memory: 2173.52 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 110 | Episode Reward: -919774.481739059 | CPU Memory: 2177.86 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 111 | Episode Reward: -950096.064214188 | CPU Memory: 2176.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 112 | Episode Reward: -896194.5366676237 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 113 | Episode Reward: -972109.882639258 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 114 | Episode Reward: -893446.6985243703 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 115 | Episode Reward: -965475.5137622643 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 116 | Episode Reward: -936531.4015393205 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 117 | Episode Reward: -917257.6773381851 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 118 | Episode Reward: -990438.5154377046 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 119 | Episode Reward: -851927.4036825806 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 120 | Episode Reward: -992468.1727737355 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 121 | Episode Reward: -916001.7080111443 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 122 | Episode Reward: -952149.0504019718 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 123 | Episode Reward: -966750.7943501032 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 124 | Episode Reward: -924959.7586148689 | CPU Memory: 2176.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 125 | Episode Reward: -932925.5352339807 | CPU Memory: 2179.35 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 126 | Episode Reward: -914226.9626247864 | CPU Memory: 2179.35 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 127 | Episode Reward: -932645.0342458228 | CPU Memory: 2179.35 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 128 | Episode Reward: -910813.0749037114 | CPU Memory: 2179.35 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 129 | Episode Reward: -923440.4364105386 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 130 | Episode Reward: -969193.1669703727 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 131 | Episode Reward: -913049.9655644471 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 132 | Episode Reward: -963375.8512659115 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 133 | Episode Reward: -986948.5995607486 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 134 | Episode Reward: -939426.2884777576 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 135 | Episode Reward: -912123.4349478607 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 136 | Episode Reward: -899614.0368737669 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 137 | Episode Reward: -924684.1765473005 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 138 | Episode Reward: -916315.3479823282 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 139 | Episode Reward: -984221.0361647361 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 140 | Episode Reward: -874672.7519509216 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 141 | Episode Reward: -883544.7577728867 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 142 | Episode Reward: -947332.1816817262 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 143 | Episode Reward: -925527.73119044 | CPU Memory: 2184.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 144 | Episode Reward: -966158.6630491528 | CPU Memory: 2186.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 145 | Episode Reward: -882185.3678830916 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 146 | Episode Reward: -896493.8904206061 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 147 | Episode Reward: -951589.143655068 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 148 | Episode Reward: -943034.5293245548 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 149 | Episode Reward: -946284.6585057428 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 150 | Episode Reward: -940208.9279591206 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 151 | Episode Reward: -909877.3271765889 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 152 | Episode Reward: -901438.2843259918 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 153 | Episode Reward: -889533.1060056068 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 154 | Episode Reward: -963271.6964029106 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 155 | Episode Reward: -912535.9589826321 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 156 | Episode Reward: -906156.0346403486 | CPU Memory: 2185.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 157 | Episode Reward: -928210.3179840064 | CPU Memory: 2194.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 158 | Episode Reward: -877684.1896977626 | CPU Memory: 2194.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 159 | Episode Reward: -905890.9190862639 | CPU Memory: 2194.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 160 | Episode Reward: -938746.841775738 | CPU Memory: 2258.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 161 | Episode Reward: -935709.5202385656 | CPU Memory: 2258.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 162 | Episode Reward: -913178.5736159426 | CPU Memory: 2258.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 163 | Episode Reward: -925447.2346095581 | CPU Memory: 2258.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 164 | Episode Reward: -907088.3510175959 | CPU Memory: 2261.04 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 165 | Episode Reward: -961082.5056442948 | CPU Memory: 2260.67 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 166 | Episode Reward: -902973.2565185652 | CPU Memory: 2260.93 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 167 | Episode Reward: -907411.7642596998 | CPU Memory: 2260.54 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 168 | Episode Reward: -921153.5704961694 | CPU Memory: 2260.54 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 169 | Episode Reward: -918814.9409309301 | CPU Memory: 2260.54 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 170 | Episode Reward: -905691.2303338673 | CPU Memory: 2269.18 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 171 | Episode Reward: -956447.1171873613 | CPU Memory: 2269.09 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 172 | Episode Reward: -897751.8413885743 | CPU Memory: 2268.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 173 | Episode Reward: -913430.6517973185 | CPU Memory: 2268.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 174 | Episode Reward: -978972.9114488338 | CPU Memory: 2268.57 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 175 | Episode Reward: -940942.0550752234 | CPU Memory: 2274.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 176 | Episode Reward: -939062.7722411272 | CPU Memory: 2274.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 177 | Episode Reward: -850985.3935660772 | CPU Memory: 2274.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 178 | Episode Reward: -944628.296793061 | CPU Memory: 2274.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 179 | Episode Reward: -981182.8782132658 | CPU Memory: 2274.62 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 180 | Episode Reward: -910468.8797475955 | CPU Memory: 2274.62 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 181 | Episode Reward: -959112.5933958271 | CPU Memory: 2274.62 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 182 | Episode Reward: -1005991.0819810344 | CPU Memory: 2274.62 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 183 | Episode Reward: -943373.4649233398 | CPU Memory: 2275.14 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 184 | Episode Reward: -893138.5993772334 | CPU Memory: 2275.14 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 185 | Episode Reward: -964446.994795867 | CPU Memory: 2275.39 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 186 | Episode Reward: -1034874.3807494267 | CPU Memory: 2277.51 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 187 | Episode Reward: -951324.6598061083 | CPU Memory: 2277.32 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 188 | Episode Reward: -923620.3752042642 | CPU Memory: 2277.15 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 189 | Episode Reward: -943704.1930457831 | CPU Memory: 2277.15 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 190 | Episode Reward: -907346.9320441055 | CPU Memory: 2277.15 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 191 | Episode Reward: -987055.777920493 | CPU Memory: 2284.48 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 192 | Episode Reward: -985408.0990972191 | CPU Memory: 2283.22 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 193 | Episode Reward: -989240.5871214223 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 194 | Episode Reward: -910149.8195713508 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 195 | Episode Reward: -890338.1393823371 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 196 | Episode Reward: -964720.7611977105 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 197 | Episode Reward: -942699.6509085858 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 198 | Episode Reward: -887284.9968306768 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 199 | Episode Reward: -939443.5252487996 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 200 | Episode Reward: -914101.159916956 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 201 | Episode Reward: -908799.2827422045 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 202 | Episode Reward: -951144.8842720767 | CPU Memory: 2287.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 203 | Episode Reward: -929046.1181473053 | CPU Memory: 2291.99 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 204 | Episode Reward: -987106.6625237358 | CPU Memory: 2301.54 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 205 | Episode Reward: -918180.631975397 | CPU Memory: 2300.77 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 206 | Episode Reward: -949843.466889087 | CPU Memory: 2300.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 207 | Episode Reward: -853266.9848965687 | CPU Memory: 2300.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 208 | Episode Reward: -955790.7086275116 | CPU Memory: 2300.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 209 | Episode Reward: -978008.9622649484 | CPU Memory: 2300.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 210 | Episode Reward: -900736.6853781771 | CPU Memory: 2300.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 211 | Episode Reward: -988876.1920673914 | CPU Memory: 2304.57 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 212 | Episode Reward: -907577.9164688361 | CPU Memory: 2304.57 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 213 | Episode Reward: -978714.5687166267 | CPU Memory: 2304.57 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 214 | Episode Reward: -951083.262737439 | CPU Memory: 2304.57 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 215 | Episode Reward: -962463.805911418 | CPU Memory: 2304.57 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 216 | Episode Reward: -937443.2975171307 | CPU Memory: 2304.57 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 217 | Episode Reward: -942914.0042912447 | CPU Memory: 2305.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 218 | Episode Reward: -974787.691443625 | CPU Memory: 2305.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 219 | Episode Reward: -977494.1732007521 | CPU Memory: 2305.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 220 | Episode Reward: -1010738.0619040923 | CPU Memory: 2305.85 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 221 | Episode Reward: -971281.3456770987 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 222 | Episode Reward: -995205.1225524618 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 223 | Episode Reward: -978450.2742580395 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 224 | Episode Reward: -937460.5510119941 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 225 | Episode Reward: -1032152.971276033 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 226 | Episode Reward: -973790.3108234986 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 227 | Episode Reward: -967912.364238918 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 228 | Episode Reward: -1012433.813783375 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 229 | Episode Reward: -990915.832756083 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 230 | Episode Reward: -1023293.9753926175 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 231 | Episode Reward: -1018378.5389438112 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 232 | Episode Reward: -1014661.3300602466 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 233 | Episode Reward: -1043240.5516159076 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 234 | Episode Reward: -1016547.0239773187 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 235 | Episode Reward: -929674.9025675011 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 236 | Episode Reward: -976742.3306826316 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 237 | Episode Reward: -935523.672523846 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 238 | Episode Reward: -950934.6227800251 | CPU Memory: 2307.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 239 | Episode Reward: -1000307.0620406874 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 240 | Episode Reward: -917380.2462063832 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 241 | Episode Reward: -922994.8056789425 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 242 | Episode Reward: -903856.2182712987 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 243 | Episode Reward: -958595.3505020884 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 244 | Episode Reward: -888574.5032963009 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 245 | Episode Reward: -982935.5358159645 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 246 | Episode Reward: -1020106.9625467021 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 247 | Episode Reward: -981660.372083243 | CPU Memory: 2314.69 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 248 | Episode Reward: -930525.9090369849 | CPU Memory: 2315.71 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 249 | Episode Reward: -935539.269173252 | CPU Memory: 2315.96 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 250 | Episode Reward: -901794.399568935 | CPU Memory: 2315.96 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 251 | Episode Reward: -961539.7618656601 | CPU Memory: 2315.96 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 252 | Episode Reward: -972299.7987717484 | CPU Memory: 2315.96 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 253 | Episode Reward: -978165.9888879571 | CPU Memory: 2315.96 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 254 | Episode Reward: -902780.4503537387 | CPU Memory: 2315.96 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 255 | Episode Reward: -977431.3417746342 | CPU Memory: 2321.78 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 256 | Episode Reward: -1041573.7932840541 | CPU Memory: 2329.22 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 257 | Episode Reward: -1034101.5041258348 | CPU Memory: 2329.22 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 258 | Episode Reward: -921899.8536025333 | CPU Memory: 2329.22 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 259 | Episode Reward: -1005194.1675323955 | CPU Memory: 2329.48 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 260 | Episode Reward: -969855.4643390548 | CPU Memory: 2316.40 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 261 | Episode Reward: -995005.8967767204 | CPU Memory: 2320.20 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 262 | Episode Reward: -958534.3425538393 | CPU Memory: 2320.46 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 263 | Episode Reward: -952591.2801876024 | CPU Memory: 2320.46 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 264 | Episode Reward: -1030343.6753989663 | CPU Memory: 2316.86 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 265 | Episode Reward: -994656.1878065283 | CPU Memory: 2320.66 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 266 | Episode Reward: -963429.625612289 | CPU Memory: 2320.92 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 267 | Episode Reward: -987883.6947740896 | CPU Memory: 2320.92 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 268 | Episode Reward: -955648.3697968926 | CPU Memory: 2320.92 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 269 | Episode Reward: -932571.6321705121 | CPU Memory: 2317.50 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 270 | Episode Reward: -995464.5221259287 | CPU Memory: 2321.30 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 271 | Episode Reward: -1010427.2202662906 | CPU Memory: 2321.30 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 272 | Episode Reward: -886873.4557340574 | CPU Memory: 2321.56 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 273 | Episode Reward: -981353.4741834025 | CPU Memory: 2321.56 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 274 | Episode Reward: -1015539.4648978735 | CPU Memory: 2327.88 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 275 | Episode Reward: -1005524.6025022219 | CPU Memory: 2327.88 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 276 | Episode Reward: -1010170.4199527511 | CPU Memory: 2318.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 277 | Episode Reward: -1035706.3557193835 | CPU Memory: 2323.36 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 278 | Episode Reward: -1041540.7205830066 | CPU Memory: 2323.36 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 279 | Episode Reward: -921776.7641356961 | CPU Memory: 2323.62 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 280 | Episode Reward: -1085217.7968907284 | CPU Memory: 2327.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 281 | Episode Reward: -1049517.7278737235 | CPU Memory: 2327.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 282 | Episode Reward: -1038414.631637121 | CPU Memory: 2330.58 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 283 | Episode Reward: -975056.4320186719 | CPU Memory: 2325.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 284 | Episode Reward: -945676.0348616671 | CPU Memory: 2325.83 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 285 | Episode Reward: -960884.4064145794 | CPU Memory: 2325.86 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 286 | Episode Reward: -982187.7675235409 | CPU Memory: 2332.16 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 287 | Episode Reward: -924652.3680865663 | CPU Memory: 2338.32 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 288 | Episode Reward: -920956.8428607838 | CPU Memory: 2338.07 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 289 | Episode Reward: -992812.467258354 | CPU Memory: 2337.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 290 | Episode Reward: -949334.2655722355 | CPU Memory: 2337.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 291 | Episode Reward: -1025099.8635546163 | CPU Memory: 2341.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 292 | Episode Reward: -1043926.7845287542 | CPU Memory: 2340.80 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 293 | Episode Reward: -1082268.0067087654 | CPU Memory: 2340.31 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 294 | Episode Reward: -1021607.1012188499 | CPU Memory: 2331.36 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 295 | Episode Reward: -1010516.4337772297 | CPU Memory: 2345.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 296 | Episode Reward: -1032027.8647451923 | CPU Memory: 2333.23 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 297 | Episode Reward: -1006272.6957118826 | CPU Memory: 2333.23 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 298 | Episode Reward: -980704.105774878 | CPU Memory: 2336.52 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 299 | Episode Reward: -952300.6490844715 | CPU Memory: 2347.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 300 | Episode Reward: -1001539.2782218527 | CPU Memory: 2337.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 301 | Episode Reward: -1014452.5016388575 | CPU Memory: 2337.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 302 | Episode Reward: -1057674.8413121866 | CPU Memory: 2333.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 303 | Episode Reward: -962287.7167155136 | CPU Memory: 2342.30 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 304 | Episode Reward: -936913.0219147223 | CPU Memory: 2342.55 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 305 | Episode Reward: -896415.8351070139 | CPU Memory: 2342.55 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 306 | Episode Reward: -887566.5899065306 | CPU Memory: 2342.81 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 307 | Episode Reward: -907039.4363785166 | CPU Memory: 2342.81 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 308 | Episode Reward: -859706.0836238556 | CPU Memory: 2342.81 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 309 | Episode Reward: -881393.9628005719 | CPU Memory: 2343.07 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 310 | Episode Reward: -891238.9770131086 | CPU Memory: 2343.07 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 311 | Episode Reward: -924397.4992586933 | CPU Memory: 2354.60 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 312 | Episode Reward: -878721.8901234623 | CPU Memory: 2343.35 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 313 | Episode Reward: -866011.8911197968 | CPU Memory: 2343.61 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 314 | Episode Reward: -937509.9389090937 | CPU Memory: 2354.88 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 315 | Episode Reward: -856388.7148044914 | CPU Memory: 2343.72 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 316 | Episode Reward: -877630.8071917355 | CPU Memory: 2343.75 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 317 | Episode Reward: -857134.4338657422 | CPU Memory: 2343.98 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 318 | Episode Reward: -881560.9409368046 | CPU Memory: 2347.78 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 319 | Episode Reward: -849143.8759696115 | CPU Memory: 2347.78 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 320 | Episode Reward: -879145.4962800713 | CPU Memory: 2348.04 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 321 | Episode Reward: -891959.0388058688 | CPU Memory: 2344.39 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 322 | Episode Reward: -891042.6796033393 | CPU Memory: 2348.19 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 323 | Episode Reward: -916901.0578385091 | CPU Memory: 2348.19 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 324 | Episode Reward: -880682.7220267606 | CPU Memory: 2348.45 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 325 | Episode Reward: -914939.8647152353 | CPU Memory: 2348.45 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 326 | Episode Reward: -926916.48045629 | CPU Memory: 2344.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 327 | Episode Reward: -901250.9883042468 | CPU Memory: 2348.62 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 328 | Episode Reward: -887888.8906652064 | CPU Memory: 2345.16 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 329 | Episode Reward: -851340.3255714248 | CPU Memory: 2354.38 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 330 | Episode Reward: -874016.2537379554 | CPU Memory: 2352.90 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 331 | Episode Reward: -902649.0213888887 | CPU Memory: 2352.65 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 332 | Episode Reward: -885746.0304856589 | CPU Memory: 2354.99 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 333 | Episode Reward: -862582.9993720909 | CPU Memory: 2366.28 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 334 | Episode Reward: -939135.1019394879 | CPU Memory: 2358.13 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 335 | Episode Reward: -911372.2057813477 | CPU Memory: 2354.17 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 336 | Episode Reward: -920451.2182592062 | CPU Memory: 2357.97 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 337 | Episode Reward: -998096.8875799662 | CPU Memory: 2357.97 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 338 | Episode Reward: -911751.6678126997 | CPU Memory: 2358.18 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 339 | Episode Reward: -887677.8095707726 | CPU Memory: 2358.18 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 340 | Episode Reward: -886026.9756954393 | CPU Memory: 2358.43 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 341 | Episode Reward: -897445.814427214 | CPU Memory: 2354.65 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 342 | Episode Reward: -900280.7489664339 | CPU Memory: 2354.94 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 343 | Episode Reward: -895585.5678335844 | CPU Memory: 2354.97 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 344 | Episode Reward: -896895.095377579 | CPU Memory: 2358.77 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 345 | Episode Reward: -919045.6151128655 | CPU Memory: 2359.03 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 346 | Episode Reward: -909283.4727355958 | CPU Memory: 2355.27 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 347 | Episode Reward: -877502.4024832678 | CPU Memory: 2355.39 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 348 | Episode Reward: -924619.4058080424 | CPU Memory: 2355.65 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 349 | Episode Reward: -934847.0115652154 | CPU Memory: 2359.48 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 350 | Episode Reward: -828863.7804505636 | CPU Memory: 2359.48 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 351 | Episode Reward: -848023.1665155006 | CPU Memory: 2359.48 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 352 | Episode Reward: -850107.7304513664 | CPU Memory: 2356.01 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 353 | Episode Reward: -877255.3060310176 | CPU Memory: 2368.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 354 | Episode Reward: -885418.0643605352 | CPU Memory: 2368.39 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 355 | Episode Reward: -863669.1998797836 | CPU Memory: 2387.00 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 356 | Episode Reward: -931291.7967527091 | CPU Memory: 2388.42 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 357 | Episode Reward: -819890.3150380692 | CPU Memory: 2387.70 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 358 | Episode Reward: -939520.0839716641 | CPU Memory: 2387.31 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 359 | Episode Reward: -890079.6069572802 | CPU Memory: 2387.56 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 360 | Episode Reward: -898891.6218842412 | CPU Memory: 2387.57 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 361 | Episode Reward: -880597.9419062015 | CPU Memory: 2387.54 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 362 | Episode Reward: -865816.1679425525 | CPU Memory: 2390.63 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 363 | Episode Reward: -910995.0077248099 | CPU Memory: 2389.85 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 364 | Episode Reward: -939063.0772455727 | CPU Memory: 2390.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 365 | Episode Reward: -911982.056381936 | CPU Memory: 2390.45 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 366 | Episode Reward: -884639.4298974029 | CPU Memory: 2390.33 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 367 | Episode Reward: -869452.3083996706 | CPU Memory: 2390.33 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 368 | Episode Reward: -882375.7692280852 | CPU Memory: 2390.59 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 369 | Episode Reward: -873770.8602164354 | CPU Memory: 2391.18 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 370 | Episode Reward: -961990.9214314437 | CPU Memory: 2391.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 371 | Episode Reward: -918689.5021607617 | CPU Memory: 2390.87 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 372 | Episode Reward: -916051.1577344676 | CPU Memory: 2390.87 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 373 | Episode Reward: -923091.2905184489 | CPU Memory: 2391.06 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 374 | Episode Reward: -876738.3752766842 | CPU Memory: 2392.24 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 375 | Episode Reward: -942529.5593238821 | CPU Memory: 2406.02 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 376 | Episode Reward: -912358.6097763357 | CPU Memory: 2392.53 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 377 | Episode Reward: -935207.3233920389 | CPU Memory: 2392.53 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 378 | Episode Reward: -864226.0638234125 | CPU Memory: 2393.55 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 379 | Episode Reward: -896631.4274392918 | CPU Memory: 2396.09 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 380 | Episode Reward: -883256.2276976765 | CPU Memory: 2408.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 381 | Episode Reward: -910186.7814448361 | CPU Memory: 2381.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 382 | Episode Reward: -1000408.1777498426 | CPU Memory: 2381.91 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 383 | Episode Reward: -1129310.3393640623 | CPU Memory: 2382.16 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 384 | Episode Reward: -1061495.874241436 | CPU Memory: 2382.16 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 385 | Episode Reward: -1054063.473517519 | CPU Memory: 2396.20 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 386 | Episode Reward: -989446.4472931116 | CPU Memory: 2382.49 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 387 | Episode Reward: -1049440.9689532267 | CPU Memory: 2382.49 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 388 | Episode Reward: -1008897.8324126436 | CPU Memory: 2384.00 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 389 | Episode Reward: -935014.8490721579 | CPU Memory: 2383.80 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 390 | Episode Reward: -1037854.034469933 | CPU Memory: 2363.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 391 | Episode Reward: -950981.5450545009 | CPU Memory: 2398.83 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 392 | Episode Reward: -908708.6123889294 | CPU Memory: 2398.83 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 393 | Episode Reward: -987598.9343534192 | CPU Memory: 2385.02 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 394 | Episode Reward: -1020845.1119443396 | CPU Memory: 2385.05 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 395 | Episode Reward: -1129507.9604640964 | CPU Memory: 2384.54 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 396 | Episode Reward: -1169683.043158358 | CPU Memory: 2384.82 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 397 | Episode Reward: -1232923.9216820872 | CPU Memory: 2391.67 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 398 | Episode Reward: -1240501.3562766677 | CPU Memory: 2396.34 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 399 | Episode Reward: -1114292.3215536894 | CPU Memory: 2401.85 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 400 | Episode Reward: -1143555.9719821822 | CPU Memory: 2400.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 401 | Episode Reward: -1037095.427670541 | CPU Memory: 2390.75 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 402 | Episode Reward: -1090720.6590670845 | CPU Memory: 2419.92 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 403 | Episode Reward: -1021658.5684005705 | CPU Memory: 2419.92 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 404 | Episode Reward: -956051.1097608288 | CPU Memory: 2420.18 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 405 | Episode Reward: -938429.2362322274 | CPU Memory: 2420.18 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 406 | Episode Reward: -947110.9650750182 | CPU Memory: 2420.44 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 407 | Episode Reward: -886830.1396005688 | CPU Memory: 2420.44 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 408 | Episode Reward: -865204.2627741736 | CPU Memory: 2420.70 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 409 | Episode Reward: -866182.2472684279 | CPU Memory: 2420.70 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 410 | Episode Reward: -792505.5012061052 | CPU Memory: 2420.70 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 411 | Episode Reward: -817284.9611340608 | CPU Memory: 2420.95 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 412 | Episode Reward: -795486.4429122135 | CPU Memory: 2420.95 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 413 | Episode Reward: -786247.0645567413 | CPU Memory: 2421.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 414 | Episode Reward: -755354.4889834635 | CPU Memory: 2421.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 415 | Episode Reward: -793147.5687527133 | CPU Memory: 2421.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 416 | Episode Reward: -768690.9125731946 | CPU Memory: 2421.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 417 | Episode Reward: -734619.7787997037 | CPU Memory: 2421.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 418 | Episode Reward: -745227.1912470858 | CPU Memory: 2421.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 419 | Episode Reward: -737065.9562863513 | CPU Memory: 2421.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 420 | Episode Reward: -743656.6826292686 | CPU Memory: 2421.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 421 | Episode Reward: -746566.345642935 | CPU Memory: 2421.73 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 422 | Episode Reward: -736137.5380500646 | CPU Memory: 2420.87 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 423 | Episode Reward: -794332.2709908704 | CPU Memory: 2421.12 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 424 | Episode Reward: -701858.1182717604 | CPU Memory: 2421.12 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 425 | Episode Reward: -725621.9565203355 | CPU Memory: 2421.12 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 426 | Episode Reward: -731237.4514908997 | CPU Memory: 2421.38 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 427 | Episode Reward: -730441.1692986964 | CPU Memory: 2421.38 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 428 | Episode Reward: -671475.2583382587 | CPU Memory: 2421.64 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 429 | Episode Reward: -698395.1035524498 | CPU Memory: 2421.64 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 430 | Episode Reward: -656668.4773861142 | CPU Memory: 2421.68 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 431 | Episode Reward: -699375.8652852012 | CPU Memory: 2421.94 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 432 | Episode Reward: -686452.2238086931 | CPU Memory: 2421.94 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 433 | Episode Reward: -721826.4358022577 | CPU Memory: 2422.19 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 434 | Episode Reward: -697794.804240607 | CPU Memory: 2422.19 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 435 | Episode Reward: -668359.4451780627 | CPU Memory: 2422.19 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 436 | Episode Reward: -671476.4486215037 | CPU Memory: 2422.45 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 437 | Episode Reward: -648091.1569104441 | CPU Memory: 2422.45 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 438 | Episode Reward: -690158.1589954809 | CPU Memory: 2422.70 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 439 | Episode Reward: -659356.6117169571 | CPU Memory: 2422.70 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 440 | Episode Reward: -687103.6840423796 | CPU Memory: 2422.70 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 441 | Episode Reward: -654590.6177084466 | CPU Memory: 2422.96 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 442 | Episode Reward: -663150.6408424296 | CPU Memory: 2391.29 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 443 | Episode Reward: -656057.6186691766 | CPU Memory: 2407.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 444 | Episode Reward: -659374.4943196314 | CPU Memory: 2423.18 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 445 | Episode Reward: -658650.3327874349 | CPU Memory: 2423.47 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 446 | Episode Reward: -667363.8517326184 | CPU Memory: 2407.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 447 | Episode Reward: -665180.8732578516 | CPU Memory: 2391.48 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 448 | Episode Reward: -667580.3046708247 | CPU Memory: 2391.51 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 449 | Episode Reward: -656866.3376434341 | CPU Memory: 2407.58 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K[2KEpisode: 450 | Episode Reward: -695740.8043923404 | CPU Memory: 2391.58 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 99.42%
+[2K
