@@ -62,39 +62,6 @@ class env_bus(object):
 
         self.state_dim = 7 + len(self.routes)//2
 
-    # def save_snapshot(self):
-    #     snapshot = {
-    #         'current_time': self.current_time,
-    #         'bus_all': copy.deepcopy(self.bus_all),
-    #         'stations': copy.deepcopy(self.stations),
-    #         'routes': copy.deepcopy(self.routes),
-    #         'timetables': copy.deepcopy(self.timetables),
-    #         'state': copy.deepcopy(self.state),
-    #         'reward': copy.deepcopy(self.reward),
-    #         'done': self.done
-    #     }
-    #     return snapshot
-    #
-    # def load_snapshot(self, snapshot):
-    #     self.current_time = snapshot['current_time']
-    #     self.bus_all = copy.deepcopy(snapshot['bus_all'])
-    #     self.stations = copy.deepcopy(snapshot['stations'])
-    #     self.routes = copy.deepcopy(snapshot['routes'])
-    #     self.timetables = copy.deepcopy(snapshot['timetables'])
-    #     self.state = copy.deepcopy(snapshot['state'])
-    #     self.reward = copy.deepcopy(snapshot['reward'])
-    #     self.done = snapshot['done']
-
-    # Example usage:
-    # env = env_bus(config, os.getcwd(), debug=debug)
-    # snapshot = env.save_snapshot()
-    # # ... run some steps ...
-    # env.load_snapshot(snapshot)
-
-    # def random_actions(self):
-    #     return np.random.randint(1, 1 + self.action_dim, self.max_agent_num)
-
-    # return the bus which is in terminal for now (which is not on route)
     @property
     def bus_in_terminal(self):
         return [bus for bus in self.bus_all if not bus.on_route]
@@ -265,14 +232,15 @@ class env_bus(object):
         unhealthy_all = [bus.is_unhealthy for bus in self.bus_all]
         if sum([trip.launched for trip in self.timetables]) == len(self.timetables) and sum([bus.on_route for bus in self.bus_all]) == 0:
             self.done = True
-            for bus in self.bus_all:
-                bus.trajectory.clear()  # 清空轨迹列表
-                bus.trajectory_dict.clear()  # 清空轨迹字典
-                del bus.trajectory  # 强制删除对象，帮助 GC
-                del bus.trajectory_dict
-            for station in self.stations:
-                station.waiting_passengers = np.array([])
-                station.total_passenger.clear()
+            if not debug:
+                for bus in self.bus_all:
+                    bus.trajectory.clear()  # 清空轨迹列表
+                    bus.trajectory_dict.clear()  # 清空轨迹字典
+                    del bus.trajectory  # 强制删除对象，帮助 GC
+                    del bus.trajectory_dict
+                for station in self.stations:
+                    station.waiting_passengers = np.array([])
+                    station.total_passenger.clear()
         else:
             self.done = False
 
@@ -295,7 +263,7 @@ class env_bus(object):
 
 
 if __name__ == '__main__':
-    debug = True
+    debug = False
     render = True
     if render:
         pygame.init()

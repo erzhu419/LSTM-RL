@@ -266,9 +266,9 @@ class Bus(object):
                             self.is_unhealthy = True
 
 
-                        if self.bus_id == 2 and debug:
-                            print('From Simulation ,', 'bus id is: ', self.bus_id,', station id is: ', self.last_station.station_id, ' ,current time: ', current_time, ', reward: ', self.reward)
-                            print()
+                        # if self.bus_id == 2 and debug:
+                        #     print('From Simulation ,', 'bus id is: ', self.bus_id,', station id is: ', self.last_station.station_id, ' ,current time: ', current_time, ', reward: ', self.reward)
+                        #     print()
 
                         # print(1)
                     self.held = True
@@ -290,10 +290,10 @@ class Bus(object):
                         #     # print(self.forward_headway, self.backward_headway, action)
                         #     self.is_unhealthy = self.forward_headway > self.backward_headway + 1 and action > 1
 
-                    if debug and self.bus_id == 2:
-
-                        print('Bus id', self.bus_id, ', stop id: ', self.last_station.station_id, ' ,current time is: ',current_time, ", dwell time: ", self.dwelling_time)
-                        print()
+                    # if debug and self.bus_id == 2:
+                    #
+                    #     print('Bus id', self.bus_id, ', stop id: ', self.last_station.station_id, ' ,current time is: ',current_time, ", dwell time: ", self.dwelling_time)
+                    #     print()
             else:
                 self.holding_time -= 1
 
