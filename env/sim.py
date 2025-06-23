@@ -153,7 +153,7 @@ class env_bus(object):
             # the iteration in drive(), we just update the state of those bus which on routes
             bus.on_route = True
 
-    def step(self, action, debug=False, render=False):
+    def step(self, action, debug=False, render=False, episode = 0):
         # Enumerate trips in timetables, if current_time<=launch_time of the trip, then launch it.
         # E.X. timetables = [6:00/launched, 6:05, 6:10], current time is 6:05, then iteration will judge from first trip [6:00]
         # But [6:00] is launched, so next is [6:05]
@@ -252,7 +252,7 @@ class env_bus(object):
             output_dir = os.path.join(self.path, 'pic')
             os.makedirs(output_dir, exist_ok=True)
             if self.enable_plot:
-                self.visualizer.plot()
+                self.visualizer.plot(episode)
 
             self.summary_data.to_csv(os.path.join(output_dir, 'summary_data.csv'))
             self.summary_reward = self.summary_reward.sort_values(['bus_id', 'time'])
@@ -268,13 +268,13 @@ class env_bus(object):
 if __name__ == '__main__':
     debug = True
     render = False
-    num_runs = 3
+    num_runs = 5
     if render:
         pygame.init()
 
     env = env_bus(os.getcwd(), debug=debug)
-    env.enable_plot = False
-    actions = {key: 15. for key in list(range(env.max_agent_num))}
+    env.enable_plot = True
+    actions = {key: 0. for key in list(range(env.max_agent_num))}
 
     all_events = []
     cumulative_time = 0
@@ -283,7 +283,7 @@ if __name__ == '__main__':
         env.reset()
         while not env.done:
             state, reward, done = env.step(action=actions, debug=debug,
-                                           render=render)
+                                           render=render, episode=run_idx)
 
         events = env.visualizer.extract_bunching_events()
         for ev in events:
