@@ -43,6 +43,8 @@ class env_bus(object):
         self.max_agent_num = 25
 
         self.visualizer = visualize(self)
+        # Allow disabling automatic plotting when simulation ends
+        self.enable_plot = True
 
         # Set effective station and time period
         self.effective_station_name = sorted(set([self.od.index[i][0] for i in range(self.od.shape[0])]))
@@ -249,7 +251,8 @@ class env_bus(object):
 
             output_dir = os.path.join(self.path, 'pic')
             os.makedirs(output_dir, exist_ok=True)
-            self.visualizer.plot()
+            if self.enable_plot:
+                self.visualizer.plot()
 
             self.summary_data.to_csv(os.path.join(output_dir, 'summary_data.csv'))
             self.summary_reward = self.summary_reward.sort_values(['bus_id', 'time'])
@@ -263,21 +266,39 @@ class env_bus(object):
 
 
 if __name__ == '__main__':
-    debug = False
-    render = True
+    debug = True
+    render = False
+    num_runs = 3
     if render:
         pygame.init()
-    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
 
     env = env_bus(os.getcwd(), debug=debug)
-    start_time = time.time()
+    env.enable_plot = False
     actions = {key: 15. for key in list(range(env.max_agent_num))}
-    env.reset()
-    while not env.done:
-        state, reward, done = env.step(action=actions, debug=debug, render=render)
-        # if debug and env.current_time % 4 == 0:
-        #     if render:
-        #         env.visualizer.render()
-        #         time.sleep(0.05)  # Add a delay to slow down the rendering
+
+    all_events = []
+    cumulative_time = 0
+
+    for run_idx in range(1, num_runs + 1):
+        env.reset()
+        while not env.done:
+            state, reward, done = env.step(action=actions, debug=debug,
+                                           render=render)
+
+        events = env.visualizer.extract_bunching_events()
+        for ev in events:
+            ev['time'] += cumulative_time
+            ev['run'] = run_idx
+        cumulative_time += env.current_time
+        all_events.extend(events)
+
     pygame.quit()
-    print(time.time() - start_time)
+
+    if all_events:
+        df = pd.DataFrame(all_events).sort_values(['run', 'time'])
+        output_dir = os.path.join(env.path, 'pic')
+        os.makedirs(output_dir, exist_ok=True)
+        df.to_csv(os.path.join(output_dir, 'bunching_records.csv'), index=False)
+        env.visualizer.plot_bunching_events(all_events, exp=str(num_runs))
+
+    print('Total simulation time:', cumulative_time)

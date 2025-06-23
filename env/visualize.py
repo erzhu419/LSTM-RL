@@ -325,6 +325,60 @@ class visualize(object):
         pygame.display.flip()
 
                 
+    def extract_bunching_events(self):
+        """Return a list of bunching events from all bus trajectories."""
+        bunching_dict = {}
+        for bus in self.env.bus_all:
+            for record in bus.trajectory:
+                station, t, _, direction, _ = record
+                key = (t, station, direction)
+                bunching_dict.setdefault(key, []).append(bus.bus_id)
+
+        events = []
+        for (t, station, direction), buses in bunching_dict.items():
+            if len(buses) >= 2:
+                events.append({'time': t, 'station': station,
+                               'direction': direction,
+                               'buses': tuple(sorted(buses))})
+
+        return events
+
+    def plot_bunching_events(self, events, min_time=None, max_time=None, exp='0'):
+        """Plot bunching events on a blank space-time diagram."""
+        if not events:
+            return
+
+        exp = str(exp)
+        path = os.getcwd()
+        if min_time is None:
+            min_time = min(e['time'] for e in events)
+        if max_time is None:
+            max_time = max(e['time'] for e in events)
+
+        plt.figure(figsize=(96, 24), dpi=300)
+        x1 = np.linspace(min_time, max_time, num=500)
+        station_names = ['Terminal up'] + [f'X{i:02d}' for i in range(1, 21)] + ['Terminal down']
+        for j in range(len(station_names)):
+            y1 = [j * 500] * len(x1)
+            plt.plot(x1, y1, color="red", linewidth=0.3, linestyle='-')
+
+        station_y = {name: i * 500 for i, name in enumerate(station_names)}
+        colors = {1: 'blue', 0: 'green', True: 'blue', False: 'green'}
+        for event in events:
+            if event['station'] in station_y:
+                plt.scatter(event['time'], station_y[event['station']],
+                            color=colors.get(event['direction'], 'black'), s=40)
+
+        plt.xticks(fontsize=16)
+        plt.yticks(ticks=[j * 500 for j in range(len(station_names))],
+                   labels=station_names, fontsize=16)
+        plt.xlabel('time', fontsize=20)
+        plt.ylabel('station', fontsize=20)
+        plt.title('bunching events', fontsize=20)
+        plt.xlim(min_time, max_time)
+        plt.savefig(path + '/pic/exp ' + exp + ', bunching events.jpg')
+        plt.close()
+
     def plot(self, exp='0'):
         exp = str(exp)
         path = os.getcwd()
@@ -414,6 +468,15 @@ class visualize(object):
                            'headway': total_headway})
         df.to_csv(path+'/pic/exp ' + exp + '.csv', index=False)
         plt.close()
+
+        # bunching analysis
+        bunching_events = self.extract_bunching_events()
+        if bunching_events:
+            bunching_df = pd.DataFrame(bunching_events)
+            bunching_df = bunching_df.sort_values('time')
+            bunching_df.to_csv(path + '/pic/bunching_records.csv', index=False)
+            self.plot_bunching_events(bunching_events, min_time=min_time,
+                                      max_time=max_time, exp=exp)
 
 
 
