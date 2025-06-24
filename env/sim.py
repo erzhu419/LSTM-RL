@@ -286,16 +286,13 @@ if __name__ == '__main__':
                                            render=render, episode=run_idx)
 
         events = env.visualizer.extract_bunching_events()
-        for ev in events:
-            ev['time'] += cumulative_time
-            ev['run'] = run_idx
         cumulative_time += env.current_time
         all_events.extend(events)
 
     pygame.quit()
 
     if all_events:
-        df = pd.DataFrame(all_events).sort_values(['run', 'time'])
+        df = pd.DataFrame(all_events).sort_values(['time'])
         output_dir = os.path.join(env.path, 'pic')
         os.makedirs(output_dir, exist_ok=True)
         df.to_csv(os.path.join(output_dir, 'bunching_records.csv'), index=False)
