@@ -310,7 +310,7 @@ class visualize(object):
         plt.ylabel('station', fontsize=20)
         plt.title('bunching events', fontsize=20)
         plt.xlim(min_time, max_time)
-        plt.savefig(path + '/pic/exp ' + exp + ', bunching events.jpg')
+        plt.savefig(path + '/pic/penalty_reward/exp ' + exp + ', bunching events.jpg')
         plt.close()
 
     def plot(self, exp=0):
@@ -348,7 +348,7 @@ class visualize(object):
         plt.ylabel('station', fontsize=20)
         plt.title('result', fontsize=20)
         plt.xlim(min_time, max_time)  # 横坐标范围是全局时间
-        plt.savefig(path + '/pic/exp ' + exp + ', bus trajectory.jpg')
+        plt.savefig(path + '/pic/penalty_reward/exp ' + exp + ', bus trajectory.jpg')
         plt.close()
 
         total_passengers = []
@@ -380,7 +380,7 @@ class visualize(object):
         plt.yticks(fontsize=16)
         plt.xlabel('station')
         plt.ylabel('difference of headway')
-        plt.savefig(path+'/pic/exp ' + exp + ', bus headway.jpg')
+        plt.savefig(path+'/pic/penalty_reward/exp ' + exp + ', bus headway.jpg')
         plt.close()
 
         fig = plt.figure()
@@ -395,7 +395,7 @@ class visualize(object):
         ax2.plot(bins[:-1] + 45, y, color='red', marker='o', linestyle='dashed', linewidth=1.5, label='cumulative probability')
         ax2.set_ylabel('cumulative probability')
         plt.legend()
-        plt.savefig(path+'/pic/exp ' + exp + ', headway variance.jpg')
+        plt.savefig(path+'/pic/penalty_reward/exp ' + exp + ', headway variance.jpg')
         total_headway = total_headway + [np.nan] * (len(total_waiting_time) - len(total_headway))
         df = pd.DataFrame({'traveling_time': total_traveling_time,
                            'waiting_time': total_waiting_time,

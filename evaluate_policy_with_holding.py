@@ -109,7 +109,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--eval_runs', type=int, default=1, help='number of evaluation episodes')
 
-    parser.add_argument('--policy_path', type=str, default='/home/erzhu419/mine_code/LSTM-RL/model/sac_v2_bus/sac_v2_bus_episode_173_policy')
+    parser.add_argument('--policy_path', type=str, default='/home/erzhu419/mine_code/LSTM-RL/model/sac_v2_bus_penalty_reward/sac_v2_bus_penalty_reward_episode_352_policy')
     args = parser.parse_args()
 
     env_path = os.path.join(os.getcwd(), 'env')
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     print(f"Mean reward: {mean_reward:.2f} +/- {reward_std:.2f}")
 
     df = pd.DataFrame(events)
-    df = df[df['duration'] > 40]
+    df = df[df['duration'] > 50]
     os.makedirs('pic', exist_ok=True)
     df.to_csv(os.path.join('env/pic', 'holding_records.csv'), index=False)
     plot_holding_events(events, exp=str(args.eval_runs))

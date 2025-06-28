@@ -508,8 +508,8 @@ eval_mean_rewards = []  # 记录评估的平均奖励
 eval_reward_stds = []   # 记录评估的奖励标准差
 
 # 修改模型保存路径
-model_path = './model/sac_v2_bus/sac_v2_bus'
-log_dir = './model/sac_v2_bus'
+model_path = './model/sac_v2_bus_penalty_reward/sac_v2_bus_penalty_reward'
+log_dir = './model/sac_v2_bus_penalty_reward'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
@@ -641,7 +641,7 @@ if __name__ == '__main__':
                 
                 # 保存带有episode信息的模型
                 model_name = f"{model_path}_episode_{eps}"
-                sac_trainer.save_model(os.path.join(log_dir, f'sac_v2_episode_{eps}'))
+                sac_trainer.save_model(os.path.join(log_dir, f'sac_v2_bus_penalty_reward_episode_{eps}'))
                 sac_trainer.save_model(model_name)
                 # snapshot = tracemalloc.take_snapshot()
                 # for stat in snapshot.statistics('lineno')[:10]:
@@ -678,7 +678,7 @@ if __name__ == '__main__':
         
         # 保存带有最终episode信息的模型
         final_model_name = f"{model_path}_episode_final"
-        sac_trainer.save_model(os.path.join(final_log_dir, 'sac_v2_episode_final'))
+        sac_trainer.save_model(os.path.join(final_log_dir, 'sac_v2_bus_penalty_reward_episode_final'))
         sac_trainer.save_model(final_model_name)
 
     if args.test:

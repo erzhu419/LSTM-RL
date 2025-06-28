@@ -9,6 +9,7 @@ class Bus(object):
         self.trip_id_list = [trip_id]
         self.launch_time = launch_time
         self.direction = direction
+        self.last_action = None # last action of the bus, used for calculating reward
 
         self.routes_list = routes
         self.stations_list = stations
@@ -225,6 +226,8 @@ class Bus(object):
 
                     self.forward_bus = list(filter(lambda x: self.trip_id - 2 in x.trip_id_list, bus_all))
                     self.backward_bus = list(filter(lambda x: self.trip_id + 2 in x.trip_id_list, bus_all))
+                    if self.last_action is None:
+                        self.last_action = 0.
 
                     if self.next_station in self.effective_station[2:] and (len(self.forward_bus) != 0 or len(self.backward_bus) != 0):
                         self.obs = [self.bus_id, self.last_station.station_id, current_time // 3600, self.direction,
@@ -242,6 +245,33 @@ class Bus(object):
                         #         return 5  # 较小偏差
                         #     else:
                         #         return np.exp(-abs(headway - 360)) * 10  # 大偏差，奖励递减
+                        neibrohood_action = []
+
+                        if len(self.forward_bus) > 0:
+                            if self.forward_bus[0].last_action is None:
+                                self.forward_bus[0].last_action = 0
+                            neibrohood_action.append(self.forward_bus[0].last_action)
+                        if len(self.backward_bus) > 0:
+                            if self.backward_bus[0].last_action is None:
+                                self.backward_bus[0].last_action = 0
+                            neibrohood_action.append(self.backward_bus[0].last_action)
+
+                        lambda_damp = 0.1  # 阻尼系数，可调
+                        sigma = 1.0  # 相似度尺度（≈动作量纲）
+                        if len(neibrohood_action):
+                            sim_penalty = 0.
+                            for a_j in neibrohood_action:
+                                # print(self.bus_id, self.last_station.station_id)
+                                if self.last_station.station_id in [1,20] and self.action is None:
+                                    self.action = 0
+                                sim_penalty += float(np.exp(-abs(self.action - a_j) / sigma))
+                            sim_penalty *= -lambda_damp  # 与式 (1) 对应
+                        else:
+                            sim_penalty = 0.  # 首发车暂不扣
+
+                        # 确保damp_penalty为标量(float)，而不是list或np.array
+                        damp_penalty = float(-lambda_damp * (self.action - self.last_action) ** 2)
+                        self.last_action = self.action
 
                         def headway_reward(headway):
                             return -abs(headway - 360)  # 简化的reward函数，目标是360秒时距时奖励最大
@@ -252,7 +282,7 @@ class Bus(object):
                         if forward_reward is not None and backward_reward is not None:
                             weight = abs(self.forward_headway - 360) / (abs(self.forward_headway - 360) + abs(self.backward_headway - 360) + 1e-6)
                             similarity_bonus = -abs(self.forward_headway - self.backward_headway) * 0.5  # 添加相等性奖励
-                            self.reward = forward_reward * weight + backward_reward * (1 - weight) + similarity_bonus
+                            self.reward = forward_reward * weight + backward_reward * (1 - weight) + similarity_bonus + sim_penalty + damp_penalty
                             if self.forward_headway > self.backward_headway + 1 and action > 1:
                                 self.is_unhealthy = True
                         elif forward_reward is not None:
@@ -281,11 +311,13 @@ class Bus(object):
                     if (self.trip_id in [0, 1] and action is None) or action == 0:
 
                         self.dwelling_time = 0
+                        self.action = 0
                     else:
                         # if self.bus_id == 2:
                         #     print("Simulation: Bus id: ", self.bus_id, ' ,station id: ', self.last_station.station_id - 1, ' , dwelling time is: ', action)
 
                         self.dwelling_time = deepcopy(action) # 使用深拷贝，防止原始数据被修改，因为原始数据要以(s,a,s',r)的transition形式存储，作为训练用
+                        self.action = deepcopy(action)
                         # if action is not None:
                         #     # print(self.forward_headway, self.backward_headway, action)
                         #     self.is_unhealthy = self.forward_headway > self.backward_headway + 1 and action > 1
@@ -362,6 +394,7 @@ class Bus(object):
         self.trip_id_list.append(trip_num)
         self.launch_time = launch_time
         self.last_station = self.effective_station[0]
+        self.last_action = None
 
         self.forward_headway = 360
         self.backward_headway = 360
