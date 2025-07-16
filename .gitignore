@@ -13,3 +13,18 @@ __pycache__
 
 
 ppo_gae_continous2_bus.png
+env/pic/bunching_records.csv
+env/pic/exp 0, bunching events.jpg
+env/pic/exp 0, bus headway.jpg
+env/pic/exp 0, bus headway.jpg
+env/pic/exp 0, bus headway.jpg
+env/pic/exp 0, bus trajectory.jpg
+env/pic/exp 0, headway variance.jpg
+env/pic/exp 0.csv
+env/pic/exp 1, bunching events.jpg
+env/pic/exp 10, bunching events.jpg
+pic/sac_v2_bus/sac_monitoring_weight_reg_0.1.png
+env/pic/exp 0, bus headway.jpg
+env/pic/exp 0, bus trajectory.jpg
+env/pic/exp 0.csv
+pic/sac_v2_bus/sac_monitoring_weight_reg_0.1.png

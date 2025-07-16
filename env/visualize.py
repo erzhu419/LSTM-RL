@@ -8,129 +8,61 @@ import pygame
 class visualize(object):
     def __init__(self, env):
         self.env = env
+        # 移除浅色和相似的颜色，保留鲜明的颜色
         self.cnames = {
-        'aquamarine':           '#7FFFD4',
-        'beige':                '#F5F5DC',
-        'bisque':               '#FFE4C4',
-        'blanchedalmond':       '#FFEBCD',
         'blue':                 '#0000FF',
         'blueviolet':           '#8A2BE2',
         'brown':                '#A52A2A',
-        'burlywood':            '#DEB887',
-        'cadetblue':            '#5F9EA0',
-        'chartreuse':           '#7FFF00',
         'chocolate':            '#D2691E',
         'coral':                '#FF7F50',
         'cornflowerblue':       '#6495ED',
         'darkblue':             '#00008B',
         'darkcyan':             '#008B8B',
         'darkgoldenrod':        '#B8860B',
-        'darkgray':             '#A9A9A9',
         'darkgreen':            '#006400',
-        'darkkhaki':            '#BDB76B',
         'darkmagenta':          '#8B008B',
-        'darkolivegreen':       '#556B2F',
         'darkorange':           '#FF8C00',
         'darkorchid':           '#9932CC',
         'darkred':              '#8B0000',
-        'darksalmon':           '#E9967A',
-        'darkseagreen':         '#8FBC8F',
         'darkslateblue':        '#483D8B',
-        'darkslategray':        '#2F4F4F',
-        'darkturquoise':        '#00CED1',
         'darkviolet':           '#9400D3',
         'deeppink':             '#FF1493',
-        'deepskyblue':          '#00BFFF',
-        'dimgray':              '#696969',
         'dodgerblue':           '#1E90FF',
         'firebrick':            '#B22222',
         'forestgreen':          '#228B22',
-        'gainsboro':            '#DCDCDC',
         'gold':                 '#FFD700',
-        'goldenrod':            '#DAA520',
-        'gray':                 '#808080',
         'green':                '#008000',
-        'greenyellow':          '#ADFF2F',
-        'honeydew':             '#F0FFF0',
         'hotpink':              '#FF69B4',
         'indianred':            '#CD5C5C',
-        'ivory':                '#FFFFF0',
-        'khaki':                '#F0E68C',
-        'lavender':             '#E6E6FA',
-        'lavenderblush':        '#FFF0F5',
-        'lawngreen':            '#7CFC00',
-        'lemonchiffon':         '#FFFACD',
-        'lightblue':            '#ADD8E6',
-        'lightcoral':           '#F08080',
-        'lightcyan':            '#E0FFFF',
-        'lightgoldenrodyellow': '#FAFAD2',
-        'lightgreen':           '#90EE90',
-        'lightgray':            '#D3D3D3',
-        'lightpink':            '#FFB6C1',
-        'lightsalmon':          '#FFA07A',
-        'lightseagreen':        '#20B2AA',
-        'lightskyblue':         '#87CEFA',
-        'lightslategray':       '#778899',
-        'lightsteelblue':       '#B0C4DE',
-        'lightyellow':          '#FFFFE0',
         'limegreen':            '#32CD32',
-        'linen':                '#FAF0E6',
         'magenta':              '#FF00FF',
         'maroon':               '#800000',
-        'mediumaquamarine':     '#66CDAA',
         'mediumblue':           '#0000CD',
         'mediumorchid':         '#BA55D3',
         'mediumpurple':         '#9370DB',
         'mediumseagreen':       '#3CB371',
         'mediumslateblue':      '#7B68EE',
-        'mediumspringgreen':    '#00FA9A',
-        'mediumturquoise':      '#48D1CC',
         'mediumvioletred':      '#C71585',
-        'midnightblue':         '#191970',
-        'mintcream':            '#F5FFFA',
-        'mistyrose':            '#FFE4E1',
-        'moccasin':             '#FFE4B5',
         'navy':                 '#000080',
-        'oldlace':              '#FDF5E6',
-        'olivedrab':            '#6B8E23',
-        'orange':               '#FFA500',
+        'olive':                '#808000',
         'orangered':            '#FF4500',
-        'orchid':               '#DA70D6',
-        'palegoldenrod':        '#EEE8AA',
-        'palegreen':            '#98FB98',
-        'paleturquoise':        '#AFEEEE',
-        'palevioletred':        '#DB7093',
-        'papayawhip':           '#FFEFD5',
-        'peachpuff':            '#FFDAB9',
-        'peru':                 '#CD853F',
-        'pink':                 '#FFC0CB',
-        'plum':                 '#DDA0DD',
-        'powderblue':           '#B0E0E6',
         'purple':               '#800080',
         'red':                  '#FF0000',
-        'rosybrown':            '#BC8F8F',
         'royalblue':            '#4169E1',
         'saddlebrown':          '#8B4513',
-        'salmon':               '#FA8072',
-        'sandybrown':           '#FAA460',
         'seagreen':             '#2E8B57',
-        'seashell':             '#FFF5EE',
         'sienna':               '#A0522D',
-        'skyblue':              '#87CEEB',
         'slateblue':            '#6A5ACD',
-        'slategray':            '#708090',
-        'snow':                 '#FFFAFA',
-        'springgreen':          '#00FF7F',
         'steelblue':            '#4682B4',
-        'tan':                  '#D2B48C',
-        'thistle':              '#D8BFD8',
         'tomato':               '#FF6347',
         'turquoise':            '#40E0D0',
         'violet':               '#EE82EE',
-        'yellow':               '#FFFF00',
-        'yellowgreen':          '#9ACD32'}
+        'yellow':               '#FFFF00'}
         
-        self.bus_color = np.random.choice(list(self.cnames.keys()), env.max_agent_num)
+        # 将颜色列表转换为有序列表，确保每次分配相同顺序的颜色
+        color_list = list(self.cnames.keys())
+        # 使用固定顺序分配颜色，而不是随机选择
+        self.bus_color = color_list[:env.max_agent_num]
         
         self.screen_width = 2100
         self.screen_length = 1600
@@ -325,17 +257,106 @@ class visualize(object):
         pygame.display.flip()
 
                 
-    def plot(self, exp='0'):
+    def extract_bunching_events(self):
+        """Return a list of bunching events from all bus trajectories."""
+        bunching_dict = {}
+        for bus in self.env.bus_all:
+            for record in bus.trajectory:
+                station, t, _, direction, _ = record
+                if station in ['Terminal_up', 'Terminal_down']:
+                    continue
+                key = (t, station, direction)
+                bunching_dict.setdefault(key, []).append(bus.bus_id)
+
+        events = []
+        for (t, station, direction), buses in bunching_dict.items():
+            if len(buses) >= 2:
+                events.append({'time': t, 'station': station,
+                               'direction': direction,
+                               'buses': tuple(sorted(buses))})
+
+        return events
+
+    def plot_bunching_events(self, events, exp='0', policy_name=None):
+        """Plot bunching events on a blank space-time diagram."""
+        if not events:
+            return
+
         exp = str(exp)
         path = os.getcwd()
+        
+        # 构建保存路径，如果有策略名称则添加到路径中
+        save_dir = path + '/pic'
+        if policy_name:
+            save_dir = f"{save_dir}/{policy_name}"
+            # 确保目录存在
+            os.makedirs(save_dir, exist_ok=True)
+        
+        global_time = [bus.trajectory[i][1] for bus in self.env.bus_all for i in range(len(bus.trajectory))]
+        min_time, max_time = min(global_time), max(global_time)
+        
+        plt.figure(figsize=(96, 24), dpi=300)
+        x1 = np.linspace(min_time, max_time, num=500)
+        station_names = ['Terminal up'] + [f'X{i:02d}' for i in range(1, 21)] + ['Terminal down']
+        for j in range(len(station_names)):
+            y1 = [j * 500] * len(x1)
+            plt.plot(x1, y1, color="red", linewidth=0.3, linestyle='-')
+
+        station_y = {name: i * 500 for i, name in enumerate(station_names)}
+        colors = {1: 'blue', 0: 'green', True: 'blue', False: 'green'}
+        for event in events:
+            if event['station'] in station_y:
+                plt.scatter(event['time'], station_y[event['station']],
+                            color=colors.get(event['direction'], 'black'), s=40)
+
+        plt.xticks(fontsize=16)
+        plt.yticks(ticks=[j * 500 for j in range(len(station_names))],
+                   labels=station_names, fontsize=16)
+        plt.xlabel('time', fontsize=20)
+        plt.ylabel('station', fontsize=20)
+        plt.title('bunching events', fontsize=20)
+        plt.xlim(min_time, max_time)
+        plt.savefig(f"{save_dir}/exp {exp}, bunching events.jpg")
+        plt.close()
+
+    def plot(self, exp=0, policy_name=None):
+        """
+        绘制公交车轨迹和相关统计数据
+        
+        参数:
+            exp (int/str): 实验编号
+            policy_name (str): 策略名称，用于区分不同策略的结果路径
+        """
+        exp = str(exp)
+        path = os.getcwd()
+        
+        # 构建保存路径，如果有策略名称则添加到路径中
+        save_dir = path + '/pic'
+        if policy_name:
+            save_dir = f"{save_dir}/{policy_name}"
+            # 确保目录存在
+            os.makedirs(save_dir, exist_ok=True)
+        
         plt.figure(figsize=(96, 24), dpi=300)
         total_headway = []
         
         global_time = [bus.trajectory[i][1] for bus in self.env.bus_all for i in range(len(bus.trajectory))]
         min_time, max_time = min(global_time), max(global_time)
-    
+        
+        # 保存所有bus的trajectory数据
+        all_trajectories = []
         for bus in self.env.bus_all:
             # 提取当前 bus 的轨迹坐标
+            for record in bus.trajectory:
+                station, time, position, direction, trip_id = record
+                all_trajectories.append({
+                    'bus_id': bus.bus_id,
+                    'station': station,
+                    'time': time,
+                    'position': position,
+                    'direction': direction,
+                    'trip_id': trip_id
+                })
             x = [bus.trajectory[i][1] for i in range(len(bus.trajectory))]  # 时间坐标
             y = [bus.trajectory[i][2] for i in range(len(bus.trajectory))]  # 站点坐标
             plt.plot(x, y, label=bus.bus_id, color=self.cnames[self.bus_color[bus.bus_id]])
@@ -343,7 +364,7 @@ class visualize(object):
 
             # 记录 headway 数据
             total_headway.extend([bus.headway_dif[i][0] for i in range(len(bus.headway_dif))])
-
+                        
         # 绘制站点参考线
         x1 = np.linspace(min_time, max_time, num=500)  # 生成等间隔的时间点
         station_names = ['Terminal up'] + [f'X{i:02d}' for i in range(1, 21)] + ['Terminal down']
@@ -355,12 +376,17 @@ class visualize(object):
         # 坐标轴设置
         plt.xticks(fontsize=16)
         plt.yticks(ticks=[j * 500 for j in range(len(station_names))], labels=station_names, fontsize=16)
-        plt.legend(fontsize=18)
+        plt.legend(fontsize=18, loc='upper right')
         plt.xlabel('time', fontsize=20)
         plt.ylabel('station', fontsize=20)
         plt.title('result', fontsize=20)
         plt.xlim(min_time, max_time)  # 横坐标范围是全局时间
-        plt.savefig(path + '/pic/exp ' + exp + ', bus trajectory.jpg')
+        # 保存trajectory数据
+        if all_trajectories:
+            trajectory_df = pd.DataFrame(all_trajectories)
+            trajectory_df.to_csv(f"{save_dir}/exp {exp}, bus_trajectories.csv", index=False)
+        # 保存trajectory图
+        plt.savefig(f"{save_dir}/exp {exp}, bus trajectory.jpg")
         plt.close()
 
         total_passengers = []
@@ -392,7 +418,7 @@ class visualize(object):
         plt.yticks(fontsize=16)
         plt.xlabel('station')
         plt.ylabel('difference of headway')
-        plt.savefig(path+'/pic/exp ' + exp + ', bus headway.jpg')
+        plt.savefig(f"{save_dir}/exp {exp}, bus headway.jpg")
         plt.close()
 
         fig = plt.figure()
@@ -404,16 +430,49 @@ class visualize(object):
         ax2 = ax1.twinx()
         y = np.cumsum(n)
         y /= y[-1]
-        ax2.plot(bins[:-1] + 45, y, color='red', marker='o', linestyle='dashed', linewidth=1.5, label='cumulative probability')
+        ax2.plot([(bins[i] + bins[i+1])/2 for i in range(len(bins)-1)], y, color='red', marker='o', linestyle='dashed', linewidth=1.5, label='cumulative probability')
         ax2.set_ylabel('cumulative probability')
         plt.legend()
-        plt.savefig(path+'/pic/exp ' + exp + ', headway variance.jpg')
+        plt.savefig(f"{save_dir}/exp {exp}, headway variance.jpg")
         total_headway = total_headway + [np.nan] * (len(total_waiting_time) - len(total_headway))
         df = pd.DataFrame({'traveling_time': total_traveling_time,
                            'waiting_time': total_waiting_time,
                            'headway': total_headway})
-        df.to_csv(path+'/pic/exp ' + exp + '.csv', index=False)
+        df.to_csv(f"{save_dir}/exp {exp}.csv", index=False)
         plt.close()
+
+        # # bunching analysis
+        # bunching_events = self.extract_bunching_events()
+        # if bunching_events:
+        #     bunching_df = pd.DataFrame(bunching_events)
+        #     bunching_df = bunching_df.sort_values('time')
+        #     bunching_df.to_csv(f"{save_dir}/bunching_records.csv", index=False)
+        #
+        #     # 为bunching events绘图设置相同的保存路径
+        #     bunching_save_path = os.path.join(os.path.dirname(save_dir), 'pic') if policy_name else path + '/pic'
+        #     plt.figure(figsize=(96, 24), dpi=300)
+        #     x1 = np.linspace(min_time, max_time, num=500)
+        #     station_names = ['Terminal up'] + [f'X{i:02d}' for i in range(1, 21)] + ['Terminal down']
+        #     for j in range(len(station_names)):
+        #         y1 = [j * 500] * len(x1)
+        #         plt.plot(x1, y1, color="red", linewidth=0.3, linestyle='-')
+        #
+        #     station_y = {name: i * 500 for i, name in enumerate(station_names)}
+        #     colors = {1: 'blue', 0: 'green', True: 'blue', False: 'green'}
+        #     for event in bunching_events:
+        #         if event['station'] in station_y:
+        #             plt.scatter(event['time'], station_y[event['station']],
+        #                         color=colors.get(event['direction'], 'black'), s=40)
+        #
+        #     plt.xticks(fontsize=16)
+        #     plt.yticks(ticks=[j * 500 for j in range(len(station_names))],
+        #             labels=station_names, fontsize=16)
+        #     plt.xlabel('time', fontsize=20)
+        #     plt.ylabel('station', fontsize=20)
+        #     plt.title('bunching events', fontsize=20)
+        #     plt.xlim(min_time, max_time)
+        #     plt.savefig(f"{save_dir}/exp {exp}, bunching events.jpg")
+        #     plt.close()
 
 
 
