@@ -277,18 +277,24 @@ class visualize(object):
 
         return events
 
-    def plot_bunching_events(self, events, min_time=None, max_time=None, exp='0'):
+    def plot_bunching_events(self, events, exp='0', policy_name=None):
         """Plot bunching events on a blank space-time diagram."""
         if not events:
             return
 
         exp = str(exp)
         path = os.getcwd()
-        if min_time is None:
-            min_time = min(e['time'] for e in events)
-        if max_time is None:
-            max_time = max(e['time'] for e in events)
-
+        
+        # 构建保存路径，如果有策略名称则添加到路径中
+        save_dir = path + '/pic'
+        if policy_name:
+            save_dir = f"{save_dir}/{policy_name}"
+            # 确保目录存在
+            os.makedirs(save_dir, exist_ok=True)
+        
+        global_time = [bus.trajectory[i][1] for bus in self.env.bus_all for i in range(len(bus.trajectory))]
+        min_time, max_time = min(global_time), max(global_time)
+        
         plt.figure(figsize=(96, 24), dpi=300)
         x1 = np.linspace(min_time, max_time, num=500)
         station_names = ['Terminal up'] + [f'X{i:02d}' for i in range(1, 21)] + ['Terminal down']
@@ -310,20 +316,47 @@ class visualize(object):
         plt.ylabel('station', fontsize=20)
         plt.title('bunching events', fontsize=20)
         plt.xlim(min_time, max_time)
-        plt.savefig(path + '/pic/exp ' + exp + ', bunching events.jpg')
+        plt.savefig(f"{save_dir}/exp {exp}, bunching events.jpg")
         plt.close()
 
-    def plot(self, exp=0):
+    def plot(self, exp=0, policy_name=None):
+        """
+        绘制公交车轨迹和相关统计数据
+        
+        参数:
+            exp (int/str): 实验编号
+            policy_name (str): 策略名称，用于区分不同策略的结果路径
+        """
         exp = str(exp)
         path = os.getcwd()
+        
+        # 构建保存路径，如果有策略名称则添加到路径中
+        save_dir = path + '/pic'
+        if policy_name:
+            save_dir = f"{save_dir}/{policy_name}"
+            # 确保目录存在
+            os.makedirs(save_dir, exist_ok=True)
+        
         plt.figure(figsize=(96, 24), dpi=300)
         total_headway = []
         
         global_time = [bus.trajectory[i][1] for bus in self.env.bus_all for i in range(len(bus.trajectory))]
         min_time, max_time = min(global_time), max(global_time)
-    
+        
+        # 保存所有bus的trajectory数据
+        all_trajectories = []
         for bus in self.env.bus_all:
             # 提取当前 bus 的轨迹坐标
+            for record in bus.trajectory:
+                station, time, position, direction, trip_id = record
+                all_trajectories.append({
+                    'bus_id': bus.bus_id,
+                    'station': station,
+                    'time': time,
+                    'position': position,
+                    'direction': direction,
+                    'trip_id': trip_id
+                })
             x = [bus.trajectory[i][1] for i in range(len(bus.trajectory))]  # 时间坐标
             y = [bus.trajectory[i][2] for i in range(len(bus.trajectory))]  # 站点坐标
             plt.plot(x, y, label=bus.bus_id, color=self.cnames[self.bus_color[bus.bus_id]])
@@ -331,7 +364,7 @@ class visualize(object):
 
             # 记录 headway 数据
             total_headway.extend([bus.headway_dif[i][0] for i in range(len(bus.headway_dif))])
-
+                        
         # 绘制站点参考线
         x1 = np.linspace(min_time, max_time, num=500)  # 生成等间隔的时间点
         station_names = ['Terminal up'] + [f'X{i:02d}' for i in range(1, 21)] + ['Terminal down']
@@ -343,12 +376,17 @@ class visualize(object):
         # 坐标轴设置
         plt.xticks(fontsize=16)
         plt.yticks(ticks=[j * 500 for j in range(len(station_names))], labels=station_names, fontsize=16)
-        plt.legend(fontsize=18)
+        plt.legend(fontsize=18, loc='upper right')
         plt.xlabel('time', fontsize=20)
         plt.ylabel('station', fontsize=20)
         plt.title('result', fontsize=20)
         plt.xlim(min_time, max_time)  # 横坐标范围是全局时间
-        plt.savefig(path + '/pic/exp ' + exp + ', bus trajectory.jpg')
+        # 保存trajectory数据
+        if all_trajectories:
+            trajectory_df = pd.DataFrame(all_trajectories)
+            trajectory_df.to_csv(f"{save_dir}/exp {exp}, bus_trajectories.csv", index=False)
+        # 保存trajectory图
+        plt.savefig(f"{save_dir}/exp {exp}, bus trajectory.jpg")
         plt.close()
 
         total_passengers = []
@@ -380,7 +418,7 @@ class visualize(object):
         plt.yticks(fontsize=16)
         plt.xlabel('station')
         plt.ylabel('difference of headway')
-        plt.savefig(path+'/pic/exp ' + exp + ', bus headway.jpg')
+        plt.savefig(f"{save_dir}/exp {exp}, bus headway.jpg")
         plt.close()
 
         fig = plt.figure()
@@ -392,25 +430,49 @@ class visualize(object):
         ax2 = ax1.twinx()
         y = np.cumsum(n)
         y /= y[-1]
-        ax2.plot(bins[:-1] + 45, y, color='red', marker='o', linestyle='dashed', linewidth=1.5, label='cumulative probability')
+        ax2.plot([(bins[i] + bins[i+1])/2 for i in range(len(bins)-1)], y, color='red', marker='o', linestyle='dashed', linewidth=1.5, label='cumulative probability')
         ax2.set_ylabel('cumulative probability')
         plt.legend()
-        plt.savefig(path+'/pic/exp ' + exp + ', headway variance.jpg')
+        plt.savefig(f"{save_dir}/exp {exp}, headway variance.jpg")
         total_headway = total_headway + [np.nan] * (len(total_waiting_time) - len(total_headway))
         df = pd.DataFrame({'traveling_time': total_traveling_time,
                            'waiting_time': total_waiting_time,
                            'headway': total_headway})
-        df.to_csv(path+'/pic/exp ' + exp + '.csv', index=False)
+        df.to_csv(f"{save_dir}/exp {exp}.csv", index=False)
         plt.close()
 
-        # bunching analysis
-        bunching_events = self.extract_bunching_events()
-        if bunching_events:
-            bunching_df = pd.DataFrame(bunching_events)
-            bunching_df = bunching_df.sort_values('time')
-            bunching_df.to_csv(path + '/pic/bunching_records.csv', index=False)
-            self.plot_bunching_events(bunching_events, min_time=min_time,
-                                      max_time=max_time, exp=exp)
+        # # bunching analysis
+        # bunching_events = self.extract_bunching_events()
+        # if bunching_events:
+        #     bunching_df = pd.DataFrame(bunching_events)
+        #     bunching_df = bunching_df.sort_values('time')
+        #     bunching_df.to_csv(f"{save_dir}/bunching_records.csv", index=False)
+        #
+        #     # 为bunching events绘图设置相同的保存路径
+        #     bunching_save_path = os.path.join(os.path.dirname(save_dir), 'pic') if policy_name else path + '/pic'
+        #     plt.figure(figsize=(96, 24), dpi=300)
+        #     x1 = np.linspace(min_time, max_time, num=500)
+        #     station_names = ['Terminal up'] + [f'X{i:02d}' for i in range(1, 21)] + ['Terminal down']
+        #     for j in range(len(station_names)):
+        #         y1 = [j * 500] * len(x1)
+        #         plt.plot(x1, y1, color="red", linewidth=0.3, linestyle='-')
+        #
+        #     station_y = {name: i * 500 for i, name in enumerate(station_names)}
+        #     colors = {1: 'blue', 0: 'green', True: 'blue', False: 'green'}
+        #     for event in bunching_events:
+        #         if event['station'] in station_y:
+        #             plt.scatter(event['time'], station_y[event['station']],
+        #                         color=colors.get(event['direction'], 'black'), s=40)
+        #
+        #     plt.xticks(fontsize=16)
+        #     plt.yticks(ticks=[j * 500 for j in range(len(station_names))],
+        #             labels=station_names, fontsize=16)
+        #     plt.xlabel('time', fontsize=20)
+        #     plt.ylabel('station', fontsize=20)
+        #     plt.title('bunching events', fontsize=20)
+        #     plt.xlim(min_time, max_time)
+        #     plt.savefig(f"{save_dir}/exp {exp}, bunching events.jpg")
+        #     plt.close()
 
 
 
