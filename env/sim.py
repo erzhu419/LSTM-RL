@@ -186,6 +186,8 @@ class env_bus(object):
                 bus.trajectory.append([bus.last_station.station_name, self.current_time, bus.absolute_distance, bus.direction, bus.trip_id])
                 bus.trajectory_dict[bus.last_station.station_name].append([bus.last_station.station_name, self.current_time + bus.holding_time, bus.absolute_distance, bus.direction, bus.trip_id])
             if bus.on_route:
+                # 在路上行驶的时候也添加trajectory,但是很慢，只是为了画图
+                bus.trajectory.append([bus.last_station.station_name, self.current_time, bus.absolute_distance, bus.direction, bus.trip_id])
                 bus.drive(self.current_time, action[bus.bus_id], self.bus_all, debug=debug)
 
         self.state_bus_list = state_bus_list = list(filter(lambda x: len(x.obs) != 0, self.bus_all))
@@ -268,7 +270,7 @@ class env_bus(object):
 if __name__ == '__main__':
     debug = True
     render = False
-    num_runs = 5
+    num_runs = 1
     if render:
         pygame.init()
 
@@ -295,7 +297,7 @@ if __name__ == '__main__':
         df = pd.DataFrame(all_events).sort_values(['time'])
         output_dir = os.path.join(env.path, 'pic')
         os.makedirs(output_dir, exist_ok=True)
-        df.to_csv(os.path.join(output_dir, 'bunching_records.csv'), index=False)
-        env.visualizer.plot_bunching_events(all_events, exp=str(num_runs))
+        df.to_csv(os.path.join(output_dir, f'all_bunching_records_{num_runs}.csv'), index=False)
+        # env.visualizer.plot_bunching_events(all_events, exp=str(num_runs))
 
     print('Total simulation time:', cumulative_time)
