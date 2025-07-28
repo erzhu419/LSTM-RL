@@ -64,7 +64,7 @@ def plot_trajectories_comparison(control_df, uncontrol_df, save_path=None):
     """
     在一张图上对比绘制控制策略和无控制策略的轨迹，并高亮bunching点
     """
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(96, 48), dpi=300)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(96, 48), dpi=120)
     
     # 与visualize.py一样，使用有序颜色列表
     color_list = list(cnames.keys())
@@ -107,22 +107,23 @@ def plot_trajectories_comparison(control_df, uncontrol_df, save_path=None):
     ax1.scatter([], [], s=300, color='red', alpha=1.0, edgecolors='red', label='Bunching Events')
     
     # 设置控制策略图的属性
-    # 设置时间轴刻度 - 从7:00开始，每小时一个刻度
+    # 设置时间轴刻度 - 从6:00开始，每小时一个刻度
     time_range = max_time_control - min_time_control
     hour_interval = 3600  # 1小时 = 3600秒
     num_hours = int(time_range / hour_interval) + 1
     time_ticks = np.arange(min_time_control, max_time_control + hour_interval, hour_interval)
-    time_labels = [f'{7 + i}:00' for i in range(len(time_ticks))]
+    time_labels = [f'{6 + i}:00' for i in range(len(time_ticks))]
     
     ax1.set_xticks(time_ticks)
-    ax1.set_xticklabels(time_labels, fontsize=40)
+    ax1.set_xticklabels(time_labels, fontsize=70)
     ax1.set_yticks([j * 500 for j in range(len(station_names))])
-    ax1.set_yticklabels(station_names, fontsize=40)
+    ax1.set_yticklabels(station_names, fontsize=70)
     ax1.legend(fontsize=40, loc='upper right')
     # 不设置xlabel，保持x轴无标签
     # ax1.set_xlabel('time', fontsize=40)
     # ax1.set_ylabel('station', fontsize=40)
-    ax1.set_title('Bus Trajectories with SAC Control', fontsize=40)
+    # Bus Trajectories with SAC Control
+    ax1.set_title('(a)', fontsize=70, loc='center', fontweight='bold')
     ax1.set_xlim(min_time_control, max_time_control)
     
     # 绘制无控制策略轨迹（下图）
@@ -162,21 +163,22 @@ def plot_trajectories_comparison(control_df, uncontrol_df, save_path=None):
     ax2.scatter([], [], s=160, color='red', alpha=1.0, edgecolors='red', label='Bunching Events')
     
     # 设置无控制策略图的属性
-    # 设置时间轴刻度 - 从7:00开始，每小时一个刻度
+    # 设置时间轴刻度 - 从6:00开始，每小时一个刻度
     time_range_uncontrol = max_time_uncontrol - min_time_uncontrol
     hour_interval = 3600  # 1小时 = 3600秒
     num_hours_uncontrol = int(time_range_uncontrol / hour_interval) + 1
     time_ticks_uncontrol = np.arange(min_time_uncontrol, max_time_uncontrol + hour_interval, hour_interval)
-    time_labels_uncontrol = [f'{7 + i}:00' for i in range(len(time_ticks_uncontrol))]
+    time_labels_uncontrol = [f'{6 + i}:00' for i in range(len(time_ticks_uncontrol))]
     
     ax2.set_xticks(time_ticks_uncontrol)
-    ax2.set_xticklabels(time_labels_uncontrol, fontsize=40)
+    ax2.set_xticklabels(time_labels_uncontrol, fontsize=70)
     ax2.set_yticks([j * 500 for j in range(len(station_names))])
-    ax2.set_yticklabels(station_names, fontsize=40)
+    ax2.set_yticklabels(station_names, fontsize=70)
     ax2.legend(fontsize=40, loc='upper right')
     # ax2.set_xlabel('time', fontsize=40)
     # ax2.set_ylabel('station', fontsize=40)
-    ax2.set_title('Bus Trajectories without Control', fontsize=40)
+    # Bus Trajectories without Control
+    ax2.set_title('(b)', fontsize=70, loc='center', fontweight='bold')
     ax2.set_xlim(min_time_uncontrol, max_time_uncontrol)
     
     # 调整子图间距
