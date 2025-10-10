@@ -66,6 +66,10 @@ class visualize(object):
         
         self.screen_width = 2100
         self.screen_length = 1600
+        if not pygame.get_init():
+            pygame.init()
+        if not pygame.font.get_init():
+            pygame.font.init()
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_length))
         
     def draw_bus(self, surface, x, y, color, scale=1):
@@ -136,6 +140,9 @@ class visualize(object):
         screen = self.screen
         pygame.display.set_caption("Bus Simulation")
         
+        if not pygame.font.get_init():
+            pygame.font.init()
+
         font = pygame.font.Font(None, 36)
         font_small = pygame.font.SysFont('arial', 20)
         # get current time in the format of "HH:MM:SS"

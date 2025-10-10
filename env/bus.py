@@ -1,5 +1,13 @@
-from copy import deepcopy
+from enum import Enum, auto
+import numbers
 import numpy as np
+
+
+class BusState(Enum):
+    HOLDING = auto()
+    WAITING_ACTION = auto()
+    DWELLING = auto()
+    TRAVEL = auto()
 
 
 class Bus(object):
@@ -44,9 +52,7 @@ class Bus(object):
         self.acceleration = 3 # 加速度
         self.deceleration = 5 # 刹车加速度
 
-        self.holding = True # 是否正在上下乘客
-        self.held = False # 是否已经上下乘客完毕，如果是，则为True，返回状态值
-        self.dwelling = False # 是否在驻站
+        self.state = BusState.HOLDING  # 初始状态：在站内上下客
         self.on_route = True # 是否在路上，如果在路上，为True，否则为False，用于判断是否到达终点站
 
         self.holding_time = 0. # 停站时间，用于上下乘客
@@ -153,149 +159,150 @@ class Bus(object):
         # is divided by 60 minutes rather than seconds. passengers on bus, boarding passengers and alighting passengers are divided by self.capacity
         # step_length = 0, which means how long a bus moves in a time step, calculated by speeding up and original velocity.
 
-        if self.next_station_dis <= self.current_speed and not self.holding and not self.dwelling:
-            # when bus is arriving at station first time, set self.holding = True
-            self.exchange_passengers(current_time, debug)  # self.holding_time is set in this function
+        if self.state == BusState.TRAVEL:
+            if self.next_station_dis <= self.current_speed:
+                self.exchange_passengers(current_time, debug)  # self.holding_time is set in this function
 
-            self.trajectory.append([self.next_station.station_name, current_time, self.absolute_distance, self.direction, self.trip_id])
-            self.trajectory_dict[self.next_station.station_name].append([self.next_station.station_name, current_time + self.holding_time + 0.01,
-                                                                         self.absolute_distance,self.direction, self.trip_id])
+                self.trajectory.append([self.next_station.station_name, current_time, self.absolute_distance, self.direction, self.trip_id])
+                self.trajectory_dict[self.next_station.station_name].append([
+                    self.next_station.station_name,
+                    current_time + self.holding_time + 0.01,
+                    self.absolute_distance,
+                    self.direction,
+                    self.trip_id
+                ])
 
-            self.arrive_station(current_time, bus_all, debug)
-            self.holding = True
-            # print('Bus: ', self.bus_id, ' ,holding at:', self.last_station.station_id)
-            # self.trajectory_dict[self.last_station.station_name].append(
-            #     [self.last_station.station_name, current_time + self.holding_time, self.absolute_distance,
-            #      self.direction, self.trip_id])
-            self.in_station = True
-        elif not self.in_station:
-            # when bus on road
-            if self.current_route.speed_limit >= self.current_speed:
-                if self.current_route.speed_limit - self.current_speed > self.acceleration:
-                    step_length = (self.current_speed + self.acceleration / 2) * self.direction_int
-                    self.current_speed += self.acceleration
-                else:
-                    step_length = (self.current_speed + self.current_route.speed_limit) * 0.5 * self.direction_int
-                    self.current_speed = self.current_route.speed_limit
+                self.arrive_station(current_time, bus_all, debug)
+                self.state = BusState.HOLDING
+                self.in_station = True
             else:
-                if self.current_speed - self.current_route.speed_limit > self.deceleration:
-                    step_length = (self.current_speed - self.deceleration / 2) * self.direction_int
-                    self.current_speed -= self.deceleration
-                else:
-                    step_length = (self.current_speed + self.current_route.speed_limit) * 0.5 * self.direction_int
-                    self.current_speed = self.current_route.speed_limit
-            # update the relative distance of stations, which is always positive. But the absolute distance is negative
-            # if direction is negative, which means the absolute_distance start from 11500 rather than 0, so step_length
-            # should be negative, until absolute_distance reduced to 0, which means this bus is arrive to terminal_up,
-            # then the direction_int becomes to positive 1, over and over
-            self.last_station_dis += abs(step_length)
-            self.next_station_dis -= abs(step_length)
-            self.absolute_distance += step_length
+                self._advance_on_route()
+        elif self.state == BusState.HOLDING:
+            self._process_holding(current_time, bus_all, debug)
+        elif self.state == BusState.WAITING_ACTION:
+            self._start_dwelling(action)
+        elif self.state == BusState.DWELLING:
+            self._process_dwelling(current_time)
+        else:
+            # Recover gracefully if state was not initialised as expected
+            self.state = BusState.TRAVEL
+            self._advance_on_route()
 
-        elif self.dwelling and not self.holding:
-            # 当公交车在站内执行动作时，不再移动，只更新停车时间
-            if self.dwelling_time is None or self.dwelling_time <= 1:
-                # 作为在站内的最后一秒，返回奖励值，更新车辆状态
-                self.dwelling = False
-                self.in_station = False
-                if self._stop_start_time is not None:
-                    self.stop_records.append([
-                        self._stop_station,
-                        self._stop_start_time,
-                        current_time
-                    ])
-                    self._stop_start_time = None
-                    self._stop_station = None
-                # if self.trip_id not in [0, 1] and self.next_station in self.effective_station[3:-1]:
-                #     self.reward = np.exp(-abs(self.forward_headway - 360)) if len(self.forward_bus) != 0 else None
-                #
-                # # print bus id, station id, trip id, direction, time, headway, reward
-                #     if self.bus_id == 2 and debug:
-                #         print(' , station id is: ', self.last_station.station_id, ' ,current time: ',current_time ,', reward: ', self.reward)
-                # self.bus_update()
-                self.dwelling_time = 0
+    def _advance_on_route(self):
+        if self.current_route.speed_limit >= self.current_speed:
+            if self.current_route.speed_limit - self.current_speed > self.acceleration:
+                step_length = (self.current_speed + self.acceleration / 2) * self.direction_int
+                self.current_speed += self.acceleration
             else:
-                self.dwelling_time -= 1
-
-        elif self.holding and not self.dwelling:
-            if self.holding_time <= 1:
-                self.holding_time = 0
-
-                if not self.held:
-
-                    self.forward_bus = list(filter(lambda x: self.trip_id - 2 in x.trip_id_list, bus_all))
-                    self.backward_bus = list(filter(lambda x: self.trip_id + 2 in x.trip_id_list, bus_all))
-
-                    if self.next_station in self.effective_station[2:] and (len(self.forward_bus) != 0 or len(self.backward_bus) != 0):
-                        self.obs = [self.bus_id, self.last_station.station_id, current_time // 3600, self.direction,
-                                    self.forward_headway, self.backward_headway,
-                                    len(self.next_station.waiting_passengers) * 1.5 +
-                                    self.current_route.distance/self.current_route.speed_limit]
-                        all_route = self.routes_list[:len(self.routes_list)//2] if self.direction else self.routes_list[len(self.routes_list)//2:]
-                        speed_list = [all_route[i].speed_limit for i in range(len(all_route))]
-                        self.obs.extend(speed_list)
-                        # 计算 forward 和 backward 头时距的奖励 TODO: 可视化很奇怪，远不如默认的-(abs(headway - 360)),后面根据实验效果修改
-                        # def headway_reward(headway):
-                        #     if abs(headway - 360) <= 10:
-                        #         return 100  # 完美匹配，给高奖励
-                        #     elif abs(headway - 360) <= 60:
-                        #         return 5  # 较小偏差
-                        #     else:
-                        #         return np.exp(-abs(headway - 360)) * 10  # 大偏差，奖励递减
-
-                        def headway_reward(headway):
-                            return -abs(headway - 360)  # 简化的reward函数，目标是360秒时距时奖励最大
-
-                        # 这里是GPT根据我的要求修改的，做了可视化，现在forward_headway和backward_headway在都是360时最大，在其余相等时次之，最后是差距较大时
-                        forward_reward = headway_reward(self.forward_headway) if len(self.forward_bus) != 0 else None
-                        backward_reward = headway_reward(self.backward_headway) if len(self.backward_bus) != 0 else None
-                        if forward_reward is not None and backward_reward is not None:
-                            weight = abs(self.forward_headway - 360) / (abs(self.forward_headway - 360) + abs(self.backward_headway - 360) + 1e-6)
-                            similarity_bonus = -abs(self.forward_headway - self.backward_headway) * 0.5  # 添加相等性奖励
-                            self.reward = forward_reward * weight + backward_reward * (1 - weight) + similarity_bonus
-                            if self.forward_headway > self.backward_headway + 1 and action > 1:
-                                self.is_unhealthy = True
-                        elif forward_reward is not None:
-                            self.reward = forward_reward
-                        elif backward_reward is not None:
-                            self.reward = backward_reward
-                        else:
-                            self.reward = -50  # 设定一个较大的负奖励，鼓励策略优化
-                        if abs(self.forward_headway - 360) > 180 or abs(self.backward_headway - 360) > 180:
-                            self.reward -= 20  # 额外惩罚
-                            self.is_unhealthy = True
-
-
-                        # if self.bus_id == 2 and debug:
-                        #     print('From Simulation ,', 'bus id is: ', self.bus_id,', station id is: ', self.last_station.station_id, ' ,current time: ', current_time, ', reward: ', self.reward)
-                        #     print()
-
-                        # print(1)
-                    self.held = True
-
-                else:
-                    self.holding = False
-                    self.dwelling = True
-                    self.held = False
-
-                    if (self.trip_id in [0, 1] and action is None) or action == 0:
-
-                        self.dwelling_time = 0
-                    else:
-                        # if self.bus_id == 2:
-                        #     print("Simulation: Bus id: ", self.bus_id, ' ,station id: ', self.last_station.station_id - 1, ' , dwelling time is: ', action)
-
-                        self.dwelling_time = deepcopy(action) # 使用深拷贝，防止原始数据被修改，因为原始数据要以(s,a,s',r)的transition形式存储，作为训练用
-                        # if action is not None:
-                        #     # print(self.forward_headway, self.backward_headway, action)
-                        #     self.is_unhealthy = self.forward_headway > self.backward_headway + 1 and action > 1
-
-                    # if debug and self.bus_id == 2:
-                    #
-                    #     print('Bus id', self.bus_id, ', stop id: ', self.last_station.station_id, ' ,current time is: ',current_time, ", dwell time: ", self.dwelling_time)
-                    #     print()
+                step_length = (self.current_speed + self.current_route.speed_limit) * 0.5 * self.direction_int
+                self.current_speed = self.current_route.speed_limit
+        else:
+            if self.current_speed - self.current_route.speed_limit > self.deceleration:
+                step_length = (self.current_speed - self.deceleration / 2) * self.direction_int
+                self.current_speed -= self.deceleration
             else:
-                self.holding_time -= 1
+                step_length = (self.current_speed + self.current_route.speed_limit) * 0.5 * self.direction_int
+                self.current_speed = self.current_route.speed_limit
+
+        self.last_station_dis += abs(step_length)
+        self.next_station_dis -= abs(step_length)
+        self.absolute_distance += step_length
+
+    def _process_holding(self, current_time, bus_all, debug):
+        if self.holding_time <= 1:
+            self.holding_time = 0
+            self._prepare_for_action(current_time, bus_all, debug)
+        else:
+            self.holding_time -= 1
+
+    def _prepare_for_action(self, current_time, bus_all, debug):
+        self.forward_bus = list(filter(lambda x: self.trip_id - 2 in x.trip_id_list, bus_all))
+        self.backward_bus = list(filter(lambda x: self.trip_id + 2 in x.trip_id_list, bus_all))
+
+        if self.next_station in self.effective_station[2:] and (len(self.forward_bus) != 0 or len(self.backward_bus) != 0):
+            self.obs = [
+                self.bus_id,
+                self.last_station.station_id,
+                current_time // 3600,
+                self.direction,
+                self.forward_headway,
+                self.backward_headway,
+                len(self.next_station.waiting_passengers) * 1.5 + self.current_route.distance / self.current_route.speed_limit
+            ]
+            all_route = self.routes_list[:len(self.routes_list) // 2] if self.direction else self.routes_list[len(self.routes_list) // 2:]
+            speed_list = [all_route[i].speed_limit for i in range(len(all_route))]
+            self.obs.extend(speed_list)
+
+            def headway_reward(headway):
+                return -abs(headway - 360)
+
+            forward_reward = headway_reward(self.forward_headway) if len(self.forward_bus) != 0 else None
+            backward_reward = headway_reward(self.backward_headway) if len(self.backward_bus) != 0 else None
+            if forward_reward is not None and backward_reward is not None:
+                weight = abs(self.forward_headway - 360) / (abs(self.forward_headway - 360) + abs(self.backward_headway - 360) + 1e-6)
+                similarity_bonus = -abs(self.forward_headway - self.backward_headway) * 0.5
+                self.reward = forward_reward * weight + backward_reward * (1 - weight) + similarity_bonus
+            elif forward_reward is not None:
+                self.reward = forward_reward
+            elif backward_reward is not None:
+                self.reward = backward_reward
+            else:
+                self.reward = -50
+
+            if abs(self.forward_headway - 360) > 180 or abs(self.backward_headway - 360) > 180:
+                self.reward -= 20
+                self.is_unhealthy = True
+
+        self.state = BusState.WAITING_ACTION
+
+    def _start_dwelling(self, action):
+        dwell_time = self._normalize_action(action)
+
+        if (self.trip_id in [0, 1] and action is None) or dwell_time == 0:
+            self.dwelling_time = 0
+        else:
+            self.dwelling_time = dwell_time
+
+        self.state = BusState.DWELLING
+
+    def _process_dwelling(self, current_time):
+        if self.dwelling_time is None or self.dwelling_time <= 1:
+            self.in_station = False
+            if self._stop_start_time is not None:
+                self.stop_records.append([
+                    self._stop_station,
+                    self._stop_start_time,
+                    current_time
+                ])
+                self._stop_start_time = None
+                self._stop_station = None
+            self.dwelling_time = 0
+            self.state = BusState.TRAVEL
+        else:
+            self.dwelling_time -= 1
+
+    def _normalize_action(self, action):
+        if action is None:
+            return None
+        if isinstance(action, numbers.Number):
+            return float(action)
+        if isinstance(action, np.ndarray):
+            if action.size == 0:
+                return None
+            return float(action.reshape(-1)[0])
+        if isinstance(action, (list, tuple)):
+            if not action:
+                return None
+            return self._normalize_action(action[0])
+        if hasattr(action, 'item'):
+            try:
+                return float(action.item())
+            except (TypeError, ValueError):
+                return None
+        try:
+            return float(action)
+        except (TypeError, ValueError):
+            return None
 
     def arrive_station(self, current_time, bus_all, debug):
         # Because we have to use the self.holding_time later, so we exchange passenger first when arrived a station
@@ -333,8 +340,7 @@ class Bus(object):
         self.backward_bus = list(filter(lambda x: self.trip_id + 2 in x.trip_id_list, bus_all))
         self.backward_headway = self.backward_bus[0].forward_headway if len(self.backward_bus) != 0 else 360
         # self.backward_headway = 360
-        # when the bus arriving in a station, set self.holding = True. Then in outer loop, the iteration will skip this
-        # function, to guarantee each bus arrive in each, this function just work ones
+        # when the bus arrives at a station, drive() will switch the state to HOLDING so this logic only executes once
         self.absolute_distance += self.next_station_dis * self.direction_int
         # station_type == 0, means the next_station is terminal, then put this bus to terminal_bus rather than on_route
         # then change the direction of the bus.
@@ -382,8 +388,7 @@ class Bus(object):
         self.reward = None
         self.obs = []
 
-        self.holding = False
-        self.held = False
+        self.state = BusState.TRAVEL
         self.on_route = True
         self.trip_turn = len(self.trip_id_list)
         self.is_unhealthy = False # False if the bus is healthy, True if the bus is unhealthy, then terminate env early
