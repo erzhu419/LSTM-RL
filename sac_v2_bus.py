@@ -47,7 +47,24 @@ parser.add_argument('--auto_entropy', type=bool, default=True, help='automatical
 parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
 parser.add_argument("--max_episodes", type=int, default=500, help="max episodes")
+parser.add_argument('--save_root', type=str, default='.', help='Base directory for saving models, logs, and figures')
+parser.add_argument('--run_name', type=str, default='gpt_version', help='Optional identifier appended to save directories to avoid overwriting previous runs')
 args = parser.parse_args()
+
+
+SCRIPT_NAME = os.path.splitext(os.path.basename(__file__))[0]
+RUN_NAME = args.run_name.strip() if args.run_name else None
+SAVE_ROOT = os.path.abspath(args.save_root)
+EXPERIMENT_ID = f"{SCRIPT_NAME}_{RUN_NAME}" if RUN_NAME else SCRIPT_NAME
+
+PIC_DIR = os.path.join(SAVE_ROOT, 'pic', EXPERIMENT_ID)
+LOG_DIR = os.path.join(SAVE_ROOT, 'logs', EXPERIMENT_ID)
+MODEL_DIR = os.path.join(SAVE_ROOT, 'model', EXPERIMENT_ID)
+
+for directory in (PIC_DIR, LOG_DIR, MODEL_DIR):
+    os.makedirs(directory, exist_ok=True)
+
+MODEL_PREFIX = os.path.join(MODEL_DIR, 'sac_v2_bus')
 
 
 class ReplayBuffer:
@@ -87,27 +104,73 @@ class ReplayBuffer:
 
 
 class EmbeddingLayer(nn.Module):
-    def __init__(self, cat_code_dict, cat_cols):
+    def __init__(self, cat_code_dict, cat_cols, embedding_dims=None, layer_norm=False, dropout=0.0):
         super(EmbeddingLayer, self).__init__()
         self.cat_code_dict = cat_code_dict
-        self.cat_cols = cat_cols
+        self.cat_cols = list(cat_cols)
 
-        # Create embedding layers for categorical variables
-        self.embeddings = nn.ModuleDict({
-            col: nn.Embedding(len(cat_code_dict[col]), min(50, len(cat_code_dict[col]) // 2))
-            for col in cat_cols
-        })
+        self.embedding_dims = {}
+        self.cardinalities = {}
+        modules = {}
+        for col in self.cat_cols:
+            codes = list(cat_code_dict[col].values())
+            if len(codes) == 0:
+                raise ValueError(f"Categorical column '{col}' has no encoding values defined.")
+            cardinality = max(codes) + 1
+            self.cardinalities[col] = cardinality
+            dim = embedding_dims[col] if embedding_dims and col in embedding_dims else self._suggest_dim(cardinality)
+            self.embedding_dims[col] = dim
+            modules[col] = nn.Embedding(cardinality, dim)
+
+        self.embeddings = nn.ModuleDict(modules)
+        self.output_dim = sum(self.embedding_dims.values())
+        self.layer_norm = nn.LayerNorm(self.output_dim) if layer_norm and self.output_dim > 0 else None
+        self.dropout = nn.Dropout(dropout) if dropout > 0 else None
+
+    @staticmethod
+    def _suggest_dim(cardinality: int) -> int:
+        if cardinality <= 1:
+            return 1
+        return min(32, max(2, int(round(cardinality ** 0.5)) + 1))
+
+    @classmethod
+    def compute_output_dim(cls, cat_code_dict, cat_cols, embedding_dims=None) -> int:
+        total = 0
+        for col in cat_cols:
+            codes = list(cat_code_dict[col].values())
+            if len(codes) == 0:
+                continue
+            cardinality = max(codes) + 1
+            if embedding_dims and col in embedding_dims:
+                total += embedding_dims[col]
+            else:
+                total += cls._suggest_dim(cardinality)
+        return total
 
     def forward(self, cat_tensor):
+        if cat_tensor.dim() == 1:
+            cat_tensor = cat_tensor.unsqueeze(0)
+
         embedding_tensor_group = []
         for idx, col in enumerate(self.cat_cols):
-            layer = self.embeddings[col]
-            out = layer(cat_tensor[:, idx])
-            embedding_tensor_group.append(out)
+            indices = cat_tensor[:, idx].long()
+            max_index = self.cardinalities[col] - 1
+            indices = torch.clamp(indices, 0, max_index)
+            embedding_tensor_group.append(self.embeddings[col](indices))
 
-        # Concatenate all embeddings
-        embed_tensor = torch.cat(embedding_tensor_group, dim=1)
+        if embedding_tensor_group:
+            embed_tensor = torch.cat(embedding_tensor_group, dim=1)
+            if self.layer_norm is not None:
+                embed_tensor = self.layer_norm(embed_tensor)
+            if self.dropout is not None:
+                embed_tensor = self.dropout(embed_tensor)
+        else:
+            embed_tensor = torch.empty(cat_tensor.size(0), 0, device=cat_tensor.device)
+
         return embed_tensor
+
+    def clone(self):
+        return copy.deepcopy(self)
 
 
 class SoftQNetwork(nn.Module):
@@ -235,19 +298,17 @@ class SAC_Trainer():
         # 数值特征的数量
         self.num_cat_features = len(cat_cols)
         self.num_cont_features = env.state_dim - self.num_cat_features  # 包括 forward_headway, backward_headway 和最后一个 feature
-        # 创建嵌入层
-        embedding_layer = EmbeddingLayer(cat_code_dict, cat_cols)
-        # SAC 网络的输入维度
-        embedding_dim = sum([min(50, len(cat_code_dict[col]) // 2) for col in cat_cols])  # 总嵌入维度
-        state_dim = embedding_dim + self.num_cont_features  # 状态维度 = 嵌入维度 + 数值特征维度
+        # 创建嵌入层模板，并为每个网络提供独立副本，避免目标网络与在线网络共享参数
+        embedding_template = EmbeddingLayer(cat_code_dict, cat_cols, layer_norm=True, dropout=0.05)
+        state_dim = embedding_template.output_dim + self.num_cont_features  # 状态维度 = 嵌入维度 + 数值特征维度
 
         self.replay_buffer = replay_buffer
 
-        self.soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
-        self.soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
-        self.target_soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
-        self.target_soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
-        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_layer, action_range).to(device)
+        self.soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone()).to(device)
+        self.soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone()).to(device)
+        self.target_soft_q_net1 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone()).to(device)
+        self.target_soft_q_net2 = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone()).to(device)
+        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone(), action_range).to(device)
         self.log_alpha = torch.zeros(1, dtype=torch.float32, requires_grad=True, device=device)
         print('Soft Q Network (1,2): ', self.soft_q_net1)
         print('Policy Network: ', self.policy_net)
@@ -457,13 +518,10 @@ def plot(rewards):
     plt.legend()
     plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
 
-    # 获取当前.py文件名（不带扩展名）
-    script_name = os.path.splitext(os.path.basename(__file__))[0]
-    pic_dir = os.path.join('pic', script_name)
-    if not os.path.exists(pic_dir):
-        os.makedirs(pic_dir)
+    if not os.path.exists(PIC_DIR):
+        os.makedirs(PIC_DIR, exist_ok=True)
 
-    plt.savefig(os.path.join(pic_dir, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
+    plt.savefig(os.path.join(PIC_DIR, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
     plt.close()
 
 replay_buffer_size = 1e6
@@ -508,10 +566,7 @@ eval_mean_rewards = []  # 记录评估的平均奖励
 eval_reward_stds = []   # 记录评估的奖励标准差
 
 # 修改模型保存路径
-model_path = './model/sac_v2_bus/sac_v2_bus'
-log_dir = './model/sac_v2_bus'
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
+model_path = MODEL_PREFIX
 
 tracemalloc.start()
 
@@ -613,17 +668,16 @@ if __name__ == '__main__':
             alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
 
             if eps % args.plot_freq == 0:  # plot and model saving interval
-                # 获取当前.py文件名（不带扩展名）                script_name = os.path.splitext(os.path.basename(__file__))[0]                log_dir = os.path.join('logs', script_name)
-                if not os.path.exists(log_dir):
-                    os.makedirs(log_dir)
-                    
+                if not os.path.exists(LOG_DIR):
+                    os.makedirs(LOG_DIR, exist_ok=True)
+
                 plot(rewards)
-                np.save(os.path.join(log_dir, 'rewards.npy'), rewards)
-                np.save(os.path.join(log_dir, 'q_values.npy'), q_values_episode)
-                np.save(os.path.join(log_dir, 'reg_norms1_episode.npy'), reg_norms1_episode)
-                np.save(os.path.join(log_dir, 'reg_norms2_episode.npy'), reg_norms2_episode)
-                np.save(os.path.join(log_dir, 'log_probs_episode.npy'), log_probs_episode)
-                np.save(os.path.join(log_dir, 'alpha_values_episode.npy'), alpha_values_episode)
+                np.save(os.path.join(LOG_DIR, 'rewards.npy'), rewards)
+                np.save(os.path.join(LOG_DIR, 'q_values.npy'), q_values_episode)
+                np.save(os.path.join(LOG_DIR, 'reg_norms1_episode.npy'), reg_norms1_episode)
+                np.save(os.path.join(LOG_DIR, 'reg_norms2_episode.npy'), reg_norms2_episode)
+                np.save(os.path.join(LOG_DIR, 'log_probs_episode.npy'), log_probs_episode)
+                np.save(os.path.join(LOG_DIR, 'alpha_values_episode.npy'), alpha_values_episode)
                 
                 # 评估当前策略
                 mean_reward, reward_std = evaluate_policy(sac_trainer, env, num_eval_episodes=15, deterministic=True)
@@ -635,13 +689,13 @@ if __name__ == '__main__':
                 eval_reward_stds.append(reward_std)
                 
                 # 保存评估结果
-                np.save(os.path.join(log_dir, 'eval_episodes.npy'), eval_episodes)
-                np.save(os.path.join(log_dir, 'eval_mean_rewards.npy'), eval_mean_rewards)
-                np.save(os.path.join(log_dir, 'eval_reward_stds.npy'), eval_reward_stds)
+                np.save(os.path.join(LOG_DIR, 'eval_episodes.npy'), eval_episodes)
+                np.save(os.path.join(LOG_DIR, 'eval_mean_rewards.npy'), eval_mean_rewards)
+                np.save(os.path.join(LOG_DIR, 'eval_reward_stds.npy'), eval_reward_stds)
                 
                 # 保存带有episode信息的模型
                 model_name = f"{model_path}_episode_{eps}"
-                sac_trainer.save_model(os.path.join(log_dir, f'sac_v2_episode_{eps}'))
+                sac_trainer.save_model(os.path.join(LOG_DIR, f'sac_v2_episode_{eps}'))
                 sac_trainer.save_model(model_name)
                 # snapshot = tracemalloc.take_snapshot()
                 # for stat in snapshot.statistics('lineno')[:10]:
@@ -667,11 +721,10 @@ if __name__ == '__main__':
         eval_reward_stds.append(reward_std)
         
         # 保存最终评估结果
-        script_name = os.path.splitext(os.path.basename(__file__))[0]
-        final_log_dir = os.path.join('logs', script_name)
+        final_log_dir = LOG_DIR
         if not os.path.exists(final_log_dir):
-            os.makedirs(final_log_dir)
-            
+            os.makedirs(final_log_dir, exist_ok=True)
+
         np.save(os.path.join(final_log_dir, 'eval_episodes.npy'), eval_episodes)
         np.save(os.path.join(final_log_dir, 'eval_mean_rewards.npy'), eval_mean_rewards)
         np.save(os.path.join(final_log_dir, 'eval_reward_stds.npy'), eval_reward_stds)
