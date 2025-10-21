@@ -6,15 +6,14 @@ paper: https://arxiv.org/pdf/1812.05905.pdf
 '''
 
 import psutil,tracemalloc
-import gym
-import copy
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Normal
 from normalization import Normalization, RewardScaling, RunningMeanStd
+from bus_feature_utils import create_embedding_layer, build_bus_categorical_info
+from bus_replay_buffer import ReplayBuffer
 
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
@@ -22,7 +21,7 @@ from env.sim import env_bus
 import os
 import argparse
 import numpy as np
-import random
+import json
 
 GPU = True
 device_idx = 0
@@ -49,13 +48,23 @@ parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
 parser.add_argument("--max_episodes", type=int, default=500, help="max episodes")
 parser.add_argument('--save_root', type=str, default='.', help='Base directory for saving models, logs, and figures')
 parser.add_argument('--run_name', type=str, default='gpt_version', help='Optional identifier appended to save directories to avoid overwriting previous runs')
+parser.add_argument('--env_path', type=str, default='env', help='Path to the environment configuration directory')
+parser.add_argument('--embedding_mode', type=str, default='full', choices=['full', 'one_hot', 'none'], help='Categorical feature handling strategy')
+parser.add_argument('--route_sigma', type=float, default=1.5, help='Sigma used for route speed sampling')
+parser.add_argument('--eval_sigmas', type=float, nargs='*', default=None, help='List of sigma values for cross-evaluation after training')
 args = parser.parse_args()
 
+args.embedding_mode = args.embedding_mode.lower()
 
 SCRIPT_NAME = os.path.splitext(os.path.basename(__file__))[0]
 RUN_NAME = args.run_name.strip() if args.run_name else None
 SAVE_ROOT = os.path.abspath(args.save_root)
-EXPERIMENT_ID = f"{SCRIPT_NAME}_{RUN_NAME}" if RUN_NAME else SCRIPT_NAME
+
+sigma_token = f"sigma{args.route_sigma}".replace('.', 'p')
+experiment_components = [SCRIPT_NAME, sigma_token, f"embed-{args.embedding_mode}"]
+if RUN_NAME:
+    experiment_components.append(RUN_NAME)
+EXPERIMENT_ID = "_".join(experiment_components)
 
 PIC_DIR = os.path.join(SAVE_ROOT, 'pic', EXPERIMENT_ID)
 LOG_DIR = os.path.join(SAVE_ROOT, 'logs', EXPERIMENT_ID)
@@ -64,113 +73,10 @@ MODEL_DIR = os.path.join(SAVE_ROOT, 'model', EXPERIMENT_ID)
 for directory in (PIC_DIR, LOG_DIR, MODEL_DIR):
     os.makedirs(directory, exist_ok=True)
 
+with open(os.path.join(LOG_DIR, 'args.json'), 'w') as f:
+    json.dump(vars(args), f, indent=2)
+
 MODEL_PREFIX = os.path.join(MODEL_DIR, 'sac_v2_bus')
-
-
-class ReplayBuffer:
-    def __init__(self, capacity, last_episode_step=5000):
-        self.capacity = capacity
-        self.last_episode_step = last_episode_step  # 预估每个 episode 的 step 数
-        self.buffer = {}
-        self.position = 0  # 用作 dict 的 key
-
-    def push(self, state, action, reward, next_state, done):
-        """添加新数据"""
-        self.buffer[self.position] = (state, action, reward, next_state, done)
-        self.position += 1
-
-        # 当 buffer 过大时，删除最早的 episode 数据
-        if len(self.buffer) > self.capacity:
-            keys_to_remove = list(self.buffer.keys())[:self.last_episode_step]  # 找到最早的 N 条数据
-            for key in keys_to_remove:
-                del self.buffer[key]  # 直接删除，提高性能
-
-    def sample(self, batch_size):
-        """随机采样 batch_size 大小的数据，确保数据格式正确"""
-        batch = random.sample(list(self.buffer.values()), batch_size)  # 直接从 dict 的值采样
-        states, actions, rewards, next_states, dones = zip(*batch)
-
-        # 确保维度正确，防止 PyTorch 计算时出现广播错误
-        states = np.stack(states)                      # (batch_size, state_dim)
-        actions = np.stack(actions)                    # (batch_size, action_dim) 或 (batch_size,)
-        rewards = np.array(rewards, dtype=np.float32)  # (batch_size,)
-        next_states = np.stack(next_states)            # (batch_size, state_dim)
-        dones = np.array(dones, dtype=np.float32)      # (batch_size,)
-
-        return states, actions, rewards, next_states, dones
-
-    def __len__(self):
-        return len(self.buffer)
-
-
-class EmbeddingLayer(nn.Module):
-    def __init__(self, cat_code_dict, cat_cols, embedding_dims=None, layer_norm=False, dropout=0.0):
-        super(EmbeddingLayer, self).__init__()
-        self.cat_code_dict = cat_code_dict
-        self.cat_cols = list(cat_cols)
-
-        self.embedding_dims = {}
-        self.cardinalities = {}
-        modules = {}
-        for col in self.cat_cols:
-            codes = list(cat_code_dict[col].values())
-            if len(codes) == 0:
-                raise ValueError(f"Categorical column '{col}' has no encoding values defined.")
-            cardinality = max(codes) + 1
-            self.cardinalities[col] = cardinality
-            dim = embedding_dims[col] if embedding_dims and col in embedding_dims else self._suggest_dim(cardinality)
-            self.embedding_dims[col] = dim
-            modules[col] = nn.Embedding(cardinality, dim)
-
-        self.embeddings = nn.ModuleDict(modules)
-        self.output_dim = sum(self.embedding_dims.values())
-        self.layer_norm = nn.LayerNorm(self.output_dim) if layer_norm and self.output_dim > 0 else None
-        self.dropout = nn.Dropout(dropout) if dropout > 0 else None
-
-    @staticmethod
-    def _suggest_dim(cardinality: int) -> int:
-        if cardinality <= 1:
-            return 1
-        return min(32, max(2, int(round(cardinality ** 0.5)) + 1))
-
-    @classmethod
-    def compute_output_dim(cls, cat_code_dict, cat_cols, embedding_dims=None) -> int:
-        total = 0
-        for col in cat_cols:
-            codes = list(cat_code_dict[col].values())
-            if len(codes) == 0:
-                continue
-            cardinality = max(codes) + 1
-            if embedding_dims and col in embedding_dims:
-                total += embedding_dims[col]
-            else:
-                total += cls._suggest_dim(cardinality)
-        return total
-
-    def forward(self, cat_tensor):
-        if cat_tensor.dim() == 1:
-            cat_tensor = cat_tensor.unsqueeze(0)
-
-        embedding_tensor_group = []
-        for idx, col in enumerate(self.cat_cols):
-            indices = cat_tensor[:, idx].long()
-            max_index = self.cardinalities[col] - 1
-            indices = torch.clamp(indices, 0, max_index)
-            embedding_tensor_group.append(self.embeddings[col](indices))
-
-        if embedding_tensor_group:
-            embed_tensor = torch.cat(embedding_tensor_group, dim=1)
-            if self.layer_norm is not None:
-                embed_tensor = self.layer_norm(embed_tensor)
-            if self.dropout is not None:
-                embed_tensor = self.dropout(embed_tensor)
-        else:
-            embed_tensor = torch.empty(cat_tensor.size(0), 0, device=cat_tensor.device)
-
-        return embed_tensor
-
-    def clone(self):
-        return copy.deepcopy(self)
 
 
 class SoftQNetwork(nn.Module):
@@ -286,20 +192,16 @@ class PolicyNetwork(nn.Module):
         return action
 
 class SAC_Trainer():
-    def __init__(self, env, replay_buffer, hidden_dim, action_range):
+    def __init__(self, env, replay_buffer, hidden_dim, action_range, embedding_mode='full'):
         # 以下是类别特征和数值特征
-        cat_cols = ['bus_id', 'station_id', 'time_period','direction']
-        cat_code_dict = {
-            'bus_id': {i: i for i in range(env.max_agent_num)},  # 最大车辆数，预设值
-            'station_id': {i: i for i in range(round(len(env.stations) / 2))},  # station_id，有几个站就有几个类别
-            'time_period': {i: i for i in range(env.timetables[-1].launch_time//3600 + 2)},  # time period,以每小时区分，+2是因为让车运行完
-            'direction': {0: 0, 1: 1}  # direction 二分类
-        }
+        cat_cols, cat_code_dict = build_bus_categorical_info(env)
         # 数值特征的数量
         self.num_cat_features = len(cat_cols)
         self.num_cont_features = env.state_dim - self.num_cat_features  # 包括 forward_headway, backward_headway 和最后一个 feature
         # 创建嵌入层模板，并为每个网络提供独立副本，避免目标网络与在线网络共享参数
-        embedding_template = EmbeddingLayer(cat_code_dict, cat_cols, layer_norm=True, dropout=0.05)
+        self.embedding_mode = embedding_mode
+        embedding_kwargs = {'layer_norm': True, 'dropout': 0.05} if embedding_mode == 'full' else {}
+        embedding_template = create_embedding_layer(embedding_mode, cat_code_dict, cat_cols, **embedding_kwargs)
         state_dim = embedding_template.output_dim + self.num_cont_features  # 状态维度 = 嵌入维度 + 数值特征维度
 
         self.replay_buffer = replay_buffer
@@ -476,7 +378,11 @@ def evaluate_policy(sac_trainer, env, num_eval_episodes=5, deterministic=True):
             for key in state_dict:
                 if len(state_dict[key]) == 1:
                     if action_dict[key] is None:
-                        state_input = np.array(state_dict[key][0])
+                        raw_state = np.array(state_dict[key][0])
+                        if args.use_state_norm:
+                            state_input = sac_trainer.state_norm(raw_state, update=False)
+                        else:
+                            state_input = raw_state
                         a = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=deterministic)
                         action_dict[key] = a
                         
@@ -486,7 +392,11 @@ def evaluate_policy(sac_trainer, env, num_eval_episodes=5, deterministic=True):
                         episode_reward += reward_dict[key]
                     
                     state_dict[key] = state_dict[key][1:]
-                    state_input = np.array(state_dict[key][0])
+                    raw_state = np.array(state_dict[key][0])
+                    if args.use_state_norm:
+                        state_input = sac_trainer.state_norm(raw_state, update=False)
+                    else:
+                        state_input = raw_state
                     action_dict[key] = sac_trainer.policy_net.get_action(torch.from_numpy(state_input).float(), deterministic=deterministic)
             
             # 执行动作
@@ -529,8 +439,8 @@ replay_buffer = ReplayBuffer(replay_buffer_size)
 
 debug = False
 render = False
-path = os.getcwd() + '/env'
-env = env_bus(path, debug=debug)
+path = os.path.abspath(args.env_path)
+env = env_bus(path, debug=debug, route_sigma=args.route_sigma)
 env.reset()
 
 action_dim = env.action_space.shape[0]
@@ -570,7 +480,13 @@ model_path = MODEL_PREFIX
 
 tracemalloc.start()
 
-sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range)
+sac_trainer = SAC_Trainer(
+    env,
+    replay_buffer,
+    hidden_dim=hidden_dim,
+    action_range=action_range,
+    embedding_mode=args.embedding_mode
+)
 
 if __name__ == '__main__':
     if args.train:
@@ -733,6 +649,24 @@ if __name__ == '__main__':
         final_model_name = f"{model_path}_episode_final"
         sac_trainer.save_model(os.path.join(final_log_dir, 'sac_v2_episode_final'))
         sac_trainer.save_model(final_model_name)
+
+    if args.eval_sigmas:
+        cross_eval_results = []
+        for eval_sigma in args.eval_sigmas:
+            eval_env = env_bus(path, debug=debug, route_sigma=eval_sigma)
+            eval_env.reset()
+            mean_reward, reward_std = evaluate_policy(sac_trainer, eval_env, num_eval_episodes=15, deterministic=True)
+            cross_eval_results.append({
+                "train_sigma": args.route_sigma,
+                "eval_sigma": eval_sigma,
+                "mean_reward": float(mean_reward),
+                "reward_std": float(reward_std),
+                "embedding_mode": args.embedding_mode,
+                "algorithm": SCRIPT_NAME
+            })
+
+        with open(os.path.join(LOG_DIR, 'cross_sigma_eval.json'), 'w') as f:
+            json.dump(cross_eval_results, f, indent=2)
 
     if args.test:
         sac_trainer.policy_net.load_state_dict(torch.load(model_path))
