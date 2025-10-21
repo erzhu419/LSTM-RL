@@ -17,11 +17,12 @@ import json
 
 class env_bus(object):
     
-    def __init__(self, path, debug=False, render=False):
+    def __init__(self, path, debug=False, render=False, route_sigma=1.5):
         if render:
             pygame.init()
 
         self.path = path
+        self.route_sigma = route_sigma
         sys.path.append(os.path.abspath(os.path.join(os.getcwd())))
         config_path = os.path.join(path, 'config.json')
         with open(config_path, 'r') as f:
@@ -77,9 +78,17 @@ class env_bus(object):
 
     def set_routes(self):
         return [
-            Route(self.routes_set['route_id'][i], self.routes_set['start_stop'][i], self.routes_set['end_stop'][i],
-                  self.routes_set['distance'][i], self.routes_set['V_max'][i], self.routes_set.iloc[i, 5:]) for i in
-            range(self.routes_set.shape[0])]
+            Route(
+                self.routes_set['route_id'][i],
+                self.routes_set['start_stop'][i],
+                self.routes_set['end_stop'][i],
+                self.routes_set['distance'][i],
+                self.routes_set['V_max'][i],
+                self.routes_set.iloc[i, 5:],
+                sigma=self.route_sigma
+            )
+            for i in range(self.routes_set.shape[0])
+        ]
 
     def set_stations(self):
         station_concat = pd.concat([self.station_set, self.station_set[::-1][1:]]).reset_index()

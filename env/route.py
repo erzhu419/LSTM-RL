@@ -3,12 +3,12 @@ import random
 import numpy as np
 
 class Route(object):
-    def __init__(self, route_id, start_stop, end_stop, route_length, max_speed, route_speed_history):
+    def __init__(self, route_id, start_stop, end_stop, route_length, max_speed, route_speed_history, sigma=1.5):
         self.route = []
         self.maximum_velocity = 0
         self.variant_velocity = 0
 
-        self.sigma = 1.5
+        self.sigma = sigma
         self.route_id = route_id
         self.route_max_speed = max_speed
         self.speed_history = route_speed_history
