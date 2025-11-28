@@ -58,19 +58,17 @@ class visualize(object):
         'turquoise':            '#40E0D0',
         'violet':               '#EE82EE',
         'yellow':               '#FFFF00'}
-        
+
         # 将颜色列表转换为有序列表，确保每次分配相同顺序的颜色
         color_list = list(self.cnames.keys())
         # 使用固定顺序分配颜色，而不是随机选择
         self.bus_color = color_list[:env.max_agent_num]
-        
+
         self.screen_width = 2100
         self.screen_length = 1600
-        if not pygame.get_init():
-            pygame.init()
-        if not pygame.font.get_init():
-            pygame.font.init()
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_length))
+        # Delay pygame initialization until render() is called
+        self.screen = None
+        self._pygame_initialized = False
         
     def draw_bus(self, surface, x, y, color, scale=1):
             # Scale dimensions with minimum size constraints
@@ -136,12 +134,17 @@ class visualize(object):
     
 
     def render(self):
-        
+        # Initialize pygame only on first render call
+        if not self._pygame_initialized:
+            if not pygame.get_init():
+                pygame.init()
+            if not pygame.font.get_init():
+                pygame.font.init()
+            self.screen = pygame.display.set_mode((self.screen_width, self.screen_length))
+            self._pygame_initialized = True
+
         screen = self.screen
         pygame.display.set_caption("Bus Simulation")
-        
-        if not pygame.font.get_init():
-            pygame.font.init()
 
         font = pygame.font.Font(None, 36)
         font_small = pygame.font.SysFont('arial', 20)

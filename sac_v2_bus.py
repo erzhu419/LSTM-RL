@@ -40,11 +40,13 @@ parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3
 parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=10, help="frequency of training the network")
-parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
-parser.add_argument('--weight_reg', type=float, default=0.1, help='weight of regularization')
+parser.add_argument("--plot_freq", type=int, default=5, help="frequency of plotting the result")
+parser.add_argument('--weight_reg', type=float, default=0.03, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
-parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
+parser.add_argument("--maximum_alpha", type=float, default=2.0, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
+parser.add_argument("--hidden_dim", type=int, default=32, help="Hidden dimension size for networks")
+parser.add_argument("--lr", type=float, default=1e-5, help="Learning rate for actor, critic, and alpha optimizers")
 parser.add_argument("--max_episodes", type=int, default=500, help="max episodes")
 parser.add_argument('--save_root', type=str, default='.', help='Base directory for saving models, logs, and figures')
 parser.add_argument('--run_name', type=str, default='gpt_version', help='Optional identifier appended to save directories to avoid overwriting previous runs')
@@ -52,7 +54,11 @@ parser.add_argument('--env_path', type=str, default='env', help='Path to the env
 parser.add_argument('--embedding_mode', type=str, default='full', choices=['full', 'one_hot', 'none'], help='Categorical feature handling strategy')
 parser.add_argument('--route_sigma', type=float, default=1.5, help='Sigma used for route speed sampling')
 parser.add_argument('--eval_sigmas', type=float, nargs='*', default=None, help='List of sigma values for cross-evaluation after training')
+parser.add_argument('--critic_actor_ratio', type=int, default=2, help='Ratio of critic updates to actor updates')
 args = parser.parse_args()
+
+# 强制在 SAC 中禁用 weight_reg，使其仅对 ensemble 生效
+args.weight_reg = 0.0
 
 args.embedding_mode = args.embedding_mode.lower()
 
@@ -61,7 +67,8 @@ RUN_NAME = args.run_name.strip() if args.run_name else None
 SAVE_ROOT = os.path.abspath(args.save_root)
 
 sigma_token = f"sigma{args.route_sigma}".replace('.', 'p')
-experiment_components = [SCRIPT_NAME, sigma_token, f"embed-{args.embedding_mode}"]
+weight_token = f"wreg{str(args.weight_reg).replace('.', 'p')}"
+experiment_components = [SCRIPT_NAME, sigma_token, f"embed-{args.embedding_mode}", weight_token]
 if RUN_NAME:
     experiment_components.append(RUN_NAME)
 EXPERIMENT_ID = "_".join(experiment_components)
@@ -223,9 +230,7 @@ class SAC_Trainer():
         self.soft_q_criterion1 = nn.MSELoss()
         self.soft_q_criterion2 = nn.MSELoss()
 
-        soft_q_lr = 1e-5
-        policy_lr = 1e-5
-        alpha_lr = 1e-5
+        soft_q_lr = policy_lr = alpha_lr = args.lr
 
         self.soft_q_optimizer1 = optim.Adam(self.soft_q_net1.parameters(), lr=soft_q_lr)
         self.soft_q_optimizer2 = optim.Adam(self.soft_q_net2.parameters(), lr=soft_q_lr)
@@ -310,7 +315,7 @@ class SAC_Trainer():
         predicted_new_q_value = torch.min(self.soft_q_net1(state, new_action) + args.weight_reg * reg_norm1, self.soft_q_net2(state, new_action)
                                           + args.weight_reg * reg_norm2)
         # Training Policy Function
-        if training_steps % 2 == 0:
+        if training_steps % args.critic_actor_ratio == 0:
             policy_loss = (self.alpha * log_prob - predicted_new_q_value).mean()
 
             self.policy_optimizer.zero_grad()
@@ -411,28 +416,7 @@ def evaluate_policy(sac_trainer, env, num_eval_episodes=5, deterministic=True):
 
 
 def plot(rewards):
-    clear_output(True)
-    plt.figure(figsize=(20, 5))
-    plt.subplot(1, 2, 1)
-    plt.plot(rewards, label="Reward")
-    plt.legend()
-    plt.title(f"Training Reward (weight_reg={args.weight_reg}, auto_entropy={args.auto_entropy}, reward_scaling={args.use_reward_scaling}, maximum_alpha={args.maximum_alpha})")
-    plt.subplot(1, 2, 2)
-
-    plt.plot(q_values_episode, label="Q-Value")
-    plt.plot(reg_norms1_episode, label="Regularization Term1")
-    plt.plot(reg_norms2_episode, label="Regularization Term2")
-    plt.plot(log_probs_episode, label="Log Prob")
-    plt.plot(alpha_values_episode, label="Alpha")
-
-    plt.legend()
-    plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
-
-    if not os.path.exists(PIC_DIR):
-        os.makedirs(PIC_DIR, exist_ok=True)
-
-    plt.savefig(os.path.join(PIC_DIR, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
-    plt.close()
+    pass
 
 replay_buffer_size = 1e6
 replay_buffer = ReplayBuffer(replay_buffer_size)
@@ -455,7 +439,7 @@ explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
 AUTO_ENTROPY = True
 DETERMINISTIC = False
-hidden_dim = 32
+hidden_dim = args.hidden_dim
 
 rewards = []    # 记录奖励
 q_values = []  # 记录 Q 值变化
@@ -619,7 +603,7 @@ if __name__ == '__main__':
             replay_buffer_usage = len(replay_buffer) / replay_buffer_size * 100
             
             print(
-                f"Episode: {eps} | Episode Reward: {episode_reward} "
+                f"[SAC | max_alpha={args.maximum_alpha}] Episode: {eps} | Episode Reward: {episode_reward} "
                 f"| CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | "
                 f"GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | "
                 f"Replay Buffer Usage: {replay_buffer_usage:.2f}%")

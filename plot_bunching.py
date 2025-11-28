@@ -5,7 +5,7 @@ import os
 
 # 读取轨迹数据
 control_df = pd.read_csv('/home/erzhu419/mine_code/LSTM-RL/pic/exp 0, bus_trajectories.csv')
-uncontrol_df = pd.read_csv('/home/erzhu419/mine_code/LSTM-RL/env/pic/exp 1, bus_trajectories.csv')
+uncontrol_df = pd.read_csv('/home/erzhu419/mine_code/LSTM-RL/pic/exp 1, bus_trajectories.csv')
 
 # 定义与visualize.py相同的颜色映射
 cnames = {

@@ -6,24 +6,25 @@ paper: https://arxiv.org/pdf/1812.05905.pdf
 '''
 
 import psutil, tracemalloc
-import gym
-import copy
-from tqdm import tqdm
 import torch, math
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Normal
-from normalization import Normalization, RewardScaling, RunningMeanStd
-
-from IPython.display import clear_output
-import matplotlib.pyplot as plt
-from env.sim import env_bus
 import os
+import json
 import argparse
 import numpy as np
 import random
 from copy import deepcopy
+
+from normalization import Normalization, RewardScaling, RunningMeanStd
+from bus_feature_utils import create_embedding_layer, build_bus_categorical_info
+from bus_replay_buffer import ReplayBuffer
+
+from IPython.display import clear_output
+import matplotlib.pyplot as plt
+from env.sim import env_bus
 GPU = True
 device_idx = 0
 if GPU:
@@ -42,11 +43,14 @@ parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3
 parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
-parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
+parser.add_argument("--plot_freq", type=int, default=5, help="frequency of plotting the result")
 parser.add_argument('--weight_reg', type=float, default=0.03, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
 parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
+parser.add_argument("--ensemble_size", type=int, default=10, help="Number of critics in the ensemble")
+parser.add_argument("--hidden_dim", type=int, default=32, help="Hidden dimension size for networks")
+parser.add_argument("--lr", type=float, default=1e-5, help="Learning rate for actor, critic, and alpha optimizers")
 #TODO 可以看到这里把beta相关的三个参数降低之后，收敛性好很多，继续调参
 parser.add_argument("--beta_bc", type=float, default=0.001, help="weight of behavior cloning loss")
 # beta这个参数在源代码中是负数(我开始也奇怪为什么下面代码关于ood_std是+,原来是因为这里是负数)
@@ -54,67 +58,37 @@ parser.add_argument("--beta", type=float, default=-2, help="weight of variance")
 parser.add_argument("--beta_ood", type=float, default=0.01, help="weight of OOD loss")
 parser.add_argument('--critic_actor_ratio', type=int, default=2, help="ratio of critic and actor training")
 parser.add_argument('--replay_buffer_size', type=int, default=int(1e6), help="buffer size")
+parser.add_argument('--save_root', type=str, default='.', help='Base directory for saving models, logs, and figures')
+parser.add_argument('--run_name', type=str, default='gpt_version', help='Optional identifier appended to save directories')
+parser.add_argument('--env_path', type=str, default='env', help='Path to the environment configuration directory')
+parser.add_argument('--embedding_mode', type=str, default='full', choices=['full', 'one_hot', 'none'], help='Categorical feature handling strategy')
+parser.add_argument('--route_sigma', type=float, default=1.5, help='Sigma used for route speed sampling')
+parser.add_argument('--eval_sigmas', type=float, nargs='*', default=None, help='List of sigma values for cross-evaluation after training')
 args = parser.parse_args()
+args.embedding_mode = args.embedding_mode.lower()
 
+SCRIPT_NAME = os.path.splitext(os.path.basename(__file__))[0]
+RUN_NAME = args.run_name.strip() if args.run_name else None
+SAVE_ROOT = os.path.abspath(args.save_root)
 
-class ReplayBuffer:
-    def __init__(self, capacity, last_episode_step=5000):
-        self.capacity = capacity
-        self.last_episode_step = last_episode_step  # 预估每个 episode 的 step 数
-        self.buffer = {}
-        self.position = 0  # 用作 dict 的 key
+sigma_token = f"sigma{args.route_sigma}".replace('.', 'p')
+weight_token = f"wreg{str(args.weight_reg).replace('.', 'p')}"
+experiment_components = [SCRIPT_NAME, sigma_token, f"embed-{args.embedding_mode}", weight_token]
+if RUN_NAME:
+    experiment_components.append(RUN_NAME)
+EXPERIMENT_ID = "_".join(experiment_components)
 
-    def push(self, state, action, reward, next_state, done):
-        """添加新数据"""
-        self.buffer[self.position] = (state, action, reward, next_state, done)
-        self.position += 1
+PIC_DIR = os.path.join(SAVE_ROOT, 'pic', EXPERIMENT_ID)
+LOG_DIR = os.path.join(SAVE_ROOT, 'logs', EXPERIMENT_ID)
+MODEL_DIR = os.path.join(SAVE_ROOT, 'model', EXPERIMENT_ID)
 
-        # 当 buffer 过大时，删除最早的 episode 数据
-        if len(self.buffer) > self.capacity:
-            keys_to_remove = list(self.buffer.keys())[:self.last_episode_step]  # 找到最早的 N 条数据
-            for key in keys_to_remove:
-                del self.buffer[key]  # 直接删除，提高性能
+for directory in (PIC_DIR, LOG_DIR, MODEL_DIR):
+    os.makedirs(directory, exist_ok=True)
 
-    def sample(self, batch_size):
-        """随机采样 batch_size 大小的数据，确保数据格式正确"""
-        batch = random.sample(list(self.buffer.values()), batch_size)  # 直接从 dict 的值采样
-        states, actions, rewards, next_states, dones = zip(*batch)
+with open(os.path.join(LOG_DIR, 'args.json'), 'w') as f:
+    json.dump(vars(args), f, indent=2)
 
-        # 确保维度正确，防止 PyTorch 计算时出现广播错误
-        states = np.stack(states)  # (batch_size, state_dim)
-        actions = np.stack(actions)  # (batch_size, action_dim) 或 (batch_size,)
-        rewards = np.array(rewards, dtype=np.float32)  # (batch_size,)
-        next_states = np.stack(next_states)  # (batch_size, state_dim)
-        dones = np.array(dones, dtype=np.float32)  # (batch_size,)
-
-        return states, actions, rewards, next_states, dones
-
-    def __len__(self):
-        return len(self.buffer)
-
-
-class EmbeddingLayer(nn.Module):
-    def __init__(self, cat_code_dict, cat_cols):
-        super(EmbeddingLayer, self).__init__()
-        self.cat_code_dict = cat_code_dict
-        self.cat_cols = cat_cols
-
-        # Create embedding layers for categorical variables
-        self.embeddings = nn.ModuleDict({
-            col: nn.Embedding(len(cat_code_dict[col]), min(50, len(cat_code_dict[col]) // 2))
-            for col in cat_cols
-        })
-
-    def forward(self, cat_tensor):
-        embedding_tensor_group = []
-        for idx, col in enumerate(self.cat_cols):
-            layer = self.embeddings[col]
-            out = layer(cat_tensor[:, idx])
-            embedding_tensor_group.append(out)
-
-        # Concatenate all embeddings
-        embed_tensor = torch.cat(embedding_tensor_group, dim=1)
-        return embed_tensor
+MODEL_PREFIX = os.path.join(MODEL_DIR, 'sac_v2_bus_ensemble')
 
 
 class VectorizedLinear(nn.Module):
@@ -166,7 +140,7 @@ class VectorizedCritic(nn.Module):
 
 # Replace original SoftQNetwork with vectorized version
 class SoftQNetwork(VectorizedCritic):
-    def __init__(self, state_dim, action_dim, hidden_dim, embedding_layer, ensemble_size=10):
+    def __init__(self, state_dim, action_dim, hidden_dim, embedding_layer, ensemble_size=5):
         # compute input dim after embedding
 
         super().__init__(
@@ -272,38 +246,29 @@ class PolicyNetwork(nn.Module):
 
 
 class SAC_Trainer():
-    def __init__(self, env, replay_buffer, hidden_dim, action_range):
-        # 以下是类别特征和数值特征
-        cat_cols = ['bus_id', 'station_id', 'time_period', 'direction']
-        cat_code_dict = {
-            'bus_id': {i: i for i in range(env.max_agent_num)},  # 最大车辆数，预设值
-            'station_id': {i: i for i in range(round(len(env.stations) / 2))},  # station_id，有几个站就有几个类别
-            'time_period': {i: i for i in range(env.timetables[-1].launch_time // 3600 + 2)},  # time period,以每小时区分，+2是因为让车运行完
-            'direction': {0: 0, 1: 1}  # direction 二分类
-        }
-        # 数值特征的数量
+    def __init__(self, env, replay_buffer, hidden_dim, action_range, embedding_mode='full', ensemble_size=5):
+        cat_cols, cat_code_dict = build_bus_categorical_info(env)
         self.num_cat_features = len(cat_cols)
-        self.num_cont_features = env.state_dim - self.num_cat_features  # 包括 forward_headway, backward_headway 和最后一个 feature
-        # 创建嵌入层
-        embedding_layer = EmbeddingLayer(cat_code_dict, cat_cols)
-        # SAC 网络的输入维度
-        embedding_dim = sum([min(50, len(cat_code_dict[col]) // 2) for col in cat_cols])  # 总嵌入维度
-        state_dim = embedding_dim + self.num_cont_features  # 状态维度 = 嵌入维度 + 数值特征维度
+        self.num_cont_features = env.state_dim - self.num_cat_features
+        self.embedding_mode = embedding_mode
+        embedding_kwargs = {'layer_norm': True, 'dropout': 0.05} if embedding_mode == 'full' else {}
+        embedding_template = create_embedding_layer(embedding_mode, cat_code_dict, cat_cols, **embedding_kwargs)
+        state_dim = embedding_template.output_dim + self.num_cont_features
 
         self.replay_buffer = replay_buffer
+        self.ensemble_size = ensemble_size
 
-        self.soft_q_net = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
-        self.target_soft_q_net = deepcopy(self.soft_q_net)
-        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_layer, action_range).to(device)
+        self.soft_q_net = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone(), ensemble_size=ensemble_size).to(device)
+        self.target_soft_q_net = deepcopy(self.soft_q_net).to(device)
+        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone(), action_range).to(device)
         self.log_alpha = torch.zeros(1, dtype=torch.float32, requires_grad=True, device=device)
+        self.alpha = args.maximum_alpha
         print('Soft Q Network: ', self.soft_q_net)
         print('Policy Network: ', self.policy_net)
 
         self.soft_q_criterion = nn.MSELoss()
 
-        soft_q_lr = 1e-5
-        policy_lr = 1e-5
-        alpha_lr = 1e-5
+        soft_q_lr = policy_lr = alpha_lr = args.lr
 
         self.soft_q_optimizer = optim.Adam(self.soft_q_net.parameters(), lr=soft_q_lr)
         self.policy_optimizer = optim.Adam(self.policy_net.parameters(), lr=policy_lr)
@@ -324,8 +289,9 @@ class SAC_Trainer():
         # with torch.no_grad():
         target_q_next = self.target_soft_q_net(next_state, new_next_action)  # shape: [ensemble_size, batch, 1]
         next_log_prob = next_log_prob.unsqueeze(0).repeat(self.soft_q_net.num_critics, 1)  # Expand and repeat for ensemble_size
-        reg_norm = reg_norm.unsqueeze(-1).repeat(1, args.batch_size)  # Adjust shape to match target_q_next
-        target_q_next = target_q_next - self.alpha * next_log_prob + args.weight_reg * reg_norm  # shape: [ensemble_size, batch, 1]
+        batch_size = reward.size(0)
+        reg_norm = reg_norm.unsqueeze(-1).repeat(1, batch_size)  # Adjust shape to match target_q_next
+        target_q_next = target_q_next - self.alpha * next_log_prob - args.weight_reg * reg_norm  # shape: [ensemble_size, batch, 1]
         target_q_value = reward + (1 - done) * gamma * target_q_next.unsqueeze(-1)
 
         ood_loss = predicted_q_value.std(0).mean()
@@ -336,9 +302,10 @@ class SAC_Trainer():
     # Policy loss computation
     def compute_policy_loss(self, state, action, new_action, log_prob, reg_norm):
 
-        reg_norm = reg_norm.unsqueeze(-1).repeat(1, args.batch_size)  # Adjust shape to match target_q_next
+        batch_size = action.size(0)
+        reg_norm = reg_norm.unsqueeze(-1).repeat(1, batch_size)  # Adjust shape to match target_q_next
 
-        q_values_dist = self.soft_q_net(state, new_action) + args.weight_reg * reg_norm - self.alpha * log_prob
+        q_values_dist = self.soft_q_net(state, new_action) - args.weight_reg * reg_norm - self.alpha * log_prob
 
         q_mean = q_values_dist.mean(dim=0)
         q_std = q_values_dist.std(dim=0)
@@ -382,19 +349,18 @@ class SAC_Trainer():
         return reg_norm
 
     def update(self, batch_size, training_steps, reward_scale=10., auto_entropy=True, target_entropy=-2, gamma=0.99, soft_tau=1e-2):
-        global q_values
+        global q_values, reg_norms, log_probs, alpha_values, ood_losses, q_stds
+
         state, action, reward, next_state, done = self.replay_buffer.sample(batch_size)
         state = torch.FloatTensor(state).to(device)
         next_state = torch.FloatTensor(next_state).to(device)
         action = torch.FloatTensor(action).to(device)
-        reward = torch.FloatTensor(reward).unsqueeze(1).to(device)  # reward is single value, unsqueeze() to add one dim to be [reward] at the sample dim;
+        reward = torch.FloatTensor(reward).unsqueeze(1).to(device)
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
 
         new_action, log_prob, z, mean, log_std = self.policy_net.evaluate(state)
         new_next_action, next_log_prob, _, _, _ = self.policy_net.evaluate(next_state)
         reward = reward_scale * (reward - reward.mean(dim=0)) / (reward.std(dim=0) + 1e-6)
-        # Updating alpha wrt entropy
-        # alpha = 0.0  # trade-off between exploration (max entropy) and exploitation (max Q)
         if auto_entropy:
             alpha_loss = self.compute_alpha_loss(log_prob, target_entropy)
             self.alpha_optimizer.zero_grad()
@@ -407,35 +373,40 @@ class SAC_Trainer():
 
         reg_norm = self.compute_reg_norm(self.target_soft_q_net)
 
-        q_value_loss, predicted_q_value, ood_loss = self.compute_q_loss(state, action, reward, next_state, done, new_next_action, next_log_prob, reg_norm, gamma)
+        q_value_loss, predicted_q_value, ood_loss = self.compute_q_loss(
+            state, action, reward, next_state, done, new_next_action, next_log_prob, reg_norm, gamma
+        )
         self.soft_q_optimizer.zero_grad()
         q_value_loss.backward(retain_graph=False)
         if args.use_gradient_clip:
             torch.nn.utils.clip_grad_norm_(self.soft_q_net.parameters(), max_norm=1.0)
         self.soft_q_optimizer.step()
 
+        q_std_value = None
         if training_steps % args.critic_actor_ratio == 0:
-            policy_loss, predicted_new_q_value, q_std= self.compute_policy_loss(state, action, new_action, log_prob, reg_norm)
-            q_stds.append(q_std.mean().item())
+            policy_loss, predicted_new_q_value, q_std = self.compute_policy_loss(
+                state, action, new_action, log_prob, reg_norm
+            )
+            q_std_value = q_std.mean().item()
 
             self.policy_optimizer.zero_grad()
-
             policy_loss.backward(retain_graph=False)
             self.policy_optimizer.step()
 
         for target_param, param in zip(self.target_soft_q_net.parameters(), self.soft_q_net.parameters()):
             target_param.data.copy_(target_param.data * (1.0 - soft_tau) + param.data * soft_tau)
-        # 把q_value分开花
-        if len(q_values) == 0:
-            q_values = predicted_q_value.mean(1).cpu().detach().numpy().reshape(-1,1)
-        else:
-            q_values = np.concatenate((q_values, predicted_q_value.mean(1).cpu().detach().numpy().reshape(-1,1)), axis=1)
+
+        ensemble_means = predicted_q_value.mean(1).detach().cpu().numpy()
+        for idx, value in enumerate(ensemble_means):
+            q_values[idx].append(float(value))
         reg_norms.append(args.weight_reg * reg_norm.mean().item())
         log_probs.append(-log_prob.mean().item())
         alpha_values.append(self.alpha)
         ood_losses.append(ood_loss.item())
+        if q_std_value is not None:
+            q_stds.append(q_std_value)
 
-        return predicted_q_value.mean()
+        return float(ensemble_means.mean())
 
     def save_model(self, path):
         torch.save(self.soft_q_net.state_dict(), path + '_q')
@@ -449,45 +420,64 @@ class SAC_Trainer():
         self.policy_net.eval()
 
 
+def evaluate_policy(sac_trainer, env, num_eval_episodes=5, deterministic=True):
+    eval_rewards = []
+
+    for eval_ep in range(num_eval_episodes):
+        env.reset()
+        state_dict, reward_dict, _ = env.initialize_state(render=False)
+
+        done = False
+        episode_reward = 0
+        action_dict = {key: None for key in list(range(env.max_agent_num))}
+
+        while not done:
+            for key in state_dict:
+                if len(state_dict[key]) == 1:
+                    if action_dict[key] is None:
+                        raw_state = np.array(state_dict[key][0])
+                        if args.use_state_norm:
+                            state_input = sac_trainer.state_norm(raw_state, update=False)
+                        else:
+                            state_input = raw_state
+                        a = sac_trainer.policy_net.get_action(
+                            torch.from_numpy(state_input).float(), deterministic=deterministic
+                        )
+                        action_dict[key] = a
+
+                elif len(state_dict[key]) == 2:
+                    if state_dict[key][0][1] != state_dict[key][1][1]:
+                        episode_reward += reward_dict[key]
+
+                    state_dict[key] = state_dict[key][1:]
+                    raw_state = np.array(state_dict[key][0])
+                    if args.use_state_norm:
+                        state_input = sac_trainer.state_norm(raw_state, update=False)
+                    else:
+                        state_input = raw_state
+                    action_dict[key] = sac_trainer.policy_net.get_action(
+                        torch.from_numpy(state_input).float(), deterministic=deterministic
+                    )
+
+            state_dict, reward_dict, done = env.step(action_dict, render=False)
+
+        eval_rewards.append(episode_reward)
+
+    mean_reward = np.mean(eval_rewards)
+    reward_std = np.std(eval_rewards)
+
+    return mean_reward, reward_std
+
+
 def plot(rewards):
-    clear_output(True)
-    plt.figure(figsize=(20, 5))
-    plt.subplot(1, 2, 1)
-    plt.plot(rewards, label="Reward")
-    plt.legend()
-    plt.title(f"Training Reward (weight_reg={args.weight_reg}, auto_entropy={args.auto_entropy}, reward_scaling={args.use_reward_scaling}, maximum_alpha={args.maximum_alpha})")
-    plt.subplot(1, 2, 2)
-
-    for i in range(q_values_episode.shape[0]):
-        # 给Q值做了缩放，方便画图
-        plt.plot(q_values_episode[i]/50, label=f"Q-Value {i + 1}", color=f"C{i % 10}")
-    plt.plot(reg_norms_episode, label="Regularization Term")
-    plt.plot(log_probs_episode, label="Log Prob")
-    plt.plot(alpha_values_episode, label="Alpha")
-    plt.plot(ood_losses_episode, label="OOD Loss")
-    plt.plot(q_stds_episode, label="Q Std")
-
-    plt.legend()
-    plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
-
-    if not os.path.exists('pic'):
-        os.makedirs('pic')
-    # Create subdirectory based on parameters except weight_reg
-    subdir_name = f"replay_buffer_size_{args.replay_buffer_size}/critic_actor_ratio_{args.critic_actor_ratio}/maximum_alpha_{args.maximum_alpha}/weight_reg_{args.weight_reg}"
-    subdir_path = os.path.join('pic', subdir_name)
-    if not os.path.exists(subdir_path):
-        os.makedirs(subdir_path)
-
-    # Save the plot in the subdirectory
-    plt.savefig(os.path.join(subdir_path, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
-    plt.close()
+    pass
 
 replay_buffer = ReplayBuffer(args.replay_buffer_size)
 
 debug = False
 render = False
-path = os.getcwd() + '/env'
-env = env_bus(path, debug=debug)
+path = os.path.abspath(args.env_path)
+env = env_bus(path, debug=debug, route_sigma=args.route_sigma)
 env.reset()
 
 action_dim = env.action_space.shape[0]
@@ -502,28 +492,40 @@ explore_steps = 0  # for random action sampling in the beginning of training
 update_itr = 1
 AUTO_ENTROPY = True
 DETERMINISTIC = False
-hidden_dim = 64
+hidden_dim = args.hidden_dim
 
 rewards = []  # 记录奖励
-q_values = np.array([], dtype=np.float32)  # 记录 Q 值变化
+q_values = []  # Will be initialised after trainer creation
 reg_norms = []  # 记录正则化项1
 log_probs = []  # 记录 log_prob
 alpha_values = []  # 记录 alpha 值
 ood_losses = []
 q_stds = []  # 记录 Q 值的标准差
 
-q_values_episode = np.array([],dtype=np.float32)  # 记录每个 episode 的 Q 值
+q_values_episode = []  # 记录每个 episode 的 Q 值
 reg_norms_episode = []  # 记录每个 episode 的正则化项1
 log_probs_episode = []  # 记录每个 episode 的 log_prob
 alpha_values_episode = []  # 记录每个 episode 的 alpha 值
 ood_losses_episode = []
 q_stds_episode = []  # 记录每个 episode 的 Q 值的标准差
 
-model_path = f"./model/sac_v2_bus_ensemble/replay_buffer_size_{args.replay_buffer_size}/critic_actor_ratio_{args.critic_actor_ratio}/maximum_alpha_{args.maximum_alpha}/weight_reg_{args.weight_reg}"
-os.makedirs(model_path, exist_ok=True)
+eval_episodes = []
+eval_mean_rewards = []
+eval_reward_stds = []
+
 tracemalloc.start()
 
-sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range)
+sac_trainer = SAC_Trainer(
+    env,
+    replay_buffer,
+    hidden_dim=hidden_dim,
+    action_range=action_range,
+    embedding_mode=args.embedding_mode,
+    ensemble_size=args.ensemble_size,
+)
+
+ensemble_size = sac_trainer.soft_q_net.num_critics
+q_values = [[] for _ in range(ensemble_size)]
 
 if __name__ == '__main__':
     if args.train:
@@ -612,35 +614,110 @@ if __name__ == '__main__':
                 if done:
                     replay_buffer.last_episode_step = episode_steps
                     break
-            # 计算每个 episode 的平均 Q 值
             rewards.append(episode_reward)
-            # q_values_episode.append(np.mean(q_values[:,-training_steps:],axis=1))
-            if len(q_values_episode) == 0:
-                q_values_episode = np.mean(q_values[:,-training_steps:],axis=1).reshape(-1,1)
-            else:
-                q_values_episode = np.concatenate((q_values_episode, np.mean(q_values[:,-training_steps:], axis=1).reshape(-1,1)), axis=1)
 
-            reg_norms_episode.append(np.mean(reg_norms[-training_steps:]))
-            log_probs_episode.append(np.mean(log_probs[-training_steps:]))
-            alpha_values_episode.append(np.mean(alpha_values[-training_steps:]))
-            ood_losses_episode.append(np.mean(ood_losses[-training_steps:]))
-            q_stds_episode.append(np.mean(q_stds[-training_steps:])) if len(q_stds) > 0 else None
+            if training_steps > 0:
+                ensemble_episode_means = []
+                for idx in range(len(q_values)):
+                    history = q_values[idx][-training_steps:] if training_steps <= len(q_values[idx]) else q_values[idx]
+                    if history:
+                        ensemble_episode_means.append(float(np.mean(history)))
+                    else:
+                        ensemble_episode_means.append(float('nan'))
+                q_values_episode.append(np.array(ensemble_episode_means, dtype=np.float32))
+
+                reg_norms_episode.append(float(np.mean(reg_norms[-training_steps:])) if reg_norms else 0.0)
+                log_probs_episode.append(float(np.mean(log_probs[-training_steps:])) if log_probs else 0.0)
+                alpha_values_episode.append(float(np.mean(alpha_values[-training_steps:])) if alpha_values else 0.0)
+                ood_losses_episode.append(float(np.mean(ood_losses[-training_steps:])) if ood_losses else 0.0)
+                if q_stds:
+                    q_stds_episode.append(float(np.mean(q_stds[-training_steps:])))
+                else:
+                    q_stds_episode.append(None)
+            else:
+                q_values_episode.append(np.zeros(len(q_values), dtype=np.float32))
+                reg_norms_episode.append(0.0)
+                log_probs_episode.append(0.0)
+                alpha_values_episode.append(0.0)
+                ood_losses_episode.append(0.0)
+                q_stds_episode.append(None)
 
             if eps % args.plot_freq == 0:  # plot and model saving interval
                 plot(rewards)
-                np.save('rewards', rewards)
-                torch.save(sac_trainer.policy_net.state_dict(), model_path + ' ' + str(eps))
+
+                np.save(os.path.join(LOG_DIR, 'rewards.npy'), np.array(rewards, dtype=np.float32))
+                if q_values_episode:
+                    np.save(
+                        os.path.join(LOG_DIR, 'q_values_episode.npy'),
+                        np.stack(q_values_episode, axis=1)
+                    )
+                np.save(os.path.join(LOG_DIR, 'reg_norms_episode.npy'), np.array(reg_norms_episode, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'log_probs_episode.npy'), np.array(log_probs_episode, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'alpha_values_episode.npy'), np.array(alpha_values_episode, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'ood_losses_episode.npy'), np.array(ood_losses_episode, dtype=np.float32))
+                np.save(
+                    os.path.join(LOG_DIR, 'q_stds_episode.npy'),
+                    np.array([np.nan if v is None else v for v in q_stds_episode], dtype=np.float32)
+                )
+
+                mean_reward, reward_std = evaluate_policy(sac_trainer, env, num_eval_episodes=10, deterministic=True)
+                eval_episodes.append(eps)
+                eval_mean_rewards.append(mean_reward)
+                eval_reward_stds.append(reward_std)
+                np.save(os.path.join(LOG_DIR, 'eval_episodes.npy'), np.array(eval_episodes, dtype=np.int32))
+                np.save(os.path.join(LOG_DIR, 'eval_mean_rewards.npy'), np.array(eval_mean_rewards, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'eval_reward_stds.npy'), np.array(eval_reward_stds, dtype=np.float32))
+
+                model_name = f"{MODEL_PREFIX}_episode_{eps}"
+                sac_trainer.save_model(model_name)
+                sac_trainer.save_model(os.path.join(LOG_DIR, f'{SCRIPT_NAME}_episode_{eps}'))
                 # snapshot = tracemalloc.take_snapshot()
                 # for stat in snapshot.statistics('lineno')[:10]:
                 #     print(stat)  # 显示内存占用最大的10行
             replay_buffer_usage = len(replay_buffer) / args.replay_buffer_size * 100
 
             print(
-                f"Episode: {eps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
-        torch.save(sac_trainer.policy_net.state_dict(), model_path)
+                f"[SAC-ENSEMBLE | wreg={args.weight_reg}, max_alpha={args.maximum_alpha}, ensemble_size={args.ensemble_size}] Episode: {eps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
+        sac_trainer.save_model(MODEL_PREFIX)
+
+        # Ensure final metrics and diagnostics are saved
+        plot(rewards)
+        np.save(os.path.join(LOG_DIR, 'rewards.npy'), np.array(rewards, dtype=np.float32))
+        if q_values_episode:
+            np.save(
+                os.path.join(LOG_DIR, 'q_values_episode.npy'),
+                np.stack(q_values_episode, axis=1)
+            )
+        np.save(os.path.join(LOG_DIR, 'reg_norms_episode.npy'), np.array(reg_norms_episode, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'log_probs_episode.npy'), np.array(log_probs_episode, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'alpha_values_episode.npy'), np.array(alpha_values_episode, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'ood_losses_episode.npy'), np.array(ood_losses_episode, dtype=np.float32))
+        np.save(
+            os.path.join(LOG_DIR, 'q_stds_episode.npy'),
+            np.array([np.nan if v is None else v for v in q_stds_episode], dtype=np.float32)
+        )
+
+        mean_reward, reward_std = evaluate_policy(sac_trainer, env, num_eval_episodes=15, deterministic=True)
+        print(f"最终评估结果: 平均奖励 = {mean_reward:.2f}, 标准差 = {reward_std:.2f}")
+        final_eval_episode = args.max_episodes - 1
+        eval_episodes.append(final_eval_episode)
+        eval_mean_rewards.append(mean_reward)
+        eval_reward_stds.append(reward_std)
+        np.save(os.path.join(LOG_DIR, 'eval_episodes.npy'), np.array(eval_episodes, dtype=np.int32))
+        np.save(os.path.join(LOG_DIR, 'eval_mean_rewards.npy'), np.array(eval_mean_rewards, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'eval_reward_stds.npy'), np.array(eval_reward_stds, dtype=np.float32))
+
+        if args.eval_sigmas:
+            sigma_results = []
+            for sigma in args.eval_sigmas:
+                eval_env = env_bus(path, debug=debug, route_sigma=sigma)
+                eval_env.reset()
+                sigma_mean, sigma_std = evaluate_policy(sac_trainer, eval_env, num_eval_episodes=10, deterministic=True)
+                sigma_results.append((sigma, sigma_mean, sigma_std))
+            np.save(os.path.join(LOG_DIR, 'eval_cross_sigma.npy'), np.array(sigma_results, dtype=np.float32))
 
     if args.test:
-        sac_trainer.policy_net.load_state_dict(torch.load(model_path))
+        sac_trainer.load_model(MODEL_PREFIX)
         for eps in range(10):
 
             done = False

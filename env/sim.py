@@ -1,26 +1,32 @@
 import json
 import time
 import numpy as np
+import pandas as pd
+import copy
+import os
+import sys
+import pygame
+
+# Ensure the project root (parent of this env package) is on sys.path so that
+# `import env.*` works even when running env/sim.py directly.
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from env.timetable import Timetable
 from env.bus import Bus
 from env.route import Route
 from env.station import Station
 from env.visualize import visualize
-import pandas as pd
 from gym.spaces.box import Box
 from gym.spaces import MultiDiscrete
-import copy
-import os, sys
-import pygame
-import json
 
 
 class env_bus(object):
-    
-    def __init__(self, path, debug=False, render=False, route_sigma=1.5):
-        if render:
-            pygame.init()
 
+    def __init__(self, path, debug=False, render=False, route_sigma=1.5):
         self.path = path
         self.route_sigma = route_sigma
         sys.path.append(os.path.abspath(os.path.join(os.getcwd())))
@@ -36,6 +42,17 @@ class env_bus(object):
         self.od = pd.read_excel(os.path.join(path, "data/passenger_OD.xlsx"), index_col=[1, 0])
         self.station_set = pd.read_excel(os.path.join(path, "data/stop_news.xlsx"))
         self.routes_set = pd.read_excel(os.path.join(path, "data/route_news.xlsx"))
+        # Ensure hourly columns use datetime.time objects so downstream lookups work
+        time_cols = self.routes_set.columns[5:]
+        rename_map = {}
+        for col in time_cols:
+            if isinstance(col, str):
+                try:
+                    rename_map[col] = pd.to_datetime(col).time()
+                except ValueError:
+                    continue
+        if rename_map:
+            self.routes_set = self.routes_set.rename(columns=rename_map)
         self.timetable_set = pd.read_excel(os.path.join(path, "data/time_table.xlsx"))
         # Truncate the original timetable by first 50 trips to reduce the calculation pressure
         self.timetable_set = self.timetable_set.sort_values(by=['launch_time', 'direction'])[:self.effective_trip_num].reset_index(drop=True)
@@ -280,10 +297,9 @@ if __name__ == '__main__':
     debug = True
     render = False
     num_runs = 1
-    if render:
-        pygame.init()
 
-    env = env_bus(os.getcwd(), debug=debug)
+    env_dir = Path(__file__).resolve().parent
+    env = env_bus(str(env_dir), debug=debug)
     env.enable_plot = True
     actions = {key: 0. for key in list(range(env.max_agent_num))}
 
@@ -300,7 +316,9 @@ if __name__ == '__main__':
         cumulative_time += env.current_time
         all_events.extend(events)
 
-    pygame.quit()
+    # Only quit pygame if it was initialized
+    if pygame.get_init():
+        pygame.quit()
 
     if all_events:
         df = pd.DataFrame(all_events).sort_values(['time'])
