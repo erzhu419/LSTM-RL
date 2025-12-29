@@ -9,6 +9,7 @@ import psutil, tracemalloc
 import gym
 import copy
 from tqdm import tqdm
+import gc
 import torch, math
 import torch.nn as nn
 import torch.optim as optim
@@ -58,8 +59,9 @@ parser.add_argument('--replay_buffer_size', type=int, default=int(1e6), help="bu
 parser.add_argument('--route_sigma', type=float, default=1.5, help='Sigma used for route speed sampling')
 parser.add_argument('--eval_sigmas', type=float, nargs='*', default=None, help='List of sigma values for cross-evaluation after training')
 parser.add_argument('--hidden_dim', type=int, default=64, help='Hidden dimension size')
-parser.add_argument('--save_root', type=str, default='.', help='Root directory for saving results')
-parser.add_argument('--run_name', type=str, default=None, help='Run name for the experiment')
+parser.add_argument('--save_root', type=str, default='model/sac_ensemble_original', help='Base directory for saving models')
+parser.add_argument('--run_name', type=str, default=None, help='Specific run name (if provided, overrides auto-generated parameter path)')
+
 args = parser.parse_args()
 
 ROUTE_SIGMA_TOKEN = f"route_sigma_{str(args.route_sigma).replace('.', 'p')}"
@@ -495,17 +497,23 @@ def plot(rewards):
     plt.legend()
     plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
 
-    if not os.path.exists('pic'):
-        os.makedirs('pic')
-    # Create subdirectory based on parameters except weight_reg
-    subdir_name = (
-        f"{ROUTE_SIGMA_TOKEN}/"
-        f"replay_buffer_size_{args.replay_buffer_size}/"
-        f"critic_actor_ratio_{args.critic_actor_ratio}/"
-        f"maximum_alpha_{args.maximum_alpha}/"
-        f"weight_reg_{args.weight_reg}"
-    )
-    subdir_path = os.path.join('pic', subdir_name)
+    save_root = args.save_root if args.save_root else '.'
+    pic_dir = os.path.join(save_root, 'pic')
+    if not os.path.exists(pic_dir):
+        os.makedirs(pic_dir)
+        
+    if args.run_name:
+        subdir_name = args.run_name
+    else:
+        # Create subdirectory based on parameters except weight_reg
+        subdir_name = (
+            f"{ROUTE_SIGMA_TOKEN}/"
+            f"replay_buffer_size_{args.replay_buffer_size}/"
+            f"critic_actor_ratio_{args.critic_actor_ratio}/"
+            f"maximum_alpha_{args.maximum_alpha}/"
+            f"weight_reg_{args.weight_reg}"
+        )
+    subdir_path = os.path.join(pic_dir, subdir_name)
     if not os.path.exists(subdir_path):
         os.makedirs(subdir_path)
 
@@ -604,14 +612,14 @@ if args.run_name:
     model_path = os.path.join(args.save_root, 'model', args.run_name)
 else:
     model_path = (
-        f"{args.save_root}/model/sac_ensemble_original/{ROUTE_SIGMA_TOKEN}/"
+        f"{args.save_root}/{ROUTE_SIGMA_TOKEN}/"
         f"replay_buffer_size_{args.replay_buffer_size}/"
         f"critic_actor_ratio_{args.critic_actor_ratio}/"
         f"maximum_alpha_{args.maximum_alpha}/"
         f"weight_reg_{args.weight_reg}"
     )
 os.makedirs(model_path, exist_ok=True)
-tracemalloc.start()
+# tracemalloc.start()
 
 sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range)
 
@@ -636,9 +644,9 @@ if __name__ == '__main__':
 
             episode_reward = 0
             
-            # Track lengths before episode starts
-            len_q_values_before = len(q_values)
-            len_q_stds_before = len(q_stds)
+            # Track lengths before episode starts - REMOVED for optimization
+            # len_q_values_before = len(q_values)
+            # len_q_stds_before = len(q_stds)
             
             while not done:
                 for key in state_dict:
@@ -716,16 +724,17 @@ if __name__ == '__main__':
 
             rewards.append(episode_reward)
             # Use tracked lengths to slice exactly what was added this episode
-            num_added_q = len(q_values) - len_q_values_before
-            num_added_stds = len(q_stds) - len_q_stds_before
+            # MEMORY FIX: We now clear lists at end of episode, so we just take the whole list
+            num_added_q = len(q_values)
+            num_added_stds = len(q_stds)
             
             if num_added_q > 0:
-                q_values_episode.append(safe_mean(q_values[-num_added_q:]))
-                reg_norms1_episode.append(safe_mean(reg_norms1[-num_added_q:]))
-                reg_norms2_episode.append(safe_mean(reg_norms2[-num_added_q:]))
-                log_probs_episode.append(safe_mean(log_probs[-num_added_q:]))
-                alpha_values_episode.append(safe_mean(alpha_values[-num_added_q:]))
-                ood_losses_episode.append(safe_mean(ood_losses[-num_added_q:]))
+                q_values_episode.append(safe_mean(q_values))
+                reg_norms1_episode.append(safe_mean(reg_norms1))
+                reg_norms2_episode.append(safe_mean(reg_norms2))
+                log_probs_episode.append(safe_mean(log_probs))
+                alpha_values_episode.append(safe_mean(alpha_values))
+                ood_losses_episode.append(safe_mean(ood_losses))
             else:
                 q_values_episode.append(0)
                 reg_norms1_episode.append(0)
@@ -735,9 +744,18 @@ if __name__ == '__main__':
                 ood_losses_episode.append(0)
                 
             if num_added_stds > 0:
-                q_stds_episode.append(safe_mean(q_stds[-num_added_stds:]))
+                q_stds_episode.append(safe_mean(q_stds))
             else:
                 q_stds_episode.append(0)
+            
+            # --- CRITICAL MEMORY FIX: Clear lists after aggregation ---
+            q_values.clear()
+            reg_norms1.clear()
+            reg_norms2.clear()
+            log_probs.clear()
+            alpha_values.clear()
+            ood_losses.clear()
+            q_stds.clear()
             # ---------------------------
 
             if eps % args.plot_freq == 0:  # plot and model saving interval
@@ -760,6 +778,7 @@ if __name__ == '__main__':
                 # 清理GPU缓存
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
+                gc.collect()  # Force garbage collection to clean up potential fragmentation
                 # snapshot = tracemalloc.take_snapshot()
                 # for stat in snapshot.statistics('lineno')[:10]:
                 #     print(stat)  # 显示内存占用最大的10行
