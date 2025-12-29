@@ -125,6 +125,8 @@ def plot_rewards(args):
     plt.legend()
     plt.tick_params(axis='both', labelsize=12)
     plt.tight_layout()
+    plt.savefig('reproduced_five_algo_v2.png')
+    print("Plot saved to reproduced_five_algo_v2.png")
     plt.show()
 
 
