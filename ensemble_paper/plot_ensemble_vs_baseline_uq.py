@@ -4,7 +4,7 @@ import os
 
 # Paths
 baseline_dir = "model/sac_v2_bus"
-ensemble_dir = "ensemble_paper/model/original_plus_sign_logging_run"
+ensemble_dir = "ensemble_paper/ensemble_10/logs"
 
 # Output file
 output_path = "ensemble_paper/ensemble_vs_baseline_final_uq.png"

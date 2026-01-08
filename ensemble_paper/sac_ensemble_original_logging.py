@@ -10,6 +10,7 @@ import gym
 import copy
 from tqdm import tqdm
 import gc
+import time
 import torch, math
 import torch.nn as nn
 import torch.optim as optim
@@ -61,6 +62,7 @@ parser.add_argument('--eval_sigmas', type=float, nargs='*', default=None, help='
 parser.add_argument('--hidden_dim', type=int, default=64, help='Hidden dimension size')
 parser.add_argument('--save_root', type=str, default='model/sac_ensemble_original', help='Base directory for saving models')
 parser.add_argument('--run_name', type=str, default=None, help='Specific run name (if provided, overrides auto-generated parameter path)')
+parser.add_argument("--ensemble_size", type=int, default=10, help="Number of models in the ensemble")
 
 args = parser.parse_args()
 
@@ -70,38 +72,29 @@ ROUTE_SIGMA_TOKEN = f"route_sigma_{str(args.route_sigma).replace('.', 'p')}"
 class ReplayBuffer:
     def __init__(self, capacity, last_episode_step=5000):
         self.capacity = capacity
-        self.last_episode_step = last_episode_step  # 预估每个 episode 的 step 数
-        self.buffer = {}
-        self.position = 0  # 用作 dict 的 key
-        self.min_key = 0  # 跟踪最小的有效key
+        self.last_episode_step = last_episode_step
+        self.buffer = []
+        self.position = 0
 
     def push(self, state, action, reward, next_state, done):
-        """添加新数据"""
+        """Add new data to buffer, overwriting old if full"""
+        if len(self.buffer) < self.capacity:
+            self.buffer.append(None)
+        
         self.buffer[self.position] = (state, action, reward, next_state, done)
-        self.position += 1
-
-        # 当 buffer 过大时，删除最早的数据
-        if len(self.buffer) > self.capacity:
-            # 删除最早的数据直到buffer大小回到capacity
-            num_to_remove = len(self.buffer) - self.capacity
-            for i in range(num_to_remove):
-                if self.min_key in self.buffer:
-                    del self.buffer[self.min_key]
-                self.min_key += 1
+        self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size):
-        """随机采样 batch_size 大小的数据，确保数据格式正确"""
-        batch = random.sample(list(self.buffer.values()), batch_size)  # 直接从 dict 的值采样
+        """Randomly sample batch_size elements in O(1)"""
+        # Optimized sampling: generates random indices instead of copying list
+        batch_indices = np.random.randint(0, len(self.buffer), size=batch_size)
+        batch = [self.buffer[i] for i in batch_indices]
+        
+        # Unzip and convert to numpy
         states, actions, rewards, next_states, dones = zip(*batch)
-
-        # 确保维度正确，防止 PyTorch 计算时出现广播错误
-        states = np.stack(states)  # (batch_size, state_dim)
-        actions = np.stack(actions)  # (batch_size, action_dim) 或 (batch_size,)
-        rewards = np.array(rewards, dtype=np.float32)  # (batch_size,)
-        next_states = np.stack(next_states)  # (batch_size, state_dim)
-        dones = np.array(dones, dtype=np.float32)  # (batch_size,)
-
-        return states, actions, rewards, next_states, dones
+        
+        return np.stack(states), np.stack(actions), np.array(rewards, dtype=np.float32), \
+               np.stack(next_states), np.array(dones, dtype=np.float32)
 
     def __len__(self):
         return len(self.buffer)
@@ -286,7 +279,7 @@ class PolicyNetwork(nn.Module):
 
 
 class SAC_Trainer():
-    def __init__(self, env, replay_buffer, hidden_dim, action_range):
+    def __init__(self, env, replay_buffer, hidden_dim, action_range, ensemble_size=10):
         # 以下是类别特征和数值特征
         cat_cols = ['bus_id', 'station_id', 'time_period', 'direction']
         cat_code_dict = {
@@ -306,7 +299,7 @@ class SAC_Trainer():
 
         self.replay_buffer = replay_buffer
 
-        self.soft_q_net = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer).to(device)
+        self.soft_q_net = SoftQNetwork(state_dim, action_dim, hidden_dim, embedding_layer, ensemble_size=ensemble_size).to(device)
         self.target_soft_q_net = deepcopy(self.soft_q_net)
         self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_layer, action_range).to(device)
         self.log_alpha = torch.zeros(1, dtype=torch.float32, requires_grad=True, device=device)
@@ -497,28 +490,8 @@ def plot(rewards):
     plt.legend()
     plt.title(f"Q-Value & V-Value and log_prob & regularization Monitoring (weight_reg={args.weight_reg})")
 
-    save_root = args.save_root if args.save_root else '.'
-    pic_dir = os.path.join(save_root, 'pic')
-    if not os.path.exists(pic_dir):
-        os.makedirs(pic_dir)
-        
-    if args.run_name:
-        subdir_name = args.run_name
-    else:
-        # Create subdirectory based on parameters except weight_reg
-        subdir_name = (
-            f"{ROUTE_SIGMA_TOKEN}/"
-            f"replay_buffer_size_{args.replay_buffer_size}/"
-            f"critic_actor_ratio_{args.critic_actor_ratio}/"
-            f"maximum_alpha_{args.maximum_alpha}/"
-            f"weight_reg_{args.weight_reg}"
-        )
-    subdir_path = os.path.join(pic_dir, subdir_name)
-    if not os.path.exists(subdir_path):
-        os.makedirs(subdir_path)
-
-    # Save the plot in the subdirectory
-    plt.savefig(os.path.join(subdir_path, f'sac_monitoring_weight_reg_{args.weight_reg}.png'))
+    os.makedirs(pic_path, exist_ok=True)
+    plt.savefig(os.path.join(pic_path, 'sac_monitoring.png'))
     plt.close()
 
 
@@ -608,25 +581,43 @@ eval_mean_rewards = []
 eval_reward_stds = []
 # ---------------------------------------------
 
+# Define param_str for consistent path naming
+param_str = (
+    f"{ROUTE_SIGMA_TOKEN}/"
+    f"replay_buffer_size_{args.replay_buffer_size}/"
+    f"critic_actor_ratio_{args.critic_actor_ratio}/"
+    f"maximum_alpha_{args.maximum_alpha}/"
+    f"weight_reg_{args.weight_reg}"
+)
+
 if args.run_name:
     model_path = os.path.join(args.save_root, 'model', args.run_name)
+    logs_path = os.path.join(args.save_root, 'logs', args.run_name)
+    pic_path = os.path.join(args.save_root, 'pic', args.run_name)
 else:
-    model_path = (
-        f"{args.save_root}/{ROUTE_SIGMA_TOKEN}/"
-        f"replay_buffer_size_{args.replay_buffer_size}/"
-        f"critic_actor_ratio_{args.critic_actor_ratio}/"
-        f"maximum_alpha_{args.maximum_alpha}/"
-        f"weight_reg_{args.weight_reg}"
-    )
+    model_path = os.path.join(args.save_root, 'model', param_str)
+    logs_path = os.path.join(args.save_root, 'logs', param_str)
+    pic_path = os.path.join(args.save_root, 'pic', param_str)
+
 os.makedirs(model_path, exist_ok=True)
+os.makedirs(logs_path, exist_ok=True)
+os.makedirs(pic_path, exist_ok=True)
+
 # tracemalloc.start()
 
-sac_trainer = SAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range)
+sac_trainer = SAC_Trainer(
+    env,
+    replay_buffer,
+    hidden_dim=hidden_dim,
+    action_range=action_range,
+    ensemble_size=args.ensemble_size
+)
 
 if __name__ == '__main__':
     if args.train:
         # training loop
         for eps in range(args.max_episodes):
+            episode_start_time = time.time()
             if eps != 0:
                 env.reset()
             state_dict, reward_dict, _ = env.initialize_state(render=render)
@@ -762,16 +753,14 @@ if __name__ == '__main__':
                 plot(rewards)
                 
                 # --- SAVE LOGS ---
-                # Original script saves rewards.npy inside model_path.
-                # Let's save extended logs alongside rewards.npy in model_path
-                np.save(os.path.join(model_path, 'rewards.npy'), rewards)
-                np.save(os.path.join(model_path, 'q_values_episode.npy'), q_values_episode)
-                np.save(os.path.join(model_path, 'reg_norms1_episode.npy'), reg_norms1_episode)
-                np.save(os.path.join(model_path, 'reg_norms2_episode.npy'), reg_norms2_episode)
-                np.save(os.path.join(model_path, 'log_probs_episode.npy'), log_probs_episode)
-                np.save(os.path.join(model_path, 'alpha_values_episode.npy'), alpha_values_episode)
-                np.save(os.path.join(model_path, 'ood_losses_episode.npy'), ood_losses_episode)
-                np.save(os.path.join(model_path, 'q_stds_episode.npy'), q_stds_episode)
+                np.save(os.path.join(logs_path, 'rewards.npy'), rewards)
+                np.save(os.path.join(logs_path, 'q_values_episode.npy'), q_values_episode)
+                np.save(os.path.join(logs_path, 'reg_norms1_episode.npy'), reg_norms1_episode)
+                np.save(os.path.join(logs_path, 'reg_norms2_episode.npy'), reg_norms2_episode)
+                np.save(os.path.join(logs_path, 'log_probs_episode.npy'), log_probs_episode)
+                np.save(os.path.join(logs_path, 'alpha_values_episode.npy'), alpha_values_episode)
+                np.save(os.path.join(logs_path, 'ood_losses_episode.npy'), ood_losses_episode)
+                np.save(os.path.join(logs_path, 'q_stds_episode.npy'), q_stds_episode)
                 # -----------------
                 
                 sac_trainer.save_model(os.path.join(model_path, f"checkpoint_episode_{eps}"))
@@ -783,9 +772,13 @@ if __name__ == '__main__':
                 # for stat in snapshot.statistics('lineno')[:10]:
                 #     print(stat)  # 显示内存占用最大的10行
             replay_buffer_usage = len(replay_buffer) / args.replay_buffer_size * 100
-
+            episode_duration = time.time() - episode_start_time
+            
             print(
-                f"Episode: {eps} | Episode Reward: {episode_reward} | CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | Replay Buffer Usage: {replay_buffer_usage:.2f}%")
+                f"Episode: {eps} | Episode Reward: {episode_reward} | Duration: {episode_duration:.2f}s "
+                f"| CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | "
+                f"GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | "
+                f"Replay Buffer Usage: {replay_buffer_usage:.2f}%")
         sac_trainer.save_model(os.path.join(model_path, "final"))
 
         if args.eval_sigmas:
