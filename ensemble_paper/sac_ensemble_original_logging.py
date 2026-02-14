@@ -46,9 +46,9 @@ parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Tric
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
 parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
-parser.add_argument('--weight_reg', type=float, default=0.03, help='weight of regularization')
+parser.add_argument('--weight_reg', type=float, default=0.01, help='weight of regularization')
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
-parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
+parser.add_argument("--maximum_alpha", type=float, default=0.6, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
 #TODO 可以看到这里把beta相关的三个参数降低之后，收敛性好很多，继续调参
 parser.add_argument("--beta_bc", type=float, default=0.001, help="weight of behavior cloning loss")
@@ -60,7 +60,7 @@ parser.add_argument('--replay_buffer_size', type=int, default=int(1e6), help="bu
 parser.add_argument('--route_sigma', type=float, default=1.5, help='Sigma used for route speed sampling')
 parser.add_argument('--eval_sigmas', type=float, nargs='*', default=None, help='List of sigma values for cross-evaluation after training')
 parser.add_argument('--hidden_dim', type=int, default=64, help='Hidden dimension size')
-parser.add_argument('--save_root', type=str, default='model/sac_ensemble_original', help='Base directory for saving models')
+parser.add_argument('--save_root', type=str, default='test_sign_before_regnorm', help='Base directory for saving models')
 parser.add_argument('--run_name', type=str, default=None, help='Specific run name (if provided, overrides auto-generated parameter path)')
 parser.add_argument("--ensemble_size", type=int, default=10, help="Number of models in the ensemble")
 
@@ -460,6 +460,7 @@ class SAC_Trainer():
     def save_model(self, path):
         torch.save(self.soft_q_net.state_dict(), path + '_q')
         torch.save(self.policy_net.state_dict(), path + '_policy')
+        torch.save(self.state_norm, path + '_norm')
 
     def load_model(self, path):
         self.soft_q_net.load_state_dict(torch.load(path + '_q', weights_only=True))

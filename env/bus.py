@@ -163,14 +163,14 @@ class Bus(object):
             if self.next_station_dis <= self.current_speed:
                 self.exchange_passengers(current_time, debug)  # self.holding_time is set in this function
 
-                self.trajectory.append([self.next_station.station_name, current_time, self.absolute_distance, self.direction, self.trip_id])
-                self.trajectory_dict[self.next_station.station_name].append([
-                    self.next_station.station_name,
-                    current_time + self.holding_time + 0.01,
-                    self.absolute_distance,
-                    self.direction,
-                    self.trip_id
-                ])
+                # self.trajectory.append([self.next_station.station_name, current_time, self.absolute_distance, self.direction, self.trip_id])
+                # self.trajectory_dict[self.next_station.station_name].append([
+                #     self.next_station.station_name,
+                #     current_time + self.holding_time + 0.01,
+                #     self.absolute_distance,
+                #     self.direction,
+                #     self.trip_id
+                # ])
 
                 self.arrive_station(current_time, bus_all, debug)
                 self.state = BusState.HOLDING
