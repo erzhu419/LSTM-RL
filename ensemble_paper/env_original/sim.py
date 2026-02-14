@@ -12,6 +12,7 @@ from gym.spaces import MultiDiscrete
 import copy
 import os, sys
 import pygame
+from collections import defaultdict
 import json
 # TODO 归一化
 # TODO 对站点标签进行one-hot处理
@@ -204,6 +205,7 @@ class env_bus(object):
         # Enumerate trips in timetables, if current_time<=launch_time of the trip, then launch it.
         # E.X. timetables = [6:00/launched, 6:05, 6:10], current time is 6:05, then iteration will judge from first trip [6:00]
         # But [6:00] is launched, so next is [6:05]
+        self.reward = defaultdict(float)
         for i, trip in enumerate(self.timetables):
             if trip.launch_time <= self.current_time and not trip.launched:
                 trip.launched = True
@@ -243,6 +245,8 @@ class env_bus(object):
             for i in range(len(state_bus_list)):
                 # print('return state is ', state_bus_list[i].obs, ' for bus: ', state_bus_list[i].bus_id, 'at time:', self.current_time)
                 # if len(self.state[state_bus_list[i].bus_id]) < 2:
+                if state_bus_list[i].bus_id not in self.state:
+                    self.state[state_bus_list[i].bus_id] = []
                 self.state[state_bus_list[i].bus_id].append(state_bus_list[i].obs)
                 # if state_bus_list[i].last_station.station_id not in [0,1,21,22]:
                 #     print(1)
