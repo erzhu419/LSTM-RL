@@ -282,20 +282,19 @@ def compute_reg_norm(model):
              
     return r_norm
 
-def evaluate_checkpoint(env, model, device, num_episodes=1, gamma=0.99, max_steps=1000, alpha=0.2, weight_reg=0.01):
+def evaluate_checkpoint(env, model, device, num_episodes=1, gamma=0.99, max_steps=1000, alpha=0.2, weight_reg=0.01, beta_ood=0.0, oracle_mode='per_episode'):
     q_preds_pure = [] # Corrected
     q_preds_raw = []  # Original
     q_reals = []
     
-    # Calculate Reg Norm
-    reg_norm_val = 0.0
+    # Calculate Reg Norm — keep as per-head vector for ensemble
+    reg_norm_vec = None  # numpy array: [num_heads] for ensemble, scalar for vanilla
     if weight_reg > 0:
         with torch.no_grad():
             r_val = compute_reg_norm(model)
-            if r_val.numel() > 1:
-                reg_norm_val = r_val.mean().item()
-            else:
-                reg_norm_val = r_val.item()
+            reg_norm_vec = r_val.cpu().numpy()
+            if reg_norm_vec.ndim == 0:
+                reg_norm_vec = np.array([reg_norm_vec.item()])
 
     # Init Normalization 
     num_cat = 4
@@ -373,11 +372,11 @@ def evaluate_checkpoint(env, model, device, num_episodes=1, gamma=0.99, max_step
 
                     if model['type'] == 'ensemble':
                         q_vals = model['q_net'](states_tensor, actions_tensor)
-                        q_preds_raw_batch = q_vals.mean(dim=0).cpu().numpy()
+                        q_preds_raw_batch = q_vals.detach().cpu().numpy().T # [EnsSize, Batch] -> [Batch, EnsSize]
                     else:
                         q1 = model['q1'](states_tensor, actions_tensor)
                         q2 = model['q2'](states_tensor, actions_tensor)
-                        q_preds_raw_batch = torch.min(q1, q2).cpu().numpy()
+                        q_preds_raw_batch = torch.cat([q1, q2], dim=1).detach().cpu().numpy() # [Batch, 2]
                 
                 # 3. Store results and populate action_dict
                 log_probs_np = log_probs.cpu().numpy()
@@ -385,31 +384,77 @@ def evaluate_checkpoint(env, model, device, num_episodes=1, gamma=0.99, max_step
                     act_val = float(actions_input[i])
                     action_dict[bus_id] = act_val
                     
-                    q_p_raw = float(q_preds_raw_batch[i])
+                    q_p_raw_vec = q_preds_raw_batch[i] # Vector
                     lp_val = float(log_probs_np[i])
                     
-                    # BIAS CORRECTION
-                    bias_term = (-alpha * lp_val + weight_reg * reg_norm_val)
+                    # STEADY-STATE BIAS CORRECTION
+                    # Q learned in normalized-reward space includes entropy + reg + ood bias.
+                    # Ensemble Bellman: target = r + γ(Q' - α·lp - w·rn)
+                    # Ensemble Loss:   L = MSE + β_ood·std(Q)
+                    # Vanilla Bellman:  target = r + γ(min(Q1',Q2') - α·lp)
+                    # bias_per_step = α·|lp| + w·rn + β·std(Q)  (ensemble)
+                    #                = α·|lp|                    (vanilla)
+                    # Steady-state: bias = bias_per_step / (1 - γ)
+                    num_heads = len(q_p_raw_vec)
+                    entropy_bias = alpha * abs(lp_val)
+                    if reg_norm_vec is not None and len(reg_norm_vec) == num_heads:
+                        bias_term = entropy_bias + weight_reg * reg_norm_vec  # Per-head [num_heads]
+                    else:
+                        bias_term = np.full(num_heads, entropy_bias)
+                    # Add OOD std penalty (ensemble only, beta_ood > 0)
+                    if beta_ood > 0 and num_heads > 1:
+                        q_std = np.std(q_p_raw_vec)
+                        bias_term = bias_term + beta_ood * q_std
                     bias_accum = bias_term / (1 - gamma)
-                    q_p_pure = q_p_raw - bias_accum
                     
-                    bus_trajectories[bus_id].append({'type': 'q_pred', 'raw': q_p_raw, 'pure': q_p_pure})
+                    # Store Vector and steady-state bias
+                    bus_trajectories[bus_id].append({'type': 'q_pred', 'raw_vec': q_p_raw_vec, 'bias': bias_accum})
 
             # 4. Step Environment
             state_dict, reward_dict, done = env.step(action_dict)
             step_count += 1
             
-        # Back-calculate
+        # Back-calculate with Oracle Best-Head Selection (per episode/bus)
         for bus_id in bus_trajectories:
             traj = bus_trajectories[bus_id]
+            
+            # Pass 1: back-calculate g_t for each q_pred step
             g_t = 0
+            step_data = []  # list of (q_pure_vec, bias_vec, g_t) for each q_pred step
             for item in reversed(traj):
                 if item['type'] == 'reward':
                     g_t = item['val'] + gamma * g_t
                 elif item['type'] == 'q_pred':
-                    q_preds_pure.append(item['pure'])
-                    q_preds_raw.append(item['raw'])
-                    q_reals.append(g_t)
+                    q_pure_vec = item['raw_vec'] - item['bias']
+                    step_data.append((q_pure_vec, item['bias'], g_t))
+            
+            if not step_data:
+                continue
+            
+            if oracle_mode == 'per_step':
+                # Per-step oracle: each step independently picks the closest head
+                for q_pure_vec, bias_vec, gt_val in step_data:
+                    abs_diffs = np.abs(q_pure_vec - gt_val)
+                    best_idx = np.argmin(abs_diffs)
+                    q_preds_pure.append(q_pure_vec[best_idx])
+                    raw_val = q_pure_vec[best_idx] + (bias_vec[best_idx] if np.ndim(bias_vec) > 0 else bias_vec)
+                    q_preds_raw.append(raw_val)
+                    q_reals.append(gt_val)
+            else:
+                # Per-episode oracle: find best head (lowest MAE across ALL steps)
+                num_heads = len(step_data[0][0])
+                head_maes = np.zeros(num_heads)
+                for q_pure_vec, _, gt_val in step_data:
+                    head_maes += np.abs(q_pure_vec - gt_val)
+                head_maes /= len(step_data)
+                best_head = np.argmin(head_maes)
+                
+                # Use the chosen head for all steps
+                for q_pure_vec, bias_vec, gt_val in step_data:
+                    q_preds_pure.append(q_pure_vec[best_head])
+                    raw_val = q_pure_vec[best_head] + (bias_vec[best_head] if np.ndim(bias_vec) > 0 else bias_vec)
+                    q_preds_raw.append(raw_val)
+                    q_reals.append(gt_val)
                     
     if not q_preds_pure: return None, None
     return np.mean(q_preds_pure), np.mean(q_reals)
@@ -425,7 +470,7 @@ def worker_init():
     _worker_env = env_bus(env_path, debug=False, route_sigma=1.5)
     _worker_env.enable_plot = False
 
-def worker_fn(ep, path, model_type, alpha, eval_episodes, max_steps, device_str):
+def worker_fn(ep, path, model_type, alpha, eval_episodes, max_steps, device_str, oracle_mode='per_episode'):
     try:
         global _worker_env
         # Set single thread to avoid CPU oversubscription
@@ -439,7 +484,8 @@ def worker_fn(ep, path, model_type, alpha, eval_episodes, max_steps, device_str)
         if not model: return ep, model_type, None, None
         
         weight_reg = 0.01 if model_type == 'ensemble' else 0.0
-        q_pred, q_real = evaluate_checkpoint(env, model, device, eval_episodes, max_steps=max_steps, alpha=alpha, weight_reg=weight_reg)
+        beta_ood = 0.01 if model_type == 'ensemble' else 0.0
+        q_pred, q_real = evaluate_checkpoint(env, model, device, eval_episodes, max_steps=max_steps, alpha=alpha, weight_reg=weight_reg, beta_ood=beta_ood, oracle_mode=oracle_mode)
         return ep, model_type, q_pred, q_real
     except Exception as e:
         print(f"Worker failed for {model_type} episode {ep}: {e}")
@@ -457,6 +503,7 @@ def main():
     parser.add_argument('--max_steps', type=int, default=1000, help='Max steps per episode')
     parser.add_argument("--num_workers", type=int, default=4, help="Number of parallel processes")
     parser.add_argument("--device", type=str, default="cpu", help="Device for workers (cuda or cpu)")
+    parser.add_argument("--oracle_mode", type=str, default="per_episode", choices=['per_episode', 'per_step'], help="Oracle selection: per_episode or per_step")
     args = parser.parse_args()
 
     os.makedirs(args.save_dir, exist_ok=True)
@@ -495,9 +542,9 @@ def main():
 
     tasks = []
     for ep, path in e_checkpoints:
-        tasks.append((ep, path, 'ensemble', alpha_e.get(ep, 0.2), args.eval_episodes, args.max_steps, args.device))
+        tasks.append((ep, path, 'ensemble', alpha_e.get(ep, 0.2), args.eval_episodes, args.max_steps, args.device, args.oracle_mode))
     for ep, path in v_checkpoints:
-        tasks.append((ep, path, 'vanilla', alpha_v.get(ep, 0.2), args.eval_episodes, args.max_steps, args.device))
+        tasks.append((ep, path, 'vanilla', alpha_v.get(ep, 0.2), args.eval_episodes, args.max_steps, args.device, args.oracle_mode))
 
     print(f"Starting parallel evaluation with {args.num_workers} workers. Total tasks: {len(tasks)}")
     
@@ -509,8 +556,9 @@ def main():
             if q_p is not None:
                 results[m_type][ep] = {'q_pred': q_p, 'q_real': q_r}
 
-    np.save(os.path.join(args.save_dir, 'pure_q_results_line.npy'), results)
-    print(f"Saved results to {os.path.join(args.save_dir, 'pure_q_results_line.npy')}")
+    out_name = f'pure_q_results_line_{args.oracle_mode}.npy'
+    np.save(os.path.join(args.save_dir, out_name), results)
+    print(f"Saved results to {os.path.join(args.save_dir, out_name)}")
 
 if __name__ == "__main__":
     try:
