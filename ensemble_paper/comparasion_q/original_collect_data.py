@@ -47,10 +47,6 @@ def collect_checkpoint_data(args):
         # Load Model & Norm Stats
         if model_type == 'sac':
             model = loader.load_sac(ckpt_path)
-        elif model_type == 'dsac':
-            model = loader.load_dsac(ckpt_path)
-        elif model_type == 'bac':
-            model = loader.load_bac(ckpt_path)
         else:
             model = loader.load_ensemble(ckpt_path)
         
@@ -110,17 +106,15 @@ def collect_checkpoint_data(args):
                         needs_action = True
                     
                     if needs_action:
-                        # Disable Normalization to reproduce the exact old plot data
-                        # state_input = raw_state
-                        # Disable Normalization to reproduce the exact old plot data
-                        state_input = raw_state
-                        # if 'state_norm' in model and model['state_norm'] is not None:
-                        #      state_input = model['state_norm'](raw_state, update=False)
-                        # else:
-                        #     state_input = raw_state
-                        bus_keys.append(key)
+                        # Apply Normalization for Model Input (if model expects it)
+                        if 'state_norm' in model and model['state_norm'] is not None:
+                             state_input = model['state_norm'](raw_state, update=False)
+                        else:
+                            state_input = raw_state
+                        
                         states_to_predict.append(state_input)
                         raw_states_batch.append(raw_state)
+                        bus_keys.append(key)
 
                 # 2. Batch Predict
                 if states_to_predict:
@@ -132,18 +126,6 @@ def collect_checkpoint_data(args):
                             # Record ALL Q-values (Ensemble Size)
                             q_vals = model['q_net'](states_tensor, actions_tensor)
                             q_vals_np = q_vals.cpu().numpy().T # [Batch, Ens_Size]
-                        elif model['type'] == 'dsac':
-                            mean, _ = model['policy'](states_tensor)
-                            actions_tensor = torch.tanh(mean) * action_range/2 + action_range/2
-                            z1 = model['z1'](states_tensor, actions_tensor)
-                            z2 = model['z2'](states_tensor, actions_tensor)
-                            # Record ALL 10+10 quantiles
-                            q_vals_np = torch.cat([z1, z2], dim=1).cpu().numpy() # [Batch, 20]
-                        elif model['type'] == 'bac':
-                            mean, _ = model['policy'](states_tensor)
-                            actions_tensor = torch.tanh(mean) * action_range/2 + action_range/2
-                            q1, q2 = model['q_net'](states_tensor, actions_tensor)
-                            q_vals_np = torch.cat([q1, q2], dim=1).cpu().numpy() # [Batch, 2]
                         else:
                             mean, _ = model['policy'](states_tensor)
                             actions_tensor = torch.tanh(mean) * action_range/2 + action_range/2
@@ -193,14 +175,16 @@ def collect_checkpoint_data(args):
         traceback.print_exc()
         return None
 
-def get_checkpoints(model_dir, prefix, suffix='_policy'):
+def get_checkpoints(model_dir, prefix):
     # Find all matching files
     files = glob.glob(os.path.join(model_dir, f"{prefix}*"))
     # Filter for policy/q files to identify unique checkpoints
+    # We look for '_policy' suffix usually
     checkpoints = []
     
     # Regex to extract episode number
-    pattern = re.compile(rf"{re.escape(prefix)}_episode_(\d+){re.escape(suffix)}")
+    # Pattern: ...checkpoint_episode_(\d+)_policy
+    pattern = re.compile(rf"{re.escape(prefix)}_episode_(\d+)_policy")
     
     seen_eps = set()
     for f in files:
@@ -209,7 +193,7 @@ def get_checkpoints(model_dir, prefix, suffix='_policy'):
             ep = int(match.group(1))
             if ep not in seen_eps:
                 seen_eps.add(ep)
-                # Reconstruct base path (without suffix)
+                # Reconstruct base path (without _policy)
                 base_path = os.path.join(model_dir, f"{prefix}_episode_{ep}")
                 checkpoints.append((ep, base_path))
     
@@ -219,14 +203,10 @@ def main():
     multiprocessing.set_start_method('spawn', force=True)
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ensemble_dir', type=str, default=None)
-    parser.add_argument('--sac_dir', type=str, default=None)
-    parser.add_argument('--dsac_dir', type=str, default=None)
-    parser.add_argument('--bac_dir', type=str, default=None)
-    parser.add_argument('--ensemble_prefix', type=str, default='checkpoint')
-    parser.add_argument('--sac_prefix', type=str, default='sac_v2')
-    parser.add_argument('--dsac_prefix', type=str, default='dsac_bus')
-    parser.add_argument('--bac_prefix', type=str, default='checkpoint')
+    parser.add_argument('--ensemble_dir', type=str, required=True, help="Dir containing ensemble checkpoints")
+    parser.add_argument('--sac_dir', type=str, required=True, help="Dir containing SAC checkpoints")
+    parser.add_argument('--ensemble_prefix', type=str, default='checkpoint', help="Prefix for files")
+    parser.add_argument('--sac_prefix', type=str, default='sac_v2', help="Prefix for files")
     
     parser.add_argument('--episodes_per_ckpt', type=int, default=2, help="Eps per checkpoint")
     parser.add_argument('--workers', type=int, default=10)
@@ -238,54 +218,39 @@ def main():
     
     os.makedirs(args.output_dir, exist_ok=True)
     
-    # 1. Find Checkpoints
+    # 1. Find Checks
     print("Scanning for checkpoints...")
+    ens_ckpts = get_checkpoints(args.ensemble_dir, args.ensemble_prefix)
+    sac_ckpts = get_checkpoints(args.sac_dir, args.sac_prefix)
+    
+    if args.only_latest:
+        if ens_ckpts: ens_ckpts = ens_ckpts[-1:]
+        if sac_ckpts: sac_ckpts = sac_ckpts[-1:]
+    
+    print(f"Found {len(ens_ckpts)} Ensemble checkpoints.")
+    print(f"Found {len(sac_ckpts)} SAC checkpoints.")
+    
+    # 2. Build Task List
     tasks = []
+    hidden_dim = 256
+    action_range = 1.0
     
-    # Hidden dims
-    hid_256 = 256
-    hid_64 = 64
+    # Ensemble Tasks
+    for ep, path in ens_ckpts:
+        # Check if output already exists (Resume capability)
+        if not os.path.exists(os.path.join(args.output_dir, f"data_ensemble_{ep}.pkl")):
+            tasks.append((path, ep, 'ensemble', args.device, hidden_dim, action_range, args.episodes_per_ckpt, args.output_dir))
     
-    # Ensemble
-    if args.ensemble_dir:
-        ckpts = get_checkpoints(args.ensemble_dir, args.ensemble_prefix, '_policy')
-        if args.only_latest: ckpts = ckpts[-1:]
-        print(f"Found {len(ckpts)} Ensemble checkpoints.")
-        for ep, path in ckpts:
-            if not os.path.exists(os.path.join(args.output_dir, f"data_ensemble_{ep}.pkl")):
-                tasks.append((path, ep, 'ensemble', args.device, hid_256, 1.0, args.episodes_per_ckpt, args.output_dir))
-
-    # SAC
-    if args.sac_dir:
-        ckpts = get_checkpoints(args.sac_dir, args.sac_prefix, '_policy')
-        if args.only_latest: ckpts = ckpts[-1:]
-        print(f"Found {len(ckpts)} SAC checkpoints.")
-        for ep, path in ckpts:
-            if not os.path.exists(os.path.join(args.output_dir, f"data_sac_{ep}.pkl")):
-                tasks.append((path, ep, 'sac', args.device, hid_256, 1.0, args.episodes_per_ckpt, args.output_dir))
-
-    # DSAC
-    if args.dsac_dir:
-        ckpts = get_checkpoints(args.dsac_dir, args.dsac_prefix, '_z1')
-        if args.only_latest: ckpts = ckpts[-1:]
-        print(f"Found {len(ckpts)} DSAC checkpoints.")
-        for ep, path in ckpts:
-            if not os.path.exists(os.path.join(args.output_dir, f"data_dsac_{ep}.pkl")):
-                tasks.append((path, ep, 'dsac', args.device, hid_64, 1.0, args.episodes_per_ckpt, args.output_dir))
-
-    # BAC
-    if args.bac_dir:
-        ckpts = get_checkpoints(args.bac_dir, args.bac_prefix, '_q')
-        if args.only_latest: ckpts = ckpts[-1:]
-        print(f"Found {len(ckpts)} BAC checkpoints.")
-        for ep, path in ckpts:
-            if not os.path.exists(os.path.join(args.output_dir, f"data_bac_{ep}.pkl")):
-                tasks.append((path, ep, 'bac', args.device, hid_64, 1.0, args.episodes_per_ckpt, args.output_dir))
+    # SAC Tasks
+    for ep, path in sac_ckpts:
+         if not os.path.exists(os.path.join(args.output_dir, f"data_sac_{ep}.pkl")):
+            tasks.append((path, ep, 'sac', args.device, hidden_dim, action_range, args.episodes_per_ckpt, args.output_dir))
             
     print(f"Total tasks pending: {len(tasks)}")
     
     # 3. Run
     with multiprocessing.Pool(processes=args.workers, initializer=worker_init) as pool:
+        # Use imap_unordered for speed/responsiveness
         list(tqdm(pool.imap_unordered(collect_checkpoint_data, tasks), total=len(tasks)))
         
     print("Data collection complete.")
