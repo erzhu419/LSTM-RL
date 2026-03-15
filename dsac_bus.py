@@ -5,8 +5,6 @@ Optimized version with improved hyperparameters and training stability
 
 import psutil
 import tracemalloc
-import copy
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -18,10 +16,13 @@ from IPython.display import clear_output
 import matplotlib.pyplot as plt
 from env.sim import env_bus
 import os
+import json
 import argparse
 import numpy as np
-import random
 from copy import deepcopy
+
+from bus_feature_utils import create_embedding_layer, build_bus_categorical_info
+from bus_replay_buffer import ReplayBuffer
 GPU = True
 device_idx = 0
 if GPU:
@@ -39,7 +40,7 @@ parser.add_argument("--use_reward_norm", type=bool, default=False, help="Trick 3
 parser.add_argument("--use_reward_scaling", type=bool, default=False, help="Trick 4:reward scaling")
 parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor 0.99")
 parser.add_argument("--training_freq", type=int, default=5, help="frequency of training the network")
-parser.add_argument("--plot_freq", type=int, default=1, help="frequency of plotting the result")
+parser.add_argument("--plot_freq", type=int, default=5, help="frequency of plotting the result")
 parser.add_argument('--auto_entropy', type=bool, default=True, help='automatically updating alpha')
 parser.add_argument("--maximum_alpha", type=float, default=0.3, help="max entropy weight")
 parser.add_argument("--batch_size", type=int, default=2048, help="batch size")
@@ -48,61 +49,39 @@ parser.add_argument("--risk_type", type=str, default='CVaR', help="risk type: ne
 parser.add_argument("--risk_param", type=float, default=0.0, help="risk parameter")
 parser.add_argument("--critic_actor_ratio", type=int, default=2, help="ratio of critic updates to actor updates")
 parser.add_argument("--tau_type", type=str, default='fix', help="quantile fraction type: fix, random")
+parser.add_argument("--max_episodes", type=int, default=500, help="maximum number of training episodes")
+parser.add_argument('--save_root', type=str, default='.', help='Base directory for saving models, logs, and figures')
+parser.add_argument('--run_name', type=str, default='gpt_version', help='Optional identifier appended to save directories to avoid overwriting previous runs')
+parser.add_argument('--env_path', type=str, default='env', help='Path to the environment configuration directory')
+parser.add_argument('--embedding_mode', type=str, default='full', choices=['full', 'one_hot', 'none'], help='Categorical feature handling strategy')
+parser.add_argument('--route_sigma', type=float, default=1.5, help='Sigma used for route speed sampling')
+parser.add_argument('--eval_sigmas', type=float, nargs='*', default=None, help='List of sigma values for cross-evaluation after training')
+parser.add_argument('--hidden_dim', type=int, default=32, help='Hidden dimension size for DSAC networks')
+parser.add_argument('--lr', type=float, default=1e-5, help='Learning rate for critic, policy, and alpha optimizers')
 args = parser.parse_args()
+args.embedding_mode = args.embedding_mode.lower()
 
+SCRIPT_NAME = os.path.splitext(os.path.basename(__file__))[0]
+RUN_NAME = args.run_name.strip() if args.run_name else None
+SAVE_ROOT = os.path.abspath(args.save_root)
 
-class ReplayBuffer:
-    def __init__(self, capacity, last_episode_step=5000):
-        self.capacity = capacity
-        self.last_episode_step = last_episode_step
-        self.buffer = {}
-        self.position = 0
+sigma_token = f"sigma{args.route_sigma}".replace('.', 'p')
+experiment_components = [SCRIPT_NAME, sigma_token, f"embed-{args.embedding_mode}"]
+if RUN_NAME:
+    experiment_components.append(RUN_NAME)
+EXPERIMENT_ID = "_".join(experiment_components)
 
-    def push(self, state, action, reward, next_state, done):
-        self.buffer[self.position] = (state, action, reward, next_state, done)
-        self.position += 1
+PIC_DIR = os.path.join(SAVE_ROOT, 'pic', EXPERIMENT_ID)
+LOG_DIR = os.path.join(SAVE_ROOT, 'logs', EXPERIMENT_ID)
+MODEL_DIR = os.path.join(SAVE_ROOT, 'model', EXPERIMENT_ID)
 
-        if len(self.buffer) > self.capacity:
-            keys_to_remove = list(self.buffer.keys())[:self.last_episode_step]
-            for key in keys_to_remove:
-                del self.buffer[key]
+for directory in (PIC_DIR, LOG_DIR, MODEL_DIR):
+    os.makedirs(directory, exist_ok=True)
 
-    def sample(self, batch_size):
-        batch = random.sample(list(self.buffer.values()), batch_size)
-        states, actions, rewards, next_states, dones = zip(*batch)
+with open(os.path.join(LOG_DIR, 'args.json'), 'w') as f:
+    json.dump(vars(args), f, indent=2)
 
-        states = np.stack(states)
-        actions = np.stack(actions)
-        rewards = np.array(rewards, dtype=np.float32)
-        next_states = np.stack(next_states)
-        dones = np.array(dones, dtype=np.float32)
-
-        return states, actions, rewards, next_states, dones
-
-    def __len__(self):
-        return len(self.buffer)
-
-
-class EmbeddingLayer(nn.Module):
-    def __init__(self, cat_code_dict, cat_cols):
-        super(EmbeddingLayer, self).__init__()
-        self.cat_code_dict = cat_code_dict
-        self.cat_cols = cat_cols
-
-        self.embeddings = nn.ModuleDict({
-            col: nn.Embedding(len(cat_code_dict[col]), min(50, len(cat_code_dict[col]) // 2))
-            for col in cat_cols
-        })
-
-    def forward(self, cat_tensor):
-        embedding_tensor_group = []
-        for idx, col in enumerate(self.cat_cols):
-            layer = self.embeddings[col]
-            out = layer(cat_tensor[:, idx])
-            embedding_tensor_group.append(out)
-
-        embed_tensor = torch.cat(embedding_tensor_group, dim=1)
-        return embed_tensor
+MODEL_PREFIX = os.path.join(MODEL_DIR, 'dsac_bus')
 
 
 class QuantileNetwork(nn.Module):
@@ -266,33 +245,23 @@ def quantile_regression_loss(quantile_pred, target, tau, kappa=1.0):
     return loss.mean()
 
 class DSAC_Trainer():
-    def __init__(self, env, replay_buffer, hidden_dim, action_range, num_quantiles=8):
-        # Categorical and numerical features
-        cat_cols = ['bus_id', 'station_id', 'time_period','direction']
-        cat_code_dict = {
-            'bus_id': {i: i for i in range(env.max_agent_num)},
-            'station_id': {i: i for i in range(round(len(env.stations) / 2))},
-            'time_period': {i: i for i in range(env.timetables[-1].launch_time//3600 + 2)},
-            'direction': {0: 0, 1: 1}
-        }
-        
+    def __init__(self, env, replay_buffer, hidden_dim, action_range, num_quantiles=8, embedding_mode='full'):
+        cat_cols, cat_code_dict = build_bus_categorical_info(env)
         self.num_cat_features = len(cat_cols)
         self.num_cont_features = env.state_dim - self.num_cat_features
         self.num_quantiles = num_quantiles
-        
-        # Create embedding layer
-        embedding_layer = EmbeddingLayer(cat_code_dict, cat_cols)
-        embedding_dim = sum([min(50, len(cat_code_dict[col]) // 2) for col in cat_cols])
-        state_dim = embedding_dim + self.num_cont_features
+        embedding_kwargs = {'layer_norm': True, 'dropout': 0.05} if embedding_mode == 'full' else {}
+        embedding_template = create_embedding_layer(embedding_mode, cat_code_dict, cat_cols, **embedding_kwargs)
+        state_dim = embedding_template.output_dim + self.num_cont_features
 
         self.replay_buffer = replay_buffer
 
         # Networks
-        self.zf1 = QuantileNetwork(state_dim, action_dim, hidden_dim, embedding_layer, num_quantiles).to(device)
-        self.zf2 = QuantileNetwork(state_dim, action_dim, hidden_dim, embedding_layer, num_quantiles).to(device)
+        self.zf1 = QuantileNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone(), num_quantiles).to(device)
+        self.zf2 = QuantileNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone(), num_quantiles).to(device)
         self.target_zf1 = deepcopy(self.zf1).to(device)
         self.target_zf2 = deepcopy(self.zf2).to(device)
-        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_layer, action_range).to(device)
+        self.policy_net = PolicyNetwork(state_dim, action_dim, hidden_dim, embedding_template.clone(), action_range).to(device)
         
         # Initialize target networks
         for target_param, param in zip(self.target_zf1.parameters(), self.zf1.parameters()):
@@ -302,14 +271,12 @@ class DSAC_Trainer():
 
         # Alpha for entropy regularization
         self.log_alpha = torch.zeros(1, dtype=torch.float32, requires_grad=True, device=device)
+        self.alpha = args.maximum_alpha
 
         print('Quantile Networks (1,2): ', self.zf1)
         print('Policy Network: ', self.policy_net)
 
-        # Optimizers with higher learning rates
-        zf_lr = 1e-5  # Increased from 1e-5
-        policy_lr = 1e-5  # Increased from 1e-5
-        alpha_lr = 1e-5  # Increased from 1e-5
+        zf_lr = policy_lr = alpha_lr = args.lr
 
         self.zf1_optimizer = optim.Adam(self.zf1.parameters(), lr=zf_lr)
         self.zf2_optimizer = optim.Adam(self.zf2.parameters(), lr=zf_lr)
@@ -357,6 +324,7 @@ class DSAC_Trainer():
             return quantile_values.mean(dim=1, keepdim=True)
 
     def update(self, batch_size, training_steps, reward_scale=10., auto_entropy=True, target_entropy=-2, gamma=0.99, soft_tau=5e-3):
+        global q_values, log_probs, alpha_values, zf_losses
         state, action, reward, next_state, done = self.replay_buffer.sample(batch_size)
         q_new_actions = np.array([0.])
         state = torch.FloatTensor(state).to(device)
@@ -460,64 +428,67 @@ class DSAC_Trainer():
         self.policy_net.eval()
 
 
+def evaluate_policy(dsac_trainer, env, num_eval_episodes=5, deterministic=True):
+    eval_rewards = []
+
+    for eval_ep in range(num_eval_episodes):
+        env.reset()
+        state_dict, reward_dict, _ = env.initialize_state(render=False)
+
+        done = False
+        episode_reward = 0
+        action_dict = {key: None for key in list(range(env.max_agent_num))}
+
+        while not done:
+            for key in state_dict:
+                if len(state_dict[key]) == 1:
+                    if action_dict[key] is None:
+                        raw_state = np.array(state_dict[key][0])
+                        if args.use_state_norm:
+                            state_input = dsac_trainer.state_norm(raw_state, update=False)
+                        else:
+                            state_input = raw_state
+                        a = dsac_trainer.policy_net.get_action(
+                            torch.from_numpy(state_input).float(), deterministic=deterministic
+                        )
+                        action_dict[key] = a
+
+                elif len(state_dict[key]) == 2:
+                    if state_dict[key][0][1] != state_dict[key][1][1]:
+                        episode_reward += reward_dict[key]
+
+                    state_dict[key] = state_dict[key][1:]
+                    raw_state = np.array(state_dict[key][0])
+                    if args.use_state_norm:
+                        state_input = dsac_trainer.state_norm(raw_state, update=False)
+                    else:
+                        state_input = raw_state
+                    action_dict[key] = dsac_trainer.policy_net.get_action(
+                        torch.from_numpy(state_input).float(), deterministic=deterministic
+                    )
+
+            state_dict, reward_dict, done = env.step(action_dict, render=False)
+
+        eval_rewards.append(episode_reward)
+
+    mean_reward = np.mean(eval_rewards)
+    reward_std = np.std(eval_rewards)
+
+    return mean_reward, reward_std
+
+
 def plot(rewards):
-    clear_output(True)
-    plt.figure(figsize=(20, 8))
-    
-    plt.subplot(2, 3, 1)
-    plt.plot(rewards, label="Reward")
-    plt.legend()
-    plt.title(f"DSAC Training Reward (risk_type={args.risk_type}, risk_param={args.risk_param})")
-    
-    plt.subplot(2, 3, 2)
-    plt.plot(q_values_episode, label="Q-Value")
-    plt.legend()
-    plt.title("Q-Value")
-    
-    plt.subplot(2, 3, 3)
-    plt.plot(log_probs_episode, label="Log Prob")
-    plt.legend()
-    plt.title("Log Probability")
-    
-    plt.subplot(2, 3, 4)
-    plt.plot(alpha_values_episode, label="Alpha")
-    plt.legend()
-    plt.title("Alpha (Entropy Coefficient)")
-    
-    plt.subplot(2, 3, 5)
-    plt.plot(zf_losses_episode, label="ZF Loss")
-    plt.legend()
-    plt.title("Quantile Function Loss")
-    
-    plt.subplot(2, 3, 6)
-    # Plot recent performance
-    recent_rewards = rewards[-50:] if len(rewards) > 50 else rewards
-    plt.plot(recent_rewards, label="Recent Reward")
-    plt.legend()
-    plt.title("Recent 50 Episodes")
-
-    plt.tight_layout()
-
-    if not os.path.exists('pic'):
-        os.makedirs('pic')
-    
-    subdir_name = f'dsac_risk_{args.risk_type}_param_{args.risk_param}'
-    subdir_path = os.path.join('pic', subdir_name)
-    if not os.path.exists(subdir_path):
-        os.makedirs(subdir_path)
-
-    plt.savefig(os.path.join(subdir_path, f'dsac_monitoring.png'))
-    plt.close()
+    pass
 
 
 # Initialize environment and parameters
-replay_buffer_size = 1e6
+replay_buffer_size = int(1e6)
 replay_buffer = ReplayBuffer(replay_buffer_size)
 
 debug = False
 render = False
-path = os.getcwd() + '/env'
-env = env_bus(path, debug=debug)
+path = os.path.abspath(args.env_path)
+env = env_bus(path, debug=debug, route_sigma=args.route_sigma)
 env.reset()
 
 action_dim = env.action_space.shape[0]
@@ -526,12 +497,11 @@ action_range = env.action_space.high[0]
 # Training parameters
 step = 0
 step_trained = 0
-max_episodes = 500
 frame_idx = 0
 explore_steps = 0
 update_itr = 1
 DETERMINISTIC = False
-hidden_dim = 256  # Increased hidden dimension
+hidden_dim = args.hidden_dim
 
 # Monitoring variables
 rewards = []
@@ -545,15 +515,25 @@ log_probs_episode = []
 alpha_values_episode = []
 zf_losses_episode = []
 
-model_path = './model/dsac_v2'
+eval_episodes = []
+eval_mean_rewards = []
+eval_reward_stds = []
+
 tracemalloc.start()
 
-dsac_trainer = DSAC_Trainer(env, replay_buffer, hidden_dim=hidden_dim, action_range=action_range, num_quantiles=args.num_quantiles)
+dsac_trainer = DSAC_Trainer(
+    env,
+    replay_buffer,
+    hidden_dim=hidden_dim,
+    action_range=action_range,
+    num_quantiles=args.num_quantiles,
+    embedding_mode=args.embedding_mode,
+)
 
 if __name__ == '__main__':
     if args.train:
         # Training loop
-        for eps in range(max_episodes):
+        for eps in range(args.max_episodes):
             if eps != 0:
                 env.reset()
             state_dict, reward_dict, _ = env.initialize_state(render=render)
@@ -630,25 +610,45 @@ if __name__ == '__main__':
             # Record episode metrics
             rewards.append(episode_reward)
             if training_steps > 0:
-                q_values_episode.append(np.mean(q_values[-training_steps:]) if q_values[-training_steps:] else 0)
-                log_probs_episode.append(np.mean(log_probs[-training_steps:]) if log_probs[-training_steps:] else 0)
-                alpha_values_episode.append(np.mean(alpha_values[-training_steps:]) if alpha_values[-training_steps:] else 0)
-                zf_losses_episode.append(np.mean(zf_losses[-training_steps:]) if zf_losses[-training_steps:] else 0)
+                recent_q = q_values[-training_steps:] if training_steps <= len(q_values) else q_values
+                recent_log_prob = log_probs[-training_steps:] if training_steps <= len(log_probs) else log_probs
+                recent_alpha = alpha_values[-training_steps:] if training_steps <= len(alpha_values) else alpha_values
+                recent_zf = zf_losses[-training_steps:] if training_steps <= len(zf_losses) else zf_losses
+
+                q_values_episode.append(float(np.mean(recent_q)) if recent_q else 0.0)
+                log_probs_episode.append(float(np.mean(recent_log_prob)) if recent_log_prob else 0.0)
+                alpha_values_episode.append(float(np.mean(recent_alpha)) if recent_alpha else 0.0)
+                zf_losses_episode.append(float(np.mean(recent_zf)) if recent_zf else 0.0)
             else:
-                q_values_episode.append(0)
-                log_probs_episode.append(0)
-                alpha_values_episode.append(0)
-                zf_losses_episode.append(0)
+                q_values_episode.append(0.0)
+                log_probs_episode.append(0.0)
+                alpha_values_episode.append(0.0)
+                zf_losses_episode.append(0.0)
 
             if eps % args.plot_freq == 0:
                 plot(rewards)
-                np.save('rewards_dsac', rewards)
-                torch.save(dsac_trainer.policy_net.state_dict(), model_path)
+                np.save(os.path.join(LOG_DIR, 'rewards.npy'), np.array(rewards, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'q_values_episode.npy'), np.array(q_values_episode, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'log_probs_episode.npy'), np.array(log_probs_episode, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'alpha_values_episode.npy'), np.array(alpha_values_episode, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'zf_losses_episode.npy'), np.array(zf_losses_episode, dtype=np.float32))
+
+                mean_reward, reward_std = evaluate_policy(dsac_trainer, env, num_eval_episodes=10, deterministic=True)
+                eval_episodes.append(eps)
+                eval_mean_rewards.append(mean_reward)
+                eval_reward_stds.append(reward_std)
+                np.save(os.path.join(LOG_DIR, 'eval_episodes.npy'), np.array(eval_episodes, dtype=np.int32))
+                np.save(os.path.join(LOG_DIR, 'eval_mean_rewards.npy'), np.array(eval_mean_rewards, dtype=np.float32))
+                np.save(os.path.join(LOG_DIR, 'eval_reward_stds.npy'), np.array(eval_reward_stds, dtype=np.float32))
+
+                model_name = f"{MODEL_PREFIX}_episode_{eps}"
+                dsac_trainer.save_model(model_name)
+                dsac_trainer.save_model(os.path.join(LOG_DIR, f'{SCRIPT_NAME}_episode_{eps}'))
 
             replay_buffer_usage = len(replay_buffer) / replay_buffer_size * 100
 
             print(
-                f"Episode: {eps} | Episode Reward: {episode_reward:.2f} "
+                f"[DSAC | risk={args.risk_type}, param={args.risk_param}, max_alpha={args.maximum_alpha}] Episode: {eps} | Episode Reward: {episode_reward:.2f} "
                 f"| CPU Memory: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB | "
                 f"GPU Memory Allocated: {torch.cuda.memory_allocated() / 1024 ** 2:.2f} MB | "
                 f"Replay Buffer Usage: {replay_buffer_usage:.2f}% | "
@@ -656,10 +656,36 @@ if __name__ == '__main__':
                 f"Avg Q-Value: {q_values_episode[-1]:.2f} | "
                 f"ZF Loss: {zf_losses_episode[-1]:.4f}")
         
-        torch.save(dsac_trainer.policy_net.state_dict(), model_path)
+        dsac_trainer.save_model(MODEL_PREFIX)
+
+        plot(rewards)
+        np.save(os.path.join(LOG_DIR, 'rewards.npy'), np.array(rewards, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'q_values_episode.npy'), np.array(q_values_episode, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'log_probs_episode.npy'), np.array(log_probs_episode, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'alpha_values_episode.npy'), np.array(alpha_values_episode, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'zf_losses_episode.npy'), np.array(zf_losses_episode, dtype=np.float32))
+
+        mean_reward, reward_std = evaluate_policy(dsac_trainer, env, num_eval_episodes=15, deterministic=True)
+        print(f"最终评估结果: 平均奖励 = {mean_reward:.2f}, 标准差 = {reward_std:.2f}")
+        final_eval_episode = args.max_episodes - 1
+        eval_episodes.append(final_eval_episode)
+        eval_mean_rewards.append(mean_reward)
+        eval_reward_stds.append(reward_std)
+        np.save(os.path.join(LOG_DIR, 'eval_episodes.npy'), np.array(eval_episodes, dtype=np.int32))
+        np.save(os.path.join(LOG_DIR, 'eval_mean_rewards.npy'), np.array(eval_mean_rewards, dtype=np.float32))
+        np.save(os.path.join(LOG_DIR, 'eval_reward_stds.npy'), np.array(eval_reward_stds, dtype=np.float32))
+
+        if args.eval_sigmas:
+            sigma_results = []
+            for sigma in args.eval_sigmas:
+                eval_env = env_bus(path, debug=debug, route_sigma=sigma)
+                eval_env.reset()
+                sigma_mean, sigma_std = evaluate_policy(dsac_trainer, eval_env, num_eval_episodes=10, deterministic=True)
+                sigma_results.append((sigma, sigma_mean, sigma_std))
+            np.save(os.path.join(LOG_DIR, 'eval_cross_sigma.npy'), np.array(sigma_results, dtype=np.float32))
 
     if args.test:
-        dsac_trainer.policy_net.load_state_dict(torch.load(model_path))
+        dsac_trainer.load_model(MODEL_PREFIX)
         for eps in range(10):
             done = False
             env.reset()

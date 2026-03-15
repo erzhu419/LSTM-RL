@@ -1,27 +1,34 @@
 import json
 import time
 import numpy as np
+import pandas as pd
+import copy
+import os
+import sys
+import pygame
+
+# Ensure the project root (parent of this env package) is on sys.path so that
+# `import env.*` works even when running env/sim.py directly.
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from env.timetable import Timetable
 from env.bus import Bus
 from env.route import Route
 from env.station import Station
 from env.visualize import visualize
-import pandas as pd
 from gym.spaces.box import Box
 from gym.spaces import MultiDiscrete
-import copy
-import os, sys
-import pygame
-import json
 
 
 class env_bus(object):
-    
-    def __init__(self, path, debug=False, render=False):
-        if render:
-            pygame.init()
 
+    def __init__(self, path, debug=False, render=False, route_sigma=1.5):
         self.path = path
+        self.route_sigma = route_sigma
         sys.path.append(os.path.abspath(os.path.join(os.getcwd())))
         config_path = os.path.join(path, 'config.json')
         with open(config_path, 'r') as f:
@@ -35,6 +42,17 @@ class env_bus(object):
         self.od = pd.read_excel(os.path.join(path, "data/passenger_OD.xlsx"), index_col=[1, 0])
         self.station_set = pd.read_excel(os.path.join(path, "data/stop_news.xlsx"))
         self.routes_set = pd.read_excel(os.path.join(path, "data/route_news.xlsx"))
+        # Ensure hourly columns use datetime.time objects so downstream lookups work
+        time_cols = self.routes_set.columns[5:]
+        rename_map = {}
+        for col in time_cols:
+            if isinstance(col, str):
+                try:
+                    rename_map[col] = pd.to_datetime(col).time()
+                except ValueError:
+                    continue
+        if rename_map:
+            self.routes_set = self.routes_set.rename(columns=rename_map)
         self.timetable_set = pd.read_excel(os.path.join(path, "data/time_table.xlsx"))
         # Truncate the original timetable by first 50 trips to reduce the calculation pressure
         self.timetable_set = self.timetable_set.sort_values(by=['launch_time', 'direction'])[:self.effective_trip_num].reset_index(drop=True)
@@ -43,6 +61,8 @@ class env_bus(object):
         self.max_agent_num = 25
 
         self.visualizer = visualize(self)
+        # Allow disabling automatic plotting when simulation ends
+        self.enable_plot = True
 
         # Set effective station and time period
         self.effective_station_name = sorted(set([self.od.index[i][0] for i in range(self.od.shape[0])]))
@@ -75,9 +95,17 @@ class env_bus(object):
 
     def set_routes(self):
         return [
-            Route(self.routes_set['route_id'][i], self.routes_set['start_stop'][i], self.routes_set['end_stop'][i],
-                  self.routes_set['distance'][i], self.routes_set['V_max'][i], self.routes_set.iloc[i, 5:]) for i in
-            range(self.routes_set.shape[0])]
+            Route(
+                self.routes_set['route_id'][i],
+                self.routes_set['start_stop'][i],
+                self.routes_set['end_stop'][i],
+                self.routes_set['distance'][i],
+                self.routes_set['V_max'][i],
+                self.routes_set.iloc[i, 5:],
+                sigma=self.route_sigma
+            )
+            for i in range(self.routes_set.shape[0])
+        ]
 
     def set_stations(self):
         station_concat = pd.concat([self.station_set, self.station_set[::-1][1:]]).reset_index()
@@ -151,7 +179,7 @@ class env_bus(object):
             # the iteration in drive(), we just update the state of those bus which on routes
             bus.on_route = True
 
-    def step(self, action, debug=False, render=False):
+    def step(self, action, debug=False, render=False, episode = 0):
         # Enumerate trips in timetables, if current_time<=launch_time of the trip, then launch it.
         # E.X. timetables = [6:00/launched, 6:05, 6:10], current time is 6:05, then iteration will judge from first trip [6:00]
         # But [6:00] is launched, so next is [6:05]
@@ -181,9 +209,12 @@ class env_bus(object):
             bus.reward = None
             bus.obs = []
             if bus.in_station:
-                bus.trajectory.append([bus.last_station.station_name, self.current_time, bus.absolute_distance, bus.direction, bus.trip_id])
-                bus.trajectory_dict[bus.last_station.station_name].append([bus.last_station.station_name, self.current_time + bus.holding_time, bus.absolute_distance, bus.direction, bus.trip_id])
+                pass
+                # bus.trajectory.append([bus.last_station.station_name, self.current_time, bus.absolute_distance, bus.direction, bus.trip_id])
+                # bus.trajectory_dict[bus.last_station.station_name].append([bus.last_station.station_name, self.current_time + bus.holding_time, bus.absolute_distance, bus.direction, bus.trip_id])
             if bus.on_route:
+                # 在路上行驶的时候也添加trajectory,但是很慢，只是为了画图
+                # bus.trajectory.append([bus.last_station.station_name, self.current_time, bus.absolute_distance, bus.direction, bus.trip_id])
                 bus.drive(self.current_time, action[bus.bus_id], self.bus_all, debug=debug)
 
         self.state_bus_list = state_bus_list = list(filter(lambda x: len(x.obs) != 0, self.bus_all))
@@ -249,7 +280,8 @@ class env_bus(object):
 
             output_dir = os.path.join(self.path, 'pic')
             os.makedirs(output_dir, exist_ok=True)
-            self.visualizer.plot()
+            if self.enable_plot:
+                self.visualizer.plot(episode)
 
             self.summary_data.to_csv(os.path.join(output_dir, 'summary_data.csv'))
             self.summary_reward = self.summary_reward.sort_values(['bus_id', 'time'])
@@ -263,21 +295,37 @@ class env_bus(object):
 
 
 if __name__ == '__main__':
-    debug = False
-    render = True
-    if render:
-        pygame.init()
-    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    debug = True
+    render = False
+    num_runs = 1
 
-    env = env_bus(os.getcwd(), debug=debug)
-    start_time = time.time()
-    actions = {key: 15. for key in list(range(env.max_agent_num))}
-    env.reset()
-    while not env.done:
-        state, reward, done = env.step(action=actions, debug=debug, render=render)
-        # if debug and env.current_time % 4 == 0:
-        #     if render:
-        #         env.visualizer.render()
-        #         time.sleep(0.05)  # Add a delay to slow down the rendering
-    pygame.quit()
-    print(time.time() - start_time)
+    env_dir = Path(__file__).resolve().parent
+    env = env_bus(str(env_dir), debug=debug)
+    env.enable_plot = True
+    actions = {key: 0. for key in list(range(env.max_agent_num))}
+
+    all_events = []
+    cumulative_time = 0
+
+    for run_idx in range(1, num_runs + 1):
+        env.reset()
+        while not env.done:
+            state, reward, done = env.step(action=actions, debug=debug,
+                                           render=render, episode=run_idx)
+
+        events = env.visualizer.extract_bunching_events()
+        cumulative_time += env.current_time
+        all_events.extend(events)
+
+    # Only quit pygame if it was initialized
+    if pygame.get_init():
+        pygame.quit()
+
+    if all_events:
+        df = pd.DataFrame(all_events).sort_values(['time'])
+        output_dir = os.path.join(env.path, 'pic')
+        os.makedirs(output_dir, exist_ok=True)
+        df.to_csv(os.path.join(output_dir, f'all_bunching_records_{num_runs}.csv'), index=False)
+        # env.visualizer.plot_bunching_events(all_events, exp=str(num_runs))
+
+    print('Total simulation time:', cumulative_time)
