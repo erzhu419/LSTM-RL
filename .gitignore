@@ -28,3 +28,22 @@ env/pic/exp 0, bus headway.jpg
 env/pic/exp 0, bus trajectory.jpg
 env/pic/exp 0.csv
 pic/sac_v2_bus/sac_monitoring_weight_reg_0.1.png
+ensemble_paper/comparasion_q/offline_dataset_dsac_v1
+ensemble_paper/comparasion_q/offline_dataset_full
+ensemble_paper/comparasion_q/offline_timeline_data
+ensemble_paper/comparasion_q/offline_dataset_test
+ensemble_paper/comparasion_q/offline_timeline_data_20eps
+ensemble_paper/comparasion_q/pic
+ensemble_paper/env_original/pic
+ensemble_paper/logs
+ensemble_paper/logs_ensemble_original
+ensemble_paper/q_accuracy_analysis/env/pic
+ensemble_paper/q_analysis_project/env/pic
+ensemble_paper/sac_v2_bus
+logs
+pic
+第一篇论文的模型和图
+comparison_runs/stdout
+ensemble_paper/q_accuracy_analysis
+logs_ensemble_original
+ensemble_paper/comparasion_q/offline_timeline_data_20eps_v3

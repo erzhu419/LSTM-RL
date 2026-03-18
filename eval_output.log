@@ -1,0 +1,218 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+pygame 2.5.2 (SDL 2.28.2, Python 3.12.4)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+================================================================================
+Evaluating May 2024 Ensemble Models
+================================================================================
+Model directory: /home/erzhu419/mine_code/LSTM-RL/model/sac_v2_bus_ensemble/replay_buffer_size_1000000/critic_actor_ratio_2/maximum_alpha_0.3/
+Configuration:
+  - replay_buffer_size: 1000000
+  - critic_actor_ratio: 2
+  - maximum_alpha: 0.3
+  - weight_reg: 0.03
+Episodes to test: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+================================================================================
+Warning: Model for episode 500 not found
+
+Found 9 available models: [50, 100, 150, 200, 250, 300, 350, 400, 450]
+
+Initializing environment...
+Initializing policy network...
+
+================================================================================
+Starting evaluation...
+================================================================================
+Traceback (most recent call last):
+  File "/home/erzhu419/mine_code/LSTM-RL/eval_may_models.py", line 135, in <module>
+    for ep in tqdm(available_models, desc="Evaluating checkpoints"):
+              ^^^^
+NameError: name 'tqdm' is not defined
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+pygame 2.5.2 (SDL 2.28.2, Python 3.12.4)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+================================================================================
+Evaluating May 2024 Ensemble Models
+================================================================================
+Model directory: /home/erzhu419/mine_code/LSTM-RL/model/sac_v2_bus_ensemble/replay_buffer_size_1000000/critic_actor_ratio_2/maximum_alpha_0.3/
+Configuration:
+  - replay_buffer_size: 1000000
+  - critic_actor_ratio: 2
+  - maximum_alpha: 0.3
+  - weight_reg: 0.03
+Episodes to test: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+================================================================================
+Warning: Model for episode 500 not found
+
+Found 9 available models: [50, 100, 150, 200, 250, 300, 350, 400, 450]
+
+Initializing environment...
+Initializing policy network...
+
+================================================================================
+Starting evaluation...
+================================================================================
+
+[1/9] Evaluating episode 50...
+
+Error loading model for episode 50: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+[2/9] Evaluating episode 100...
+
+Error loading model for episode 100: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+[3/9] Evaluating episode 150...
+
+Error loading model for episode 150: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+[4/9] Evaluating episode 200...
+
+Error loading model for episode 200: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+[5/9] Evaluating episode 250...
+
+Error loading model for episode 250: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+[6/9] Evaluating episode 300...
+
+Error loading model for episode 300: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+[7/9] Evaluating episode 350...
+
+Error loading model for episode 350: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+[8/9] Evaluating episode 400...
+
+Error loading model for episode 400: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+[9/9] Evaluating episode 450...
+
+Error loading model for episode 450: Error(s) in loading state_dict for PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.embeddings.bus_id.weight", "embedding_layer.embeddings.station_id.weight", "embedding_layer.embeddings.time_period.weight", "embedding_layer.embeddings.direction.weight". 
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 55]) from checkpoint, the shape in current model is torch.Size([256, 28]).
+	size mismatch for linear1.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear2.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear2.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear3.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear3.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for linear4.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([256, 256]).
+	size mismatch for linear4.bias: copying a param with shape torch.Size([64]) from checkpoint, the shape in current model is torch.Size([256]).
+	size mismatch for mean_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+	size mismatch for log_std_linear.weight: copying a param with shape torch.Size([1, 64]) from checkpoint, the shape in current model is torch.Size([1, 256]).
+
+================================================================================
+Saving results...
+================================================================================
+Results saved to: may_ensemble_eval_results.npy
+Plot saved to: may_ensemble_evaluation.png
+
+================================================================================
+EVALUATION SUMMARY
+================================================================================
+Traceback (most recent call last):
+  File "/home/erzhu419/mine_code/LSTM-RL/eval_may_models.py", line 236, in <module>
+    print(f"Best checkpoint: Episode {results['episodes'][np.argmax(results['mean_rewards'])]}")
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/erzhu419/anaconda3/lib/python3.12/site-packages/numpy/core/fromnumeric.py", line 1229, in argmax
+    return _wrapfunc(a, 'argmax', axis=axis, out=out, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/erzhu419/anaconda3/lib/python3.12/site-packages/numpy/core/fromnumeric.py", line 56, in _wrapfunc
+    return _wrapit(obj, method, *args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/erzhu419/anaconda3/lib/python3.12/site-packages/numpy/core/fromnumeric.py", line 45, in _wrapit
+    result = getattr(asarray(obj), method)(*args, **kwds)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: attempt to get argmax of an empty sequence

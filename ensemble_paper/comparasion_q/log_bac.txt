@@ -1,0 +1,21 @@
+Scanning for checkpoints...
+Found 0 Ensemble checkpoints.
+Found 0 SAC checkpoints.
+Found 1 BAC checkpoints.
+Total tasks pending: 10
+Collecting data:   0%|          | 0/10 [00:00<?, ?it/s]Collecting data:  10%|█         | 1/10 [08:57<1:20:33, 537.07s/it]Collecting data:  20%|██        | 2/10 [09:06<30:14, 226.75s/it]  Collecting data:  30%|███       | 3/10 [09:17<14:58, 128.35s/it]Collecting data:  40%|████      | 4/10 [09:32<08:20, 83.46s/it] Collecting data:  50%|█████     | 5/10 [09:36<04:33, 54.71s/it]Collecting data:  60%|██████    | 6/10 [09:39<02:29, 37.34s/it]Collecting data:  70%|███████   | 7/10 [09:41<01:16, 25.66s/it]Collecting data:  80%|████████  | 8/10 [09:42<00:35, 17.68s/it]Collecting data:  90%|█████████ | 9/10 [09:45<00:13, 13.10s/it]Collecting data: 100%|██████████| 10/10 [09:46<00:00,  9.39s/it]Collecting data: 100%|██████████| 10/10 [09:46<00:00, 58.62s/it]
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+Error loading bac norm: A load persistent id instruction was encountered, but no persistent_load function was specified.
+
+Data collection complete. Completed: 10, Failed: 0
+Merging part files...
+  Merging 10 parts for bac ckpt 499...
+    Saved merged file: offline_dataset_full/data_bac_499.pkl

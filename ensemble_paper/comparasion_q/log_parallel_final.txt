@@ -1,0 +1,11 @@
+Scanning for checkpoints...
+Found 0 Ensemble checkpoints.
+Found 0 SAC checkpoints.
+Found 1 DSAC-v1 checkpoints.
+Total tasks pending: 15
+Collecting data:   0%|          | 0/15 [00:00<?, ?it/s]Collecting data:   7%|▋         | 1/15 [02:51<39:59, 171.42s/it]Collecting data:  13%|█▎        | 2/15 [02:54<15:37, 72.12s/it] Collecting data:  27%|██▋       | 4/15 [02:54<04:56, 26.97s/it]Collecting data:  33%|███▎      | 5/15 [02:54<03:07, 18.76s/it]Collecting data:  40%|████      | 6/15 [02:55<02:00, 13.34s/it]Collecting data:  47%|████▋     | 7/15 [02:56<01:15,  9.41s/it]Collecting data:  53%|█████▎    | 8/15 [02:57<00:48,  6.97s/it]Collecting data:  60%|██████    | 9/15 [02:57<00:29,  4.92s/it]Collecting data:  73%|███████▎  | 11/15 [02:58<00:11,  2.87s/it]Collecting data:  80%|████████  | 12/15 [03:00<00:07,  2.56s/it]Collecting data:  87%|████████▋ | 13/15 [03:01<00:04,  2.10s/it]Collecting data:  93%|█████████▎| 14/15 [03:01<00:01,  1.57s/it]Collecting data: 100%|██████████| 15/15 [03:29<00:00,  9.01s/it]Collecting data: 100%|██████████| 15/15 [03:29<00:00, 13.96s/it]
+
+Data collection complete. Completed: 15, Failed: 0
+Merging part files...
+  Merging 15 parts for dsac_v1 ckpt 495...
+    Saved merged file: offline_dataset_full/data_dsac_v1_495.pkl

@@ -1,0 +1,49 @@
+pygame 2.6.1 (SDL 2.28.4, Python 3.8.20)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+cuda:0
+[33mWARN: gym.spaces.Box autodetected dtype as <class 'numpy.float32'>. Please provide explicit dtype.[0m
+Soft Q Network:  SoftQNetwork(
+  (embedding_layer): EmbeddingLayer(
+    (embeddings): ModuleDict(
+      (bus_id): Embedding(25, 12)
+      (station_id): Embedding(22, 11)
+      (time_period): Embedding(15, 7)
+      (direction): Embedding(2, 1)
+    )
+  )
+  (critic): Sequential(
+    (0): VectorizedLinear()
+    (1): ReLU()
+    (2): VectorizedLinear()
+    (3): ReLU()
+    (4): VectorizedLinear()
+    (5): ReLU()
+    (6): VectorizedLinear()
+  )
+)
+Policy Network:  PolicyNetwork(
+  (embedding_layer): EmbeddingLayer(
+    (embeddings): ModuleDict(
+      (bus_id): Embedding(25, 12)
+      (station_id): Embedding(22, 11)
+      (time_period): Embedding(15, 7)
+      (direction): Embedding(2, 1)
+    )
+  )
+  (linear1): Linear(in_features=55, out_features=64, bias=True)
+  (linear2): Linear(in_features=64, out_features=64, bias=True)
+  (linear3): Linear(in_features=64, out_features=64, bias=True)
+  (linear4): Linear(in_features=64, out_features=64, bias=True)
+  (mean_linear): Linear(in_features=64, out_features=1, bias=True)
+  (log_std_linear): Linear(in_features=64, out_features=1, bias=True)
+)
+[2K[2KEpisode: 0 | Episode Reward: -1189919.2354864653 | CPU Memory: 1596.23 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 4.97%
+[2K[2KEpisode: 1 | Episode Reward: -1231297.7453957545 | CPU Memory: 1695.19 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 9.94%
+[2K[2KEpisode: 2 | Episode Reward: -1086447.9016323052 | CPU Memory: 1720.56 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 14.91%
+[2K[2KEpisode: 3 | Episode Reward: -1015321.9855184698 | CPU Memory: 1750.21 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 19.89%
+[2K[2KEpisode: 4 | Episode Reward: -1048043.7242450932 | CPU Memory: 1749.74 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 24.86%
+[2K[2KEpisode: 5 | Episode Reward: -1026952.631201699 | CPU Memory: 1772.75 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 29.83%
+[2K[2KEpisode: 6 | Episode Reward: -1015418.9183817456 | CPU Memory: 1819.11 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 34.80%
+[2K[2KEpisode: 7 | Episode Reward: -1021915.7945845231 | CPU Memory: 1827.29 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 39.77%
+[2K[2KEpisode: 8 | Episode Reward: -1054067.4354702567 | CPU Memory: 1791.05 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 44.75%
+[2K[2KEpisode: 9 | Episode Reward: -1027071.4088345851 | CPU Memory: 1715.05 MB | GPU Memory Allocated: 19.29 MB | Replay Buffer Usage: 49.72%

@@ -32,7 +32,7 @@ def smooth_curve(points, factor=0.9):
             smoothed_points.append(point)
     return np.array(smoothed_points)
 
-plt.figure(figsize=(14, 8))
+plt.figure(figsize=(18, 10))
 
 # Iterate and Plot
 for path, (label, color, linestyle, file_type) in experiments.items():
@@ -70,10 +70,11 @@ for path, (label, color, linestyle, file_type) in experiments.items():
     except Exception as e:
         print(f"Error loading {path} ({label}): {e}")
 
-plt.title("Comparative Analysis: Ensemble vs SAC vs DSAC Versions", fontsize=16, fontweight='bold')
-plt.xlabel("Episode", fontsize=12)
-plt.ylabel("Cumulative Reward (Smoothed)", fontsize=12)
-plt.legend(loc='lower right', fontsize=10, ncol=2)
+plt.title("Comparative Analysis: Ensemble vs SAC vs DSAC Versions", fontsize=20, fontweight='bold')
+plt.xlabel("Episode", fontsize=16)
+plt.ylabel("Cumulative Reward (Smoothed)", fontsize=16)
+plt.legend(loc='lower right', fontsize=14, ncol=2)
+plt.tick_params(labelsize=13)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
 

@@ -1,0 +1,21 @@
+\begin{table*}[t]\centering
+\caption{Cross-variance evaluation (mean return $\pm$ std). Best in each column is \textbf{bold}.}\label{tab:crosssigma}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l l ccccccccc}
+\toprule
+\multirow{2}{*}{Algorithm} & \multirow{2}{*}{Embedding} & \multicolumn{3}{c}{$\sigma_{\text{test}}=1.0$} & \multicolumn{3}{c}{$\sigma_{\text{test}}=1.5$} & \multicolumn{3}{c}{$\sigma_{\text{test}}=2.0$} \\
+\cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+ &  & train 1.0 & train 1.5 & train 2.0 & train 1.0 & train 1.5 & train 2.0 & train 1.0 & train 1.5 & train 2.0 \\
+\midrule
+SAC & Full & -369.1K $\pm$ 9.6K & -347.4K $\pm$ 13.2K & \textbf{-322.8K $\pm$ 9.1K} & -496.3K $\pm$ 13.7K & -479.4K $\pm$ 16.5K & \textbf{-436.7K $\pm$ 8.8K} & -622.7K $\pm$ 12.5K & -608.4K $\pm$ 21.1K & \textbf{-554.2K $\pm$ 12.5K} \\
+SAC & One-hot & -362.3K $\pm$ 9.7K & \textbf{-341.5K $\pm$ 10.5K} & -350.9K $\pm$ 8.5K & \textbf{-474.2K $\pm$ 10.9K} & \textbf{-475.8K $\pm$ 14.4K} & -486.0K $\pm$ 13.6K & \textbf{-585.7K $\pm$ 19.2K} & \textbf{-594.0K $\pm$ 17.1K} & -617.2K $\pm$ 19.6K \\
+SAC & None & \textbf{-343.5K $\pm$ 12.7K} & -347.5K $\pm$ 13.4K & -366.2K $\pm$ 10.7K & -478.0K $\pm$ 11.7K & -483.5K $\pm$ 17.3K & -517.2K $\pm$ 11.5K & -602.5K $\pm$ 15.7K & -611.3K $\pm$ 15.4K & -651.6K $\pm$ 17.9K \\
+DDPG & Full & -714.5K $\pm$ 29.6K & -698.7K $\pm$ 42.1K & -712.6K $\pm$ 21.2K & -992.2K $\pm$ 41.5K & -981.5K $\pm$ 42.7K & -989.9K $\pm$ 46.1K & -1251.4K $\pm$ 57.0K & -1255.4K $\pm$ 53.1K & -1257.9K $\pm$ 47.5K \\
+DDPG & One-hot & -708.1K $\pm$ 31.9K & -698.6K $\pm$ 32.7K & -690.9K $\pm$ 31.8K & -995.2K $\pm$ 45.2K & -952.5K $\pm$ 38.3K & -992.6K $\pm$ 27.3K & -1259.6K $\pm$ 55.7K & -1239.6K $\pm$ 54.7K & -1227.3K $\pm$ 54.0K \\
+DDPG & None & -698.9K $\pm$ 30.7K & -721.2K $\pm$ 19.1K & -698.3K $\pm$ 30.0K & -996.3K $\pm$ 31.6K & -1003.2K $\pm$ 42.7K & -990.6K $\pm$ 34.4K & -1253.1K $\pm$ 57.2K & -1260.0K $\pm$ 62.1K & -1243.9K $\pm$ 49.7K \\
+TD3 & Full & -714.0K $\pm$ 33.6K & -492.1K $\pm$ 17.9K & -701.6K $\pm$ 28.6K & -994.4K $\pm$ 43.1K & -634.7K $\pm$ 15.4K & -983.0K $\pm$ 44.1K & -1245.4K $\pm$ 56.2K & -780.2K $\pm$ 16.8K & -1268.2K $\pm$ 45.9K \\
+TD3 & One-hot & -706.9K $\pm$ 24.2K & -703.9K $\pm$ 32.5K & -709.6K $\pm$ 21.3K & -959.6K $\pm$ 49.7K & -979.9K $\pm$ 32.3K & -979.8K $\pm$ 38.5K & -1243.1K $\pm$ 49.0K & -1247.6K $\pm$ 51.4K & -1253.5K $\pm$ 29.4K \\
+TD3 & None & -694.8K $\pm$ 31.3K & -690.7K $\pm$ 27.6K & -694.2K $\pm$ 26.7K & -989.5K $\pm$ 49.9K & -991.9K $\pm$ 64.9K & -982.8K $\pm$ 30.4K & -1227.5K $\pm$ 45.7K & -1226.1K $\pm$ 46.8K & -1219.3K $\pm$ 31.5K \\
+\bottomrule
+\end{tabular}}
+\end{table*}

@@ -7,14 +7,16 @@ import os
 # Path -> Label, Color, Linestyle, MainFile, StdFile(Optional)
 BASE_DIR = "/home/erzhu419/mine_code/LSTM-RL"
 experiments = {
-    os.path.join(BASE_DIR, "model/sac_v2_bus"): ("Baseline (SAC)", "black", "-", "q_values.npy", None),
+    os.path.join(BASE_DIR, "model/sac_v2_bus"): ("Baseline (SAC)", "black", "-", "q_values.npy", "q_stds_episode.npy"),
     os.path.join(BASE_DIR, "ensemble_paper/ensemble_5/logs"): ("Ensemble 5", "#ff7f0e", "-", "q_values_episode.npy", "q_stds_episode.npy"),
     os.path.join(BASE_DIR, "ensemble_paper/ensemble_10/logs"): ("Ensemble 10", "#2ca02c", "-", "q_values_episode.npy", "q_stds_episode.npy"),
     os.path.join(BASE_DIR, "ensemble_paper/ensemble_20/logs"): ("Ensemble 20", "#d62728", "-", "q_values_episode.npy", "q_stds_episode.npy"),
     os.path.join(BASE_DIR, "ensemble_paper/ensemble_40/logs"): ("Ensemble 40", "#9467bd", "-", "q_values_episode.npy", "q_stds_episode.npy"),
     os.path.join(BASE_DIR, "ensemble_paper/Aleatoric_Only/logs"): ("Aleatoric Only", "#8c564b", "--", "q_values_episode.npy", "q_stds_episode.npy"),
     # New DSAC-v1
-    os.path.join(BASE_DIR, "ensemble_paper/logs/dsac_bus_sigma1p5_embed-full_exp_dsac_amax2p0_20251025_221923"): ("DSAC-v1", "#00ced1", "-.", "q_values_episode.npy", None),
+    os.path.join(BASE_DIR, "ensemble_paper/logs/dsac_bus_sigma1p5_embed-full_exp_dsac_amax2p0_20251025_221923"): ("DSAC-v1", "#00ced1", "-.", "q_values_episode.npy", "q_stds_episode.npy"),
+    # BAC
+    os.path.join(BASE_DIR, "ensemble_paper/logs_bac/logs/bac_v1_lambda0p5_q0p7"): ("BAC", "#9400D3", ":", "q_values_episode.npy", "q_stds_episode.npy"),
 }
 
 OUTPUT_FILE = os.path.join(BASE_DIR, "ensemble_paper/all_q_values_comparison_v2.png")
@@ -29,7 +31,7 @@ def smooth_curve(points, factor=0.9):
             smoothed_points.append(point)
     return np.array(smoothed_points)
 
-plt.figure(figsize=(14, 8))
+plt.figure(figsize=(18, 10))
 
 # Iterate and Plot
 for log_dir, (label, color, linestyle, filename, std_filename) in experiments.items():
@@ -71,10 +73,11 @@ for log_dir, (label, color, linestyle, filename, std_filename) in experiments.it
     except Exception as e:
         print(f"Error loading {label}: {e}")
 
-plt.title("Comparative Analysis: Q-Value Estimation with Uncertainty (Mean ± 2σ)", fontsize=16, fontweight='bold')
-plt.xlabel("Episode", fontsize=12)
-plt.ylabel("Q-Value", fontsize=12)
-plt.legend(loc='lower right', fontsize=10, ncol=2)
+plt.title("Comparative Analysis: Q-Value Estimation with Uncertainty (Mean ± 2σ)", fontsize=20, fontweight='bold')
+plt.xlabel("Episode", fontsize=16)
+plt.ylabel("Q-Value", fontsize=16)
+plt.legend(loc='lower right', fontsize=14, ncol=2)
+plt.tick_params(labelsize=13)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
 
