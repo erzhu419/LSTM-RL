@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../RL with bus control"
+		},
+		{
+			"path": "\\\\wsl.localhost\\Ubuntu-22.04\\home\\erzhu419\\mine_code\\LSTM-RL"
+		},
+		{
+			"path": "\\\\wsl.localhost\\Ubuntu-22.04\\home\\erzhu419\\mine_code\\Seizing-Serendipity-Exploiting-the-Value-of-Past-Success-in-Off-Policy-Actor-Critic"
+		},
+		{
+			"path": "\\\\wsl.localhost\\Ubuntu-22.04\\home\\erzhu419\\mine_code\\dsac"
+		}
+	],
+	"settings": {}
+}

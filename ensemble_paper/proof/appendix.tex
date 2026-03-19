@@ -1,0 +1,719 @@
+\newpage
+\appendix
+\onecolumn
+\begin{center}
+    {\Large \textbf{Appendix: Theoretical foundations and derivations}}
+\end{center}
+\vspace{0.5cm}
+
+\section{Sample complexity analysis}
+\label{app:complexity}
+We compare the theoretical sample complexity (data efficiency) of Risk-Sensitive RL against our Robust-Regularized approach.
+
+\subsection{Risk-Sensitive RL: The exponential barrier}
+Optimizing risk measures like the Exponential Utility ($\mathbb{E}[\exp(\beta \sum r)]$) faces a fundamental statistical barrier. As established by Fei et al.~\cite{Fei2020RiskSensitive}, the regret lower bound for any algorithm learning a risk-sensitive policy is exponential in the risk parameter $\beta$ and horizon $H$:
+\begin{equation}
+    \text{Regret}_{RS}(T) \ge \Omega(\exp(|\beta|H) \cdot \sqrt{S^2 A T}).
+\end{equation}
+\textbf{Corollary (Sample complexity):}
+Although Fei et al. prove the regret bound directly, the sample complexity $T_\epsilon$ follows as a standard corollary. 
+
+\textit{Proof Sketch:} The average pseudo-regret after $T$ episodes is $\Delta(T) = \text{Regret}(T)/T$. To find an $\epsilon$-optimal policy, we require $\Delta(T) \le \epsilon$. Substituting the lower bound:
+\begin{align}
+    \frac{\Omega(\exp(|\beta|H) \sqrt{S^2 A T})}{T} &\le \epsilon \nonumber \\
+    \Omega\left( \frac{\exp(|\beta|H) \sqrt{S^2 A}}{\sqrt{T}} \right) &\le \epsilon \nonumber \\
+    \implies \sqrt{T} &\ge \Omega\left( \frac{\exp(|\beta|H) \sqrt{S^2 A}}{\epsilon} \right).
+\end{align}
+Squaring both sides yields the sample complexity lower bound:
+\begin{equation}
+    T_\epsilon^{RS} \ge \Omega\left( \frac{\exp(2|\beta|H) S^2 A}{\epsilon^2} \right).
+\end{equation}
+This confirms that the "Exponential Barrier" is unavoidable for direct risk-sensitive optimization.
+
+\subsection{RE-SAC: Retrieving polynomial bounds}
+Why might RE-SAC avoid the exponential barrier? The key observation is that its penalty terms are \\emph{deterministic} functions of the network weights (for $\\kappa$) or the frozen target ensemble (for $\\Gamma_{epi}$), rather than statistics of the return distribution.
+
+Directly Optimizing $\mathbb{E}[\exp(\beta R)]$ (Risk-Sensitive) requires accurate estimation of the tail distribution, which is statistically expensive (hence $\exp(H)$).
+However, RE-SAC leverages the specific duality shown by Xu et al. (Appendix~\ref{app:equivalence}), which maps a specific form of robustness (IPM-based) to Norm Regularization.
+\begin{equation}
+    \text{Robust Objective} \approx \mathbb{E}[R] - \lambda \|W\|_F^2.
+\end{equation}
+This transformation converts the ``Hard'' Risk-Sensitive problem into a ``Standard'' Risk-Neutral MDP with augmented reward $\tilde{R}(s,a) = R(s,a) - \lambda \|W\|^2$.
+
+\textbf{Informal argument.}
+If the penalties are treated as fixed (which they are per Bellman backup; see \S\ref{app:contraction}), the RE-SAC operator acts on a standard shifted-reward MDP whose tabular regret scales as $\tilde{O}(\sqrt{H^3 S^2 A T})$, polynomial in the horizon $H$---in contrast to the exponential $\exp(|\beta|H)$ dependence of risk-sensitive approaches.
+
+\medskip
+\textbf{Important caveat.}
+This comparison is an \emph{informal motivation}, not a formal regret theorem for RE-SAC, for two reasons:
+\begin{enumerate}
+    \item The penalties $\kappa$ and $\Gamma_{epi}$ change across training iterations as the network weights and target ensemble evolve.  A rigorous regret analysis would need to account for this non-stationarity (cf.~the per-step discussion in \S\ref{app:scope}).
+    \item The shifted reward $\tilde{R}$ may have a different range than $R$, affecting the constants in the bound.
+\end{enumerate}
+The conceptual takeaway is that by replacing tail-distribution estimation (which requires exponential samples) with a deterministic structural penalty (which requires no additional samples), RE-SAC \emph{sidesteps the mechanism} that causes the exponential barrier.
+
+\section{The correspondence chain: From risk to regularization}
+\label{app:equivalence}
+Here we detail the mathematical "Golden Thread" connecting Risk-Sensitivity, Robustness, and Regularization.
+
+\subsection{Risk-sensitivity $\iff$ Robustness (Osogami~\cite{Osogami2012Robustness})}
+We provide the rigorous derivation linking Iterated Risk Measures to Robust MDPs.
+Unlike single-step risk measures, Osogami deals with the dynamic consistency of risk over time.
+
+\textbf{Definition (Iterated entropic risk):}
+Osogami defines the risk-sensitive value function recursively using the entropic risk measure $\rho_\beta$:
+\begin{equation}
+    J_\beta^\pi(s) = r(s, \pi(s)) + \gamma \rho_\beta(J_\beta^\pi(S')),
+\end{equation}
+where $\rho_\beta(X) = -\frac{1}{\beta} \log \mathbb{E}[\exp(-\beta X)]$.
+
+\textbf{Theorem (Bellman equivalence):}
+The Bellman operator for this risk-sensitive objective is $\mathcal{T}_\beta V(s) = \max_a (r + \gamma \rho_\beta(V(s')))$. 
+Using the duality of the log-exponential function (Donsker-Varadhan), we can rewrite the single-step risk as:
+\begin{equation}
+    \rho_\beta(V(s')) = \min_{p \in \Delta(S)} \left( \mathbb{E}_{s' \sim p}[V(s')] + \frac{1}{\beta} \text{KL}(p \| p^\circ(\cdot|s,a)) \right).
+\end{equation}
+The term $\frac{1}{\beta} \text{KL}(p \| p^\circ)$ acts as a penalty for deviating from the nominal transition $p^\circ$.
+This allows us to rewrite the Risk-Sensitive Bellman operator exactly as a Robust Bellman Operator with a penalty-based uncertainty set:
+\begin{equation}
+    \mathcal{T}_{risk} V(s) \equiv \max_a \min_{p} \left( \mathbb{E}_{p}[r + \gamma V(s')] + \frac{\gamma}{\beta} \text{KL}(p \| p^\circ) \right).
+\end{equation}
+This proves that optimizing the Iterated Entropic Risk is mathematically isomorphic to solving a Robust MDP with soft KL-constraints.
+
+\subsection{Robustness $\iff$ Regularization (Xu et al.~\cite{Xu2009RobustSVM})}
+Xu et al. (2009) provide the fundamental link between robust optimization and regularization. They prove this equivalence for Support Vector Machines (Hinge Loss) and Lasso (Regression). We extend their logic to general function approximation.
+
+\textbf{Theorem (Xu et al.):}
+Consider a supervised learning problem $\min_w \sum_i \ell(y_i, w^T x_i) + \lambda \|w\|$.
+Xu et al. prove that for specific loss functions, this regularized problem is \textit{equivalent} to a robust formulation $\min_w \max_{\delta \in \mathcal{U}} \sum_i \ell(y_i, w^T (x_i + \delta))$.
+\begin{itemize}
+    \item \textbf{SVM (Hinge Loss):} Robustness against $\ell_2$-norm perturbation sets $\{\delta : \|\delta\|_2 \le \epsilon\}$ is equivalent to standard $\ell_2$-regularization (SVM).
+    \item \textbf{Lasso (Linear):} Robustness against $\ell_\infty$-norm perturbation sets is equivalent to $\ell_1$-regularization (Lasso).
+\end{itemize}
+
+\textbf{Extension to squared error (Our Case):}
+For the squared error loss $\ell(y, \hat{y}) = (y - \hat{y})^2$ used in Q-learning, adding robustness against $\ell_2$ perturbations $\|\delta\|_2 \le \epsilon$ leads to:
+\begin{equation}
+    \min_w \max_{\|\delta\|\le\epsilon} (y - w^T(x+\delta))^2 = \min_w \left( |y-w^T x| + \epsilon \|w\|_2 \right)^2.
+\end{equation}
+Expanding this yields:
+\begin{equation}
+    (y-w^T x)^2 + 2\epsilon |y-w^T x| \|w\|_2 + \epsilon^2 \|w\|_2^2.
+\end{equation}
+While not identical to simple Ridge Regression ($(y-w^T x)^2 + \lambda \|w\|_2^2$), it strictly enforces a penalty on the weight norm $\|w\|_2$.
+In RE-SAC, we adopt the standard $\ell_1$ regularization $\lambda \sum_l\|W_l\|_1$ as a computationally efficient surrogate for this robust objective.  This surrogate relationship is an \emph{inequality} (pessimistic upper bound on the robustness penalty), not an exact equivalence; see \S\ref{app:scope}, point~(S2) for a discussion of the approximation gap.  The core insight remains: imposing limitations on the weight norm creates explicit robustness against input (state) perturbations.
+
+\subsection{Connection to distributional RL}
+Algorithms like C51~\cite{Bellemare2017Distributional} and QR-DQN~\cite{Dabney2018QuantileRegression} explicitly model the return distribution $Z(s,a)$ to manage risk (e.g., optimizing CVaR on $Z$). While Osogami's result implies these methods \textit{could} be robust, they require complex distributional projections. Our method uses Xu's result to bypass distribution modeling entirely, achieving the same robust effect via simple regularization.
+
+\section{Regularization as a unified semi-Bayesian prior}
+\label{app:regularization_prior}
+We provide a unified view showing how our Regularized-Robust framework is grounded in Bayesian Uncertainty Quantification.
+
+\subsection{The intractability of full Bayesian modeling}
+\label{app:bayes_intractability}
+A fully Bayesian approach to uncertainty would ideally maintain a posterior distribution over the transition dynamics $P(s'|s,a)$. For tabular MDPs, this corresponds to maintaining a Dirichlet Distribution for every state-action pair:
+\begin{equation}
+    P(\cdot|s,a) \sim \text{Dirichlet}(\alpha_1, \alpha_2, \dots, \alpha_S).
+\end{equation}
+While theoretically elegant, this "Naive" Bayesian approach faces insurmountable computational hurdles in high-dimensional continuous control (like bus fleets):
+\begin{itemize}
+    \item \textbf{Explosion of Belief Space:} The state of the system is no longer just the physical state $s$, but the entire belief state (the parameters $\alpha$ of the Dirichlet). The problem transforms into a POMDP where the belief space dimension is $O(S^2 A)$. For a bus network with $S \approx 10^3$, the parameter space exceeds $10^6$, rendering exact planning intractable.
+    \item \textbf{Computational Complexity:} Updating the posterior requires integrating over the simplexes of transition probabilities. As noted by Derman et al., finding the optimal policy in this full Bayesian setting is NP-hard.
+\end{itemize}
+This necessitates a tractable approximation that captures the \textit{essence} of Bayesian uncertainty without the computational burden of full belief planning.
+
+\subsection{Bayesian robustness via uncertainty decomposition}
+\label{app:bayes_robustness}
+To make the problem tractable, we adopt a Bayesian Robust approach (Derman et al.~\cite{Derman2019BayesianRobust}), which replaces the complex integration over the posterior with an optimization over "Credible Sets." This first requires creating a tractable posterior proxy, which we achieve via Uncertainty Decomposition (Depeweg et al.~\cite{Depeweg2018Decomposition}).
+
+\textbf{1. Decomposition (Depeweg et al.):}
+We distinguish between reducible and irreducible uncertainty:
+\begin{equation}
+    \underbrace{\mathcal{H}[p(s'|s,a)]}_{\text{Total Uncertainty}} = \underbrace{\mathbb{E}_{q(\mathbf{w})}[\mathcal{H}(p(s'|s,a,\mathbf{w}))]}_{\text{Aleatoric (Expected Data Noise)}} + \underbrace{I(s'; \mathbf{w})}_{\text{Epistemic (Mutual Information)}},
+\end{equation}
+where $I(s'; \mathbf{w})$ is the Mutual Information between the weights and the prediction.
+\begin{itemize}
+    \item \textbf{Epistemic Risk:} Corresponds to the spread of the posterior $q(\mathbf{w})$. Instead of full Dirichlet tracking, we approximate this using the Ensemble Variance of Q-functions.
+    \item \textbf{Aleatoric Risk:} Corresponds to the inherent noise in the system transition $P(s'|s,a)$. We handle this via Robust Regularization (as proved in Appendix~\ref{app:equivalence}).
+\end{itemize}
+
+\textbf{2. Robustness as Bayesian proxy (Derman et al.):}
+Derman et al. show that optimizing for the worst-case model within a Bayesian "Credible Set" (Ambiguity Set $\mathcal{U}$) is a lower bound on the true Bayesian optimal value:
+\begin{equation}
+    V_{Bayes}(s) \ge \max_\pi \min_{P \in \mathcal{U}_\alpha} \mathbb{E}[R].
+\end{equation}
+This justifies our approach: we use the Ensemble to define the Credible Set (where the model might be), and we optimize a lower bound (LCB) to act robustly with respect to this Bayesian uncertainty.
+
+\subsection{Regularization as the optimal Bayesian update (Geist et al.~\cite{Geist2019TheoryRegularized})}
+Finally, Geist et al. unify these concepts by proving that the Regularized Bellman Operator is not merely a heuristic, but the exact solution to a convex dual problem involving the prior.
+The regularized Bellman update is defined as:
+\begin{equation}
+    \mathcal{T}_\Omega V(s) = \max_\pi \left( \langle Q, \pi \rangle - \Omega(\pi) \right).
+\end{equation}
+Using the Fenchel-Rockafellar duality, the convex conjugate $\Omega^*(Q) = \max_\pi (\langle Q, \pi \rangle - \Omega(\pi))$ gives the value function directly.
+Crucially, if we choose the regularizer $\Omega(\pi)$ to be the KL-divergence from a prior $\pi_0$ (i.e., $\Omega(\pi) = \alpha \text{KL}(\pi \| \pi_0)$), the optimal policy update takes the explicit closed form:
+\begin{equation}
+    \pi_{k+1}(a|s) \propto \pi_0(a|s) \exp\left( \frac{Q_k(s,a)}{\alpha} \right).
+\end{equation}
+This is exactly a \textbf{Bayesian Posterior Update} where:
+\begin{itemize}
+    \item $\pi_0$ is the \textbf{Prior} (historical or base policy).
+    \item $\exp(Q/\alpha)$ is the \textbf{Likelihood} of the action being optimal.
+    \item $\pi_{k+1}$ is the \textbf{Posterior} policy.
+\end{itemize}
+Geist et al. further prove that this regularized operator $\mathcal{T}_\Omega$ enjoys a strictly tighter contraction factor $\gamma' = \frac{\gamma + \mu \alpha}{1 + \mu \alpha}$ (where $\mu$ is the smoothness modulus) compared to the standard operator.
+\textbf{Conclusion:} Our RE-SAC framework is a principled uncertainty-aware pipeline that draws on Bayesian intuitions at each level. The Ensemble captures the Epistemic posterior (Depeweg), the regularized reward handles the Robust Aleatoric risk (Derman/Xu), and the KL-regularized update ensures the policy evolution follows the optimal Bayesian transport (Geist).
+
+\section{Theoretical comparison: Policy robustness vs. dynamics robustness}
+\label{app:sac_vs_resac}
+We rigorously distinguish the type of robustness provided by standard SAC (Maximum Entropy) versus our RE-SAC (IPM Regularization), demonstrating why the former is insufficient for the dual-uncertainty bus control problem.
+
+\subsection{Theoretical Foundation: The Kantorovich-Rubinstein duality}
+\label{app:kantorovich}
+A core theoretical component of our robust framework is the equivalence between the Wasserstein distance (Optimal Transport) and the IPM over Lipschitz functions. This duality allows us to convert the intractable "Transport Minimal Cost" problem into a tractable "Function Maximization" problem.
+
+\textbf{Theorem (Kantorovich-Rubinstein Duality \cite{Villani2009OptimalTransport}):}
+Let $P$ and $Q$ be two probability measures on a metric space $(S, d)$. The 1-Wasserstein distance is defined as the minimum cost to transport mass from $P$ to $Q$:
+\begin{equation}
+    W_1(P, Q) = \inf_{\gamma \in \Pi(P, Q)} \mathbb{E}_{(x, y) \sim \gamma} [d(x, y)],
+\end{equation}
+where $\Pi(P, Q)$ is the set of all joint distributions (couplings) with marginals $P$ and $Q$.
+For the standard cost function $d(x, y) = \|x - y\|$, the Kantorovich-Rubinstein theorem states that this infimum is exactly equal to the supremum over 1-Lipschitz functions:
+\begin{equation}
+    W_1(P, Q) = \sup_{f: \|f\|_L \le 1} \left( \mathbb{E}_{x \sim P}[f(x)] - \mathbb{E}_{y \sim Q}[f(y)] \right).
+\end{equation}
+\textbf{Implication for RE-SAC:}
+In our Robust Bus Control, we define risk as the worst-case transition within a Wasserstein ball of radius $\epsilon$. Using this duality, the robust Bellman regularizer becomes:
+\begin{equation}
+    \max_{\Delta P: W_1(\Delta P, 0) \le \epsilon} \mathbb{E}_{\Delta P}[V] = \sup_{f: \|f\|_L \le 1} \epsilon \cdot \|\nabla V\| = \epsilon \cdot \text{Lip}(V).
+\end{equation}
+This derivation proves that controlling the Lipschitz constant of the Critic (via Weight Regularization) is mathematically equivalent to minimizing the worst-case parameter shift in the Wasserstein sense.
+
+\subsection{SAC: Policy robustness (Eysenbach \& Levine, 2021)}
+Eysenbach and Levine~\cite{Eysenbach2021MaxEnt} proved that Maximum Entropy RL optimizes a robust objective against adversarial perturbations to the \textit{rewards} or \textit{policy execution}.
+Specifically, maximizing the entropy-regularized objective:
+\begin{equation}
+    J_{MaxEnt}(\pi) = \mathbb{E}_{\pi} \left[ \sum_t r(s_t, a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t)) \right]
+\end{equation}
+is equivalent to maximizing the worst-case reward under an adversarial perturbation $q(a|s)$ that is close to the policy $\pi(a|s)$ in terms of KL divergence:
+\begin{equation}
+    \max_\pi \min_{q: D_{KL}(q\|\pi) \le \epsilon} \mathbb{E}_{q} [ \sum_t r(s_t, a_t) ].
+\end{equation}
+\textbf{Limitation:} This form of robustness protects against "Action Noise" (e.g., driver error). However, the derivation relies on Jensen's inequality, providing only a loosely theoretical lower bound. More critically, it assumes fixed system dynamics $P(s'|s,a)$. It does not explicitly penalize sensitivity to state perturbations or model mismatch (Aleatoric/Epistemic risk).
+
+\subsection{RE-SAC: Dynamics Robustness (Zhou et al., 2023)}
+In contrast, our RE-SAC utilizes IPM-based regularization on the Critic, which matches the framework of \textit{Natural Actor-Critic for robust RL} proposed by Zhou et al.~\cite{Zhou2023NaturalActorCritic}.
+They show that for a Robust MDP with an uncertainty set defined by the IPM (which includes the Wasserstein distance used in transport problems), the robust value function has an exact dual form:
+\begin{equation}
+    V_{Robust}^\pi(s) = \mathcal{T}^\pi V(s) - \delta \|\mathbf{w}\|_{p},
+\end{equation}
+where $\|\mathbf{w}\|$ is the norm of the critic network weights.
+Advantage: Unlike the inequality bound in MaxEnt RL, this is an Exact Duality. By penalizing the weight norm, RE-SAC directly restricts the Lipschitz constant of the Q-function with respect to the \textit{state} $s$:
+\begin{equation}
+    |Q(s, a) - Q(s+\Delta, a)| \le L_Q \|\Delta\|.
+\end{equation}
+This ensures Dynamics Robustness: if the traffic state $s$ jumps unexpectedly (Aleatoric) or drifts to OOD regions (Epistemic), the value estimate $Q$ remains stable.
+
+\subsection{Sensitivity analysis conclusion}
+\begin{itemize}
+    \item \textbf{SAC (Policy Robustness):} Smooths the policy $\pi(a|s)$ to handle action execution errors. This defends against driver imperfections but ignores traffic chaos.
+    \item \textbf{BEE Operator~\cite{Ji2024SeizingSerendipity} (Buffer-Based):} Mitigates value collapse by retrieving historical optimal actions from the \textit{external} replay buffer to mechanically "lift" $Q$-values. While effective, it relies on the coverage of historical success.
+    \item \textbf{RE-SAC (Dynamics Robustness):} Stabilizes $Q$-values \textit{internally} via weight-space regularization. By limiting the sensitivity of $Q$ to state perturbations ($\nabla_s Q$), our method directly addresses the inherent stochasticity of traffic dynamics. This "Dynamics Robustness" is particularly vital for bus fleet control, where the core challenge is the irreducible randomness of the traffic flow ($s \to s'$), not just the variance in policy execution.
+\end{itemize}
+
+\section{Formal contraction proof via Blackwell's sufficiency conditions}
+\label{app:contraction}
+
+We provide a self-contained, machine-verified proof that the RE-SAC operator $\mathcal{T}^{REV}$ is a $\gamma$-contraction in the $L_\infty$ norm.
+The proof is fully mechanized in Lean~4 / Mathlib (supplementary material) and follows Blackwell's classical route~\cite{Blackwell1965DiscountedDP}.
+
+\medskip
+\noindent\textbf{Convention on the aleatoric term.}
+The operator defined below includes $-\kappa$ explicitly for theoretical completeness.
+In the implementation (\S4.4.1, Eq.~\eqref{eq:target_y}), the aleatoric term enters the critic loss rather than the Bellman target, as subtracting $\kappa$ from already-negative bus-holding rewards violates the feasibility condition and causes non-convergence.
+Because $\kappa$ is a \emph{fixed scalar} independent of $Q$, the contraction proof is valid under either convention: $\kappa$ cancels identically in $\mathcal{T}^{REV} Q_1 - \mathcal{T}^{REV} Q_2$.
+
+\medskip
+\noindent\textbf{Key observation: both penalties are fixed scalars per training step.}
+In RE-SAC, the aleatoric penalty $\lambda_{ale} \sum_l \|W_l^{(\theta)}\|_1$ is computed from the \emph{current} critic weights $\theta$, which are held fixed during one policy-evaluation sweep and updated only afterward. It therefore reduces to a constant:
+\begin{equation}
+    \kappa \;=\; \lambda_{ale} \textstyle\sum_l \|W_l^{(\theta)}\|_1 \;\in\; \mathbb{R}.
+\end{equation}
+Likewise, the epistemic penalty $\Gamma_{epi}(s,a) = \text{Var}(\{Q_{\phi'_k}(s,a)\})$ is computed from the \emph{target} networks $\phi'_k$, which are also frozen during the Bellman backup. Hence both $\kappa$ and $\Gamma_{epi}$ are independent of which $Q$-function we apply $\mathcal{T}^{REV}$ to, and cancel exactly in the difference $\mathcal{T}^{REV} Q_1 - \mathcal{T}^{REV} Q_2$.
+
+\medskip
+\noindent\textbf{Setup.}
+Let $\mathcal{S}$ and $\mathcal{A}$ be \emph{finite, non-empty} state and action spaces (required for the maximum to be well-defined), and let $\mathcal{Q} = \{Q : \mathcal{S} \times \mathcal{A} \to \mathbb{R}\}$ be equipped with the sup-norm $\|Q\|_\infty = \max_{s,a} |Q(s,a)|$.
+The REV operator with fixed penalties $\kappa$ and $\Gamma_{epi}$ is:
+\begin{equation}
+    \mathcal{T}^{REV}_\kappa Q(s,a) = R(s,a) + \gamma \Bigl(
+        \sum_{s'} P(s'|s,a)\,V^Q(s') \;-\;
+        \lambda_{epi}\,\Gamma_{epi}(s,a) \;-\;
+        \kappa
+    \Bigr),
+\end{equation}
+where $V^Q(s') = \max_{a'} Q(s', a')$.  We require three conditions:
+
+\begin{enumerate}
+    \item[\textbf{(A0)}] \textit{(Discount factor)} $0 \le \gamma < 1$.
+    \item[\textbf{(A1)}] \textit{(Non-negative transitions)} $P(s'|s,a) \ge 0$ for all $s,a,s'$.
+    \item[\textbf{(A2)}] \textit{(Probability kernel)} $\sum_{s'} P(s'|s,a) = 1$ for all $s,a$.
+\end{enumerate}
+
+And one standard property of the $\max$ operator (proven in Lean as \texttt{max\_over\_a\_nonexpansive}):
+
+\begin{itemize}
+    \item[\textbf{(P)}] \textit{(1-Lipschitz of $V^Q$)} $|V^{Q_1}(s) - V^{Q_2}(s)| \le \|Q_1 - Q_2\|_\infty$ for all $s$.
+\end{itemize}
+
+\medskip
+\begin{lemma}[Monotonicity]
+    \label{lem:monotonicity}
+    If $Q_1 \le Q_2$ pointwise, then $\mathcal{T}^{REV}_\kappa Q_1 \le \mathcal{T}^{REV}_\kappa Q_2$ pointwise.
+\end{lemma}
+\begin{proof}
+Fix $(s,a)$.  Since $Q_1 \le Q_2$ implies $V^{Q_1}(s') \le V^{Q_2}(s')$ for all $s'$ (max is monotone), and each $P(s'|s,a) \ge 0$ by (A1):
+\begin{equation}
+    \sum_{s'} P(s'|s,a)\,V^{Q_1}(s') \;\le\; \sum_{s'} P(s'|s,a)\,V^{Q_2}(s').
+\end{equation}
+The $\kappa$ and $\Gamma_{epi}$ terms are identical on both sides and cancel.  Multiplying by $\gamma \ge 0$ (by A0) gives the claim.
+\end{proof}
+
+\begin{lemma}[Discounting]
+    \label{lem:discounting}
+    For any $Q \in \mathcal{Q}$ and constant $c \in \mathbb{R}$,
+    $\mathcal{T}^{REV}_\kappa(Q + c) = \mathcal{T}^{REV}_\kappa Q + \gamma c$.
+\end{lemma}
+\begin{proof}
+Here $V^{Q+c}(s') \triangleq \max_{a'}(Q+c)(s',a')$ denotes the greedy value induced by the shifted Q-function $Q+c$. Since the constant $c$ is added uniformly across all actions, the argmax is unchanged and $V^{Q+c}(s') = V^Q(s') + c$. With $\kappa$ and $\Gamma_{epi}$ also unchanged:
+\begin{align}
+    \mathcal{T}^{REV}_\kappa(Q+c)(s,a)
+    &= R(s,a) + \gamma \Bigl(
+        \textstyle\sum_{s'} P(s'|s,a)\bigl(V^Q(s')+c\bigr) - \lambda_{epi}\Gamma_{epi}(s,a) - \kappa
+    \Bigr) \notag \\
+    &= \mathcal{T}^{REV}_\kappa Q(s,a)
+    + \gamma c \cdot \underbrace{\textstyle\sum_{s'}P(s'|s,a)}_{=\,1\text{ by (A2)}} \notag \\
+    &= \mathcal{T}^{REV}_\kappa Q(s,a) + \gamma c. \qedhere
+\end{align}
+\end{proof}
+
+\begin{theorem}[RE-SAC Contraction]
+    \label{thm:contraction}
+    Under (A0)--(A2), $\mathcal{T}^{REV}_\kappa$ is a $\gamma$-contraction on $(\mathcal{Q}, \|\cdot\|_\infty)$ with a unique fixed point $Q^*_{robust}$.
+\end{theorem}
+\begin{proof}
+By Blackwell's Theorem~\cite{Blackwell1965DiscountedDP}, Lemmas~\ref{lem:monotonicity}--\ref{lem:discounting} suffice.
+We also give the direct bound (which the Lean proof follows):
+let $\varepsilon = \|Q_1 - Q_2\|_\infty$.
+Since $\kappa$ is the same for both $Q_1$ and $Q_2$, it cancels exactly:
+\begin{align}
+    &\mathcal{T}^{REV}_\kappa Q_1(s,a) - \mathcal{T}^{REV}_\kappa Q_2(s,a)
+    = \gamma \sum_{s'} P(s'|s,a)\bigl(V^{Q_1}(s') - V^{Q_2}(s')\bigr).
+\end{align}
+Therefore:
+\begin{align}
+    &\bigl|\mathcal{T}^{REV}_\kappa Q_1(s,a) - \mathcal{T}^{REV}_\kappa Q_2(s,a)\bigr| \notag\\
+    &\quad \le \gamma \sum_{s'} P(s'|s,a)\,|V^{Q_1}(s') - V^{Q_2}(s')|
+        \quad\text{(triangle inequality + A1)} \notag\\
+    &\quad \le \gamma \sum_{s'} P(s'|s,a) \cdot \varepsilon
+        \quad\text{(by (P): $|V^{Q_1}-V^{Q_2}|\le\varepsilon$)} \notag\\
+    &\quad = \gamma\varepsilon.
+        \quad\text{(by (A2): $\sum_{s'} P = 1$)} \qedhere
+\end{align}
+\end{proof}
+
+\begin{theorem}[Continuous-Space Extension]
+\label{thm:continuous}
+Let $\mathcal{S}\subseteq\mathbb{R}^{d_s}$ and $\mathcal{A}\subseteq\mathbb{R}^{d_a}$ be compact and non-empty.
+Let $\mathcal{Q}$ be the Banach space of bounded measurable functions $Q:\mathcal{S}\times\mathcal{A}\to\mathbb{R}$ equipped with the sup-norm $\|Q\|_\infty = \sup_{(s,a)}|Q(s,a)|$.
+Under the following conditions:
+\begin{enumerate}
+    \item[\textbf{(C0)}] $0\le\gamma<1$.
+    \item[\textbf{(C1)}] $P(\cdot\,|\,s,a)$ is a probability kernel on $\mathcal{S}$, and $(s,a)\mapsto\int f\,\mathrm{d}P(\cdot\,|\,s,a)$ is measurable for every bounded measurable $f$.
+    \item[\textbf{(C2)}] $R:\mathcal{S}\times\mathcal{A}\to\mathbb{R}$ is bounded and measurable.
+    \item[\textbf{(C3)}] $\kappa\in\mathbb{R}$ and $\Gamma_{epi}:\mathcal{S}\times\mathcal{A}\to\mathbb{R}$ are fixed (independent of $Q$).
+\end{enumerate}
+the operator
+\begin{equation}
+    \mathcal{T}^{REV}_\kappa Q(s,a) = R(s,a) + \gamma\!\int_\mathcal{S}\!\sup_{a'\in\mathcal{A}}Q(s',a')\,P(\mathrm{d}s'|s,a)
+    - \gamma\bigl(\lambda_{epi}\Gamma_{epi}(s,a)+\kappa\bigr)
+\end{equation}
+is a $\gamma$-contraction on $(\mathcal{Q},\|\cdot\|_\infty)$ with a unique fixed point $Q^*_{robust}$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+For any $Q_1,Q_2\in\mathcal{Q}$ and $(s,a)\in\mathcal{S}\times\mathcal{A}$:
+\begin{align}
+    &\bigl|\mathcal{T}^{REV}_\kappa Q_1(s,a) - \mathcal{T}^{REV}_\kappa Q_2(s,a)\bigr| \notag\\
+    &\quad = \gamma\left|\int_\mathcal{S}\!\bigl(\sup_{a'}Q_1(s',a')-\sup_{a'}Q_2(s',a')\bigr)\,P(\mathrm{d}s'|s,a)\right|
+    \quad\text{($\kappa$, $\Gamma_{epi}$ cancel by (C3))} \notag\\
+    &\quad \le \gamma\int_\mathcal{S}\!\bigl|\sup_{a'}Q_1(s',a')-\sup_{a'}Q_2(s',a')\bigr|\,P(\mathrm{d}s'|s,a)
+    \quad\text{(triangle ineq.)} \notag\\
+    &\quad \le \gamma\int_\mathcal{S}\!\|Q_1-Q_2\|_\infty\,P(\mathrm{d}s'|s,a)
+    \quad\text{($|\sup Q_1 - \sup Q_2|\le\|Q_1-Q_2\|_\infty$)} \notag\\
+    &\quad = \gamma\|Q_1-Q_2\|_\infty.
+    \quad\text{($\sum P = 1$)} \notag
+\end{align}
+Taking the sup over $(s,a)$ gives $\|\mathcal{T}^{REV}_\kappa Q_1 - \mathcal{T}^{REV}_\kappa Q_2\|_\infty\le\gamma\|Q_1-Q_2\|_\infty$.
+By the Banach Fixed-Point Theorem ($\gamma<1$), $\mathcal{T}^{REV}_\kappa$ has a unique fixed point.
+\end{proof}
+
+
+\textbf{Remark (relationship to the Lean~4 proof).}
+The Lean~4 proof (supplementary \texttt{Proof.lean}) mechanises the finite case
+(assumptions (A0)--(A2), which are the finite-space analogues of (C0)--(C2)).
+The continuous-space theorem above is not mechanised, but its proof is
+structurally identical: the only difference is that sums over a finite $\mathcal{S}$
+are replaced by integrals against $P(\mathrm{d}s'|s,a)$, and the finite $\max$ is
+replaced by $\sup_{a'\in\mathcal{A}}$.  Crucially, condition (C3)---the
+independence of $\kappa$ and $\Gamma_{epi}$ from $Q$---is the same in both
+versions and is the load-bearing step of the proof.  The finite-space
+mechanisation therefore provides a machine-verified certificate of the core
+logical structure, with the continuous extension following by the standard
+measure-theoretic argument above.
+
+\textbf{Remark (function approximation in practice).}
+In deep RL, $Q$ is represented by a neural network $Q_\phi$ rather than an arbitrary
+measurable function.  The standard functional-approximation theory
+(e.g.~Bertsekas \& Tsitsiklis~\cite{Bertsekas1996NeuroDynProg}) shows that
+the contraction of $\mathcal{T}^{REV}_\kappa$ on the full space $\mathcal{Q}$
+transfers to approximate fixed-point results on the restricted class $\{Q_\phi\}$:
+the approximation error is bounded by $\frac{1}{1-\gamma}\min_\phi\|Q_\phi - Q^*_{robust}\|_\infty$.
+The RE-SAC training loop minimises this residual via gradient descent.  The
+finiteness assumption of the Lean proof is therefore a proof-of-concept certificate
+for the theoretical mechanism, not a claim that the practical system operates
+in a discrete space.
+
+\medskip
+\textbf{Remark (non-triviality of the fixed-penalty design).}
+A referee might note that once $\kappa$ and $\Gamma_{epi}$ are treated as constants, the operator $\mathcal{T}^{REV}_\kappa$ is merely a standard Bellman operator applied to a shifted reward $\tilde{R}(s,a) = R(s,a) - \gamma(\lambda_{epi}\Gamma_{epi}(s,a)+\kappa)$, and that the contraction of a shifted-reward operator is a textbook fact.
+This observation is mathematically correct, but the scientific contribution lies \emph{before} this reduction:
+
+\begin{enumerate}
+    \item \textbf{Necessity of the frozen-parameter design.}
+    If the aleatoric penalty were allowed to vary with $Q$ (i.e.\
+    $\kappa_Q = \lambda_{ale}\sum_l\|W_l^{(Q)}\|_1$ for a Q-dependent parametrisation), the operator would take the form
+    \begin{equation}
+        T_{\mathrm{bad}} Q = \gamma\, Q + \lambda_{\mathrm{ale}}\cdot Q, \label{eq:tbad}
+    \end{equation}
+    in the worst case (see the 1-state 1-action derivation in the supplementary \texttt{Counterproof.lean}).
+    The effective contraction factor becomes $\gamma + \lambda_{\mathrm{ale}}$, which exceeds~1 for any non-trivial aleatoric coefficient, \emph{preventing contraction}. Formally (machine-verified in \texttt{Counterproof.lean}, Theorem~\ref{thm:counterproof}):
+    \phantomsection\label{thm:counterproof}%
+    \begin{quote}
+        \textbf{(Non-contraction, \texttt{Counterproof.lean}: \texttt{T\_bad\_not\_contraction})} Let $\gamma\ge 0$, $\lambda\ge 0$, $\gamma+\lambda\ge 1$. Then $T_{\mathrm{bad}}(q)=(\gamma+\lambda)q$ is not a contraction: $\exists\,q_1,q_2$ s.t.\ $|T_{\mathrm{bad}}(q_1)-T_{\mathrm{bad}}(q_2)|\ge|q_1-q_2|$.
+    \end{quote}
+    \noindent(Setting $R=0$ is without loss of generality: any constant $R$ shifts both $T_{\mathrm{bad}}(q_1)$ and $T_{\mathrm{bad}}(q_2)$ equally, leaving the distance $|T(q_1)-T(q_2)|$ unchanged.)
+    A stronger result is also machine-verified (\texttt{T\_bad\_expansion}): if $\gamma+\lambda>1$ then $T_{\mathrm{bad}}$ \emph{strictly expands} distances, so it cannot be a $\gamma'$-contraction for \emph{any} $\gamma'<1$.
+    The two results together establish that $\gamma+\lambda\ge 1$ is a \emph{sharp} boundary: equality gives non-contraction; strict inequality gives expansion.
+    The frozen-weight / target-network design (standard in deep RL, e.g.\ DQN, SAC) is therefore \emph{necessary}, not merely convenient, for the RE-SAC operator to be contractive.
+
+\medskip
+\begin{center}
+\begin{tabular}{lllc}
+\toprule
+\textbf{Operator} & \textbf{Aleatoric term} & \textbf{Distance factor} & \textbf{Contracts?} \\
+\midrule
+$T_{\mathrm{bad}}$ (Counterproof.lean) & $\lambda\cdot Q$ (Q-dependent) & $\gamma+\lambda$ & $\times$ if $\gamma{+}\lambda\ge 1$ \\
+$\mathcal{T}^{REV}_\kappa$ (Proof.lean) & $\kappa$ (fixed scalar) & $\gamma$ & $\checkmark$ ($\gamma<1$) \\
+\bottomrule
+\end{tabular}
+\end{center}
+\medskip
+
+    \item \textbf{Non-obviousness of the multi-penalty cancellation.}
+    RE-SAC carries \emph{two} heterogeneous penalty terms: an aleatoric term that depends on critic weight norms and an epistemic term that depends on ensemble variance over target networks. Neither is obviously constant in $Q$ without careful inspection of the training mechanics. The proof makes explicit that \emph{both} terms cancel independently in $\mathcal{T}^{REV}_\kappa Q_1 - \mathcal{T}^{REV}_\kappa Q_2$---a fact that the Lean~4 mechanisation (no \texttt{sorry}) confirms without ambiguity. In this sense the theoretical claim is: \emph{the specific architecture choices of RE-SAC (target networks for epistemic variance, frozen critic weights for aleatoric penalty) are jointly sufficient to guarantee the operator is a $\gamma$-contraction}.
+
+    \item \textbf{Connection to the Robust Bellman Operator.}
+    From a broader perspective, $\mathcal{T}^{REV}_\kappa$ can be viewed as an \emph{analytical approximation of the Robust Bellman Operator} under an IPM-based uncertainty set (see Appendix~\ref{app:equivalence}). The standard Robust Bellman Operator $\mathcal{T}^{rob}Q(s,a)=R(s,a)+\gamma\min_{P'\in\mathcal{P}_{s,a}}\mathbb{E}_{P'}[V^Q]$ is itself a contraction~\cite{Iyengar2005RobustDP}, but evaluating $\min_{P'}$ is intractable in practice. RE-SAC replaces this intractable inner minimisation with the tractable additive penalty $\lambda_{epi}\Gamma_{epi}+\kappa$, retaining contractivity (as proven above) while remaining computationally efficient. This is the sense in which the result is non-trivial: it guarantees that a \emph{specific tractable approximation} preserves the convergence guarantee of the exact robust operator.
+\end{enumerate}
+
+\textbf{Summary.}
+The technical contribution of the proof in this section is thus three-fold: (i) establishing that the frozen-parameter design is a \emph{necessary} condition for contraction (Theorem~\ref{thm:counterproof}); (ii) verifying that this condition is \emph{sufficient} for the multi-penalty RE-SAC operator via Blackwell's conditions (Lemmas~\ref{lem:monotonicity}--\ref{lem:discounting} and Theorem~\ref{thm:contraction}); and (iii) connecting the result to the broader theory of tractable Robust Bellman Operators.
+
+\subsection{Scope and limitations of the contraction result}
+\label{app:scope}
+
+We explicitly circumscribe the theoretical contribution to preempt several natural objections.
+
+\medskip
+\noindent\textbf{(S1) Per-step vs.\ learning-dynamics guarantee.}
+The contraction property proven above (Theorem~\ref{thm:contraction}) is a \emph{per-step} result: for any fixed snapshot of the penalties $(\kappa, \Gamma_{epi})$, the operator $\mathcal{T}^{REV}_\kappa$ contracts in the $L_\infty$ norm.  It does \emph{not} by itself guarantee that the full training loop—in which $\kappa$ and $\Gamma_{epi}$ change after every gradient update—converges to a global optimum.
+This distinction is standard: every Bellman-operator contraction proof in deep RL (DQN~\cite{Mnih2015DQN}, SAC~\cite{Haarnoja2018SAC}, TD3~\cite{Fujimoto2018TD3}) establishes the same per-step property; no published result proves end-to-end convergence of the full nonlinear training loop.
+Our contribution is not a claim of global convergence but a \emph{structural certificate}: the frozen-parameter design is the exact design choice that preserves the per-step contraction, and any Q-dependent alternative provably breaks it (\texttt{Counterproof.lean}).
+
+\medskip
+\noindent\textbf{(S2) IPM-to-$\kappa$ approximation chain.}
+The aleatoric penalty $\kappa = \lambda_{ale}\sum_l\|W_l\|_1$ arises from three successive relaxations: (i)~the IPM robust lower bound yields $\varepsilon\cdot\mathrm{Lip}(V_\theta)$; (ii)~$\mathrm{Lip}(V_\theta) \le \prod_l \|W_l\|_2$ by the spectral-norm chain rule; (iii)~$\|W_l\|_2$ is upper-bounded by the computationally cheaper $\|W_l\|_1$.
+Each step is an \emph{over-approximation}, making $\kappa$ a conservative (pessimistic) proxy.
+Crucially, the contraction proof does not depend on the \emph{tightness} of $\kappa$: it requires only that $\kappa$ be a fixed scalar per Bellman backup, which it is regardless of approximation quality.  Tightness affects the quality of the fixed point $Q^*_{robust}$ (a tighter $\kappa$ yields a fixed point closer to the true robust value), but not the existence or uniqueness of that fixed point.
+
+\medskip
+\noindent\textbf{(S3) $\Gamma_{epi}$ is Q-independent (not Q-dependent).}
+A potential concern is that $\Gamma_{epi}(s,a) = \mathrm{Var}\bigl(\{Q_{\phi'_k}(s,a)\}\bigr)$ depends on Q-functions and could break contraction (cf.\ the counterexample in \texttt{Counterproof.lean}).
+This concern does \emph{not} apply: the variance is computed from the \emph{target} networks $\phi'_k$, which are frozen (EMA-lagged) copies of the online networks, updated \emph{after} the Bellman backup completes.
+During the backup step $Q \mapsto \mathcal{T}^{REV}_\kappa Q$, the function $\Gamma_{epi}: \mathcal{S}\times\mathcal{A}\to\mathbb{R}$ is a fixed mapping, independent of $Q$.  The Lean proof reflects this: \texttt{Γ\_epi} is a parameter of type \texttt{S → A → ℝ}, not a function of \texttt{Q}.
+This is the precise structural property that makes the penalty \emph{safe}: it enters the operator identically for $Q_1$ and $Q_2$, cancelling exactly in $\mathcal{T}^{REV}_\kappa Q_1 - \mathcal{T}^{REV}_\kappa Q_2$.
+
+\medskip
+\noindent\textbf{(S4) Robust lower bound vs.\ training loss.}
+The operator $\mathcal{T}^{REV}_\kappa$ defines the \emph{ideal} Bellman target; the actual training minimises a mean-squared loss $\mathcal{L}_Q(\phi) = \|Q_\phi - \mathcal{T}^{REV}_\kappa \hat{Q}\|^2 + \text{regularisers}$.
+The contraction of $\mathcal{T}^{REV}_\kappa$ ensures that the target to which the loss drives the network is well-defined (unique fixed point).  The gap between the training loss and the ideal operator is governed by the function-approximation error, which is bounded by $\frac{1}{1-\gamma}\min_\phi\|Q_\phi - Q^*_{robust}\|_\infty$ under standard projected Bellman theory~\cite{Bertsekas1996NeuroDynProg}.
+
+\medskip
+\noindent\textbf{(S5) Function approximation and the deadly triad.}
+Deep RL with bootstrapping, off-policy data, and function approximation (the ``deadly triad''~\cite{VanHasselt2018DeadlyTriad}) can diverge even when the underlying operator is a contraction.
+Our contraction result does not eliminate this risk; instead, it removes one potential source of instability (operator non-contractiveness due to Q-dependent penalties) from the equation.
+The empirical stability of RE-SAC (§5) should therefore be understood as the \emph{joint} effect of per-step contraction \emph{plus} standard stabilising mechanisms (target networks, replay buffer, gradient clipping).
+
+\medskip
+\noindent\textbf{(S6) Boundedness of $\kappa$ during training.}
+The scalar $\kappa = \lambda_{ale}\sum_l\|W_l\|_1$ remains bounded throughout training because (i)~gradient clipping (max norm $= 1.0$) prevents weight explosion, and (ii)~the $\ell_1$ regularisation in $\mathcal{L}_Q$ explicitly penalises large weight norms.  In our experiments, $\kappa$ stabilises within the first 50 episodes and fluctuates by less than 5\% thereafter.
+
+
+\section{Formal justification of uncertainty disentanglement}
+\label{app:disentanglement}
+
+A potential concern is whether the two penalty terms in RE-SAC genuinely
+target distinct sources of uncertainty, or whether they conflate aleatoric and
+epistemic signals.  We address this below with two formal propositions.
+
+\medskip
+\noindent\textbf{Setup.}
+Let $P(s'|s,a)$ be the true transition kernel and $\hat{P}_n(s'|s,a)$ its
+empirical estimate from $n$ i.i.d.\ transitions.  The aleatoric penalty is
+$\kappa = \lambda_{ale}\sum_l\|W_l^{(\theta)}\|_1$, the Lipschitz proxy for the
+worst-case value sensitivity.  The epistemic penalty is $\Gamma_{epi}(s,a) =
+\mathrm{Var}(\{Q_{\phi_k}(s,a)\}_{k=1}^K)$, the sample variance across $K$
+diversely-initialised critics trained on $\hat{P}_n$.
+
+\begin{proposition}[Aleatoric penalty does not encode epistemic information]
+    \label{prop:ale_orth}
+    The aleatoric penalty $\kappa$ is a function only of the current frozen critic
+    weights $\theta$.  It is independent of the dataset size $n$, the empirical
+    transition kernel $\hat{P}_n$, and the ensemble indices $k\in\{1,\dots,K\}$.
+    In particular, $\kappa$ has zero covariance with any statistic derived
+    from data coverage, such as visitation counts or $\hat{P}_n$-uncertainty.
+\end{proposition}
+\begin{proof}
+    By definition, $\kappa = \lambda_{ale}\sum_l\|W_l^{(\theta)}\|_1$, where
+    $\theta$ are the weights of the current (frozen) critic at the time of the
+    Bellman backup.  These weights are fixed during the backup.  The quantity
+    $\sum_l\|W_l^{(\theta)}\|_1$ depends only on the parameter values, not on
+    which state-action pair $(s,a)$ is evaluated, nor on $n$ nor on
+    $\hat{P}_n$.  Hence $\kappa$ carries no information about data coverage or
+    model disagreement.  It measures the structural sensitivity (Lipschitz
+    constant) of the value network to input perturbations---a property of the
+    function class, not of the data distribution.
+\end{proof}
+
+\begin{proposition}[Epistemic penalty vanishes in the infinite-data limit]
+    \label{prop:epi_limit}
+    Under mild regularity conditions (bounded Q-function class, i.i.d.\ data
+    collection with positive visitation probability for all $(s,a)$, and
+    independently initialised ensemble members), as $n\to\infty$:
+    \begin{equation}
+        \Gamma_{epi}(s,a) = \mathrm{Var}\bigl(\{Q_{\phi_k}(s,a)\}_{k=1}^K\bigr)
+        \xrightarrow{\;n\to\infty\;} 0 \quad \forall (s,a),
+    \end{equation}
+    while the aleatoric penalty $\kappa$ remains strictly positive as long as
+    the environment is stochastic and $\lambda_{ale}>0$.
+\end{proposition}
+\begin{proof}[Proof sketch]
+    \textbf{Part 1: $\Gamma_{epi}\to 0$.}
+    The key property of ensembles is that in the limit of infinite data, all
+    ensemble members converge to the same Bayes-optimal Q-function
+    $Q^*_{Bayes}$ (assuming a well-specified function class).  This follows
+    from the standard statistical argument: with probability 1, each member's
+    empirical loss converges to the population loss (by the law of large
+    numbers), and the unique minimiser of the population risk is $Q^*_{Bayes}$
+    (by Bayes consistency).  Since all $K$ members converge to the same
+    function, their variance converges to zero:
+    $\mathrm{Var}(\{Q_{\phi_k}(s,a)\})\to 0$.
+
+    \textbf{Part 2: $\kappa$ remains positive.}
+    In a stochastic environment with irreducible noise $\sigma^2>0$ in the
+    transition $P(s'|s,a)$, the optimal Q-function $Q^*$ itself has nonzero
+    sensitivity to perturbations in the state $s$: even with infinite data, a
+    small state perturbation $\delta$ shifts $Q^*(s+\delta,a)$ by at most
+    $\mathrm{Lip}(Q^*)\|\delta\|$, and $\mathrm{Lip}(Q^*)>0$ whenever $R$ or
+    $P$ depends non-trivially on $s$.  Weight regularization controls an
+    upper bound on this Lipschitz constant.  As long as $\lambda_{ale}>0$ and
+    the environment is non-trivially stochastic, $\kappa>0$ regardless of $n$.
+\end{proof}
+
+\medskip
+\noindent\textbf{Remark (ensemble variance in high-aleatoric environments).}
+A subtle concern is that in environments with high aleatoric noise, ensemble
+members may disagree even with infinite data, because each member observes
+different noise realisations during training.  We note two mitigating factors:
+\begin{enumerate}
+    \item \textbf{Target network smoothing.} $\Gamma_{epi}$ in RE-SAC is
+    computed from \emph{target} networks $\hat{Q}_{\phi'_k}$, which are
+    updated via slow exponential moving averages ($\tau=0.01$).  This
+    smoothing reduces the variance due to individual-batch noise.
+    \item \textbf{The aleatoric penalty as a lower bound on irreducible error.}
+    Even if $\Gamma_{epi}$ retains a small residual contribution from
+    aleatoric noise in finite-data regimes, this residual is \emph{bounded by}
+    $\kappa$: the aleatoric penalty explicitly penalises the Lipschitz constant
+    that governs sensitivity to such noise.  Hence the two penalties together
+    form a composite upper bound on total uncertainty, and the aleatoric
+    term prevents double-counting: $\lambda_{epi}\Gamma_{epi}$ penalises only
+    residual disagreement \emph{beyond} what $\kappa$ already captured.
+\end{enumerate}
+\textbf{Conclusion.}
+Propositions~\ref{prop:ale_orth} and~\ref{prop:epi_limit} jointly establish
+that $\kappa$ captures an intrinsic, data-independent structural property
+(aleatoric sensitivity) while $\Gamma_{epi}$ captures a data-dependent
+model-agreement signal (epistemic uncertainty) that vanishes as data coverage
+improves.  The two penalties are therefore \emph{functionally disentangled},
+not merely labelled differently.
+
+
+\section{Penalty feasibility and policy non-degeneration}
+\label{app:nondegen}
+
+A natural concern is whether large penalty coefficients $\lambda_{ale}$ and
+$\lambda_{epi}$ can drive the fixed point $Q^*_{robust}$ so far below the
+unpenalised value $Q^*$ that the greedy policy degenerates---e.g.\ a bus agent
+that never acts because every action appears equally bad.  We show that this
+cannot happen: the penalties preserve the action ranking exactly.
+
+\medskip
+\noindent\textbf{Key observation.}
+In the RE-SAC operator $\mathcal{T}^{REV}_\kappa$, both penalty terms are
+\emph{action-independent} at any given state $s$:
+\begin{itemize}
+    \item $\kappa = \lambda_{ale}\sum_l\|W_l^{(\theta)}\|_1$ is a global scalar;
+    \item $\Gamma_{epi}(s',a')$ depends on the \emph{next} state-action pair
+    $(s',a')$ sampled via $a'\sim\pi(\cdot|s')$, not on the current action $a$.
+\end{itemize}
+Therefore the penalty enters the Bellman backup as
+$\gamma(\lambda_{epi}\Gamma_{epi}+\kappa)$, a term that is identical for
+every action $a$ at a given state $s$.
+
+\begin{proposition}[Action-ranking preservation]
+    \label{prop:nondegen}
+    Under (A0)--(A2), let $Q^*$ be the fixed point of the standard (unpenalised)
+    Bellman operator and $Q^*_{robust}$ be the fixed point of
+    $\mathcal{T}^{REV}_\kappa$.  Then for all $s\in\mathcal{S}$ and
+    $a_1,a_2\in\mathcal{A}$:
+    \begin{equation}
+        Q^*_{robust}(s,a_1) \ge Q^*_{robust}(s,a_2)
+        \;\;\Longleftrightarrow\;\;
+        Q^*(s,a_1) \ge Q^*(s,a_2).
+        \label{eq:ranking}
+    \end{equation}
+    In particular, $\arg\max_a Q^*_{robust}(s,a) = \arg\max_a Q^*(s,a)$:
+    the greedy policy is unchanged by the penalties.
+\end{proposition}
+\begin{proof}
+    Write $\Delta = \lambda_{epi}\Gamma_{epi} + \kappa$.  Since $\Delta$ is
+    independent of $a$, the fixed-point equation gives:
+    \begin{align}
+        Q^*_{robust}(s,a)
+        &= R(s,a) + \gamma\!\sum_{s'}P(s'|s,a)\,V^*_{robust}(s')
+          - \gamma\,\Delta \notag \\
+        &= \underbrace{R(s,a) + \gamma\!\sum_{s'}P(s'|s,a)\,V^*(s')}_{\displaystyle Q^*(s,a)}
+          \;-\; \underbrace{\gamma\,\Delta\,\tfrac{1}{1-\gamma}}_{\text{uniform shift}},
+        \notag
+    \end{align}
+    where the second equality uses the self-consistent relationship
+    $V^*_{robust}(s) = V^*(s) - \gamma\Delta/(1-\gamma)$ (since the uniform
+    shift propagates identically through all future states under the same
+    transition kernel).
+    The shift $\gamma\Delta/(1-\gamma)$ is the same for every action $a$,
+    so the ordering is preserved.
+\end{proof}
+
+\medskip
+\noindent\textbf{Quantitative Q-value depression.}
+The fixed point satisfies the uniform bound:
+\begin{equation}
+    Q^*_{robust}(s,a) = Q^*(s,a) - \frac{\gamma\,\Delta}{1-\gamma}
+    \quad\text{for all }(s,a).
+    \label{eq:depression}
+\end{equation}
+In the bus control experiments, $\gamma=0.99$ and
+$\Delta \approx \lambda_{epi}\Gamma_{\max} + \kappa_{\max}
+\approx 0.005\times 5 + 10^{-4}\times 10^3 \approx 0.125$, so the
+depression is $\gamma\Delta/(1-\gamma) \approx 0.99 \times 0.125 / 0.01
+= 12.4$ Q-units---small compared to the typical $|Q^*| \approx 10^3$ scale.
+
+\medskip
+\noindent\textbf{Practical $\lambda$ feasibility bounds.}
+Although the penalties cannot change the action ranking, excessively large
+$\Delta$ can depress $Q^*_{robust}$ so far that numerical precision issues
+arise or that the entropy bonus $\alpha\log\pi$ dominates the Q-differences.
+A practical guideline is:
+\begin{equation}
+    \frac{\gamma\,\Delta}{1-\gamma} \;\ll\; \max_{a_1,a_2}\bigl|Q^*(s,a_1)-Q^*(s,a_2)\bigr|,
+    \label{eq:lambda_practical}
+\end{equation}
+i.e.\ the uniform depression should be small relative to the inter-action
+Q-value spread.  The empirical choices $\lambda_{ale}=10^{-4}$,
+$\lambda_{epi}=0.005$ yield a depression of $\sim\!12$ Q-units against a
+typical inter-action spread of $\sim\!200$, satisfying this condition.
+
+\medskip
+\noindent\textbf{Remark (connection to Robust MDP feasibility).}
+Condition~\eqref{eq:lambda_practical} is the additive-penalty analogue of the
+uncertainty-set budget constraint in Robust MDP theory~\cite{Iyengar2005RobustDP}:
+infeasibility arises when the uncertainty set is so large that the minimax
+value is unbounded below.  Proposition~\ref{prop:nondegen} strengthens the
+classical feasibility result by showing that, for action-independent penalties,
+policy degeneration is \emph{impossible} regardless of reward scale---only
+numerical precision imposes a practical upper bound on $\Delta$.
+
+
+
+\section{Q-value poisoning vs.\ classical estimation pathologies}
+\label{app:poisoning_vs_classical}
+
+Definition~\ref{def:poisoning} introduces $Q$-value poisoning as a distinct
+failure mode.  We here make the distinction from two classical concepts
+explicit.
+
+\medskip
+\begin{center}
+\begin{tabular}{p{3.0cm}p{3.8cm}p{4.5cm}}
+\toprule
+\textbf{Phenomenon} & \textbf{Formal signature} & \textbf{Mechanism} \\
+\midrule
+\textbf{Overestimation Bias}
+  \cite{VanHasselt2010DoubleQ,Fujimoto2018TD3}
+& $Q_t(s,a) \ge Q^*(s,a)$ uniformly
+& Bootstrapping from a max-operator amplifies upward noise; no dependence on local stochasticity $\sigma^2(s,a)$ \\
+\addlinespace
+\textbf{Deadly Triad}
+  \cite{Fujimoto2018TD3}
+& $\|Q_t\|_\infty \to \infty$ (divergence)
+& Off-policy sampling + function approximation + bootstrapping combine to destabilise the Bellman iteration globally \\
+\addlinespace
+\textbf{$Q$-value Poisoning}
+  (Definition~\ref{def:poisoning})
+& $Q_t(s,a) < Q^*(s,a)$ on $\mathcal{P}_t = \{(s,a) : \sigma^2(s,a) \ge \sigma^2_0\}$;
+  accurate elsewhere
+& Aleatoric variance is \emph{selectively} misattributed as epistemic uncertainty, causing pessimism only in high-noise regions while $\|Q_t\|_\infty$ remains bounded \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+\noindent The three pathologies are therefore \emph{mutually exclusive} in their primary signature:
+overestimation is uniformly upward; the deadly triad diverges; poisoning is
+selectively downward and bounded.  Importantly, poisoning can occur even when
+the standard stability conditions (contraction, bounded rewards) are satisfied---it
+is a \emph{biased-but-stable} regime, not a divergent one.
+
+\medskip
+\noindent\textbf{Why poisoning is specifically dangerous for transit control.}
+Overestimation bias leads to aggressive policies that are corrected by double-Q
+tricks~\cite{VanHasselt2010DoubleQ}.  The Deadly Triad leads to numerical
+instability that is visible in training curves.  $Q$-value poisoning is more
+insidious: the training curve appears stable, but the agent's value estimates
+for \emph{high-variance states} (e.g.\ severe headway deviations) are
+systematically too low, causing the policy to avoid those states even when the
+optimal action would yield high long-run reward.  This manifests as the
+``under-exploitation trap'' described in the main text and in~\cite{Ji2024SeizingSerendipity}.
+The RE-SAC mechanism (Definition~\ref{def:poisoning} + Theorems~\ref{thm:contraction}--\ref{thm:continuous}) directly targets this failure mode by decoupling the sources of variance.

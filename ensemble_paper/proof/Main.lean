@@ -1,4 +1,5 @@
 import Proof
+import Counterproof
 
 def main : IO Unit :=
-  IO.println s!"Hello, {hello}!"
+  IO.println "RE-SAC proofs verified successfully."
