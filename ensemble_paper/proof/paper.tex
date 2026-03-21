@@ -82,6 +82,7 @@ Bus holding control remains a persistent challenge in urban transit systems due 
 In this paper, we propose a robust ensemble soft actor-critic (RE-SAC) framework that explicitly disentangles and addresses both sources of uncertainty. Our approach applies Integral Probability Metric (IPM)-based weight regularization to the critic network to hedge against aleatoric risk, providing a smooth analytical lower bound for the robust Bellman operator without requiring expensive inner-loop state perturbations. To address epistemic risk, a diversified $Q$-ensemble penalizes overconfident value estimates in sparsely covered regions of the state-action space. This dual mechanism prevents the ensemble variance from misidentifying inherent noise as a data gap, a failure mode that causes complete policy collapse in our ablation study.
 
 Empirically, experiments in a realistic bidirectional bus corridor simulation demonstrate that RE-SAC achieves the highest and most stable cumulative reward (approximately $-0.4 \times 10^6$) among all baselines, compared to $-0.55 \times 10^6$ for vanilla SAC and $-1.2 \times 10^6$ for the epistemic-only ablation. The Mahalanobis rareness analysis further confirms that RE-SAC reduces \emph{Oracle} Q-value estimation error by up to $62\%$ in rare out-of-distribution states relative to SAC (average Oracle MAE of 1647 vs.\ 4343), demonstrating superior worst-case robustness under high traffic variability.
+Our theoretical analysis further reveals that the frozen-parameter design (target networks, held-fixed critic weights) is not merely a practical stabilisation heuristic but a \emph{structurally necessary condition} for Bellman operator contractiveness under multi-penalty regularisation---an insight with implications beyond transit control.
 \end{abstract}
 
 
@@ -125,7 +126,10 @@ In vanilla DRL, these two risks are conflated~\cite{Kendall2017WhatUncertainties
 
 To mitigate $Q$-value poisoning, a theoretically rigorous approach is to model the uncertainty distribution using Bayesian methods~\cite{Derman2019BayesianRobust, Depeweg2018Decomposition}. However, maintaining full posterior beliefs (e.g., Dirichlet distributions) for every state-action pair is intractable in high-dimensional continuous control. To circumvent this, we pivot to the framework of Robust Markov Decision Process (MDP)~\cite{Wiesemann2013RobustMDP}, which seeks a policy optimal against a worst-case uncertainty set. Building on the insights of Osogami~\cite{Osogami2012Robustness} and Xu et al.~\cite{Xu2009RobustLasso, Xu2009RobustSVM}, we treat this robust objective as mathematically equivalent to regularization in function space. This allows us to hedge against aleatoric risk by introducing an IPM-based network weight regularization term~\cite{Zhou2023NaturalActorCritic, Panaganti2024RobustF}, acting as a structural prior to suppress aleatoric-induced oscillations~\cite{Asadi2018Lipschitz}. Yet, regularization alone is a uniform prior; it cannot detect the ``unknown unknowns.'' Therefore, for epistemic risk, we complement this with a diversified $Q$-ensemble~\cite{An2021UncertaintyEnsemble, Osband2016BootstrappedDQN} to penalize data insufficiency.
 
-Building upon our previous work on single-agent robust control for bus fleets~\cite{Zhang2025SingleAgentBus}, this paper introduces the RE-SAC framework. Our contributions are summarized as follows:
+Building upon our previous work on single-agent robust control for bus fleets~\cite{Zhang2025SingleAgentBus}, this paper introduces the RE-SAC framework.
+More broadly, our results suggest that \emph{contraction in regularised reinforcement learning is not a generic property of penalised Bellman operators}, but depends critically on whether the penalty term is fixed or value-function-dependent during each backup step.
+Making this structural assumption explicit---and verifying it formally---is essential for a correct theoretical understanding of modern deep RL algorithms.
+Our contributions are summarized as follows:
 \begin{itemize}
     \item \textbf{Theoretical disentanglement:} We provide a formal motivation for decoupling aleatoric and epistemic risks in transit control, bridging the gap between risk-sensitive RL~\cite{Osogami2012Robustness} and bus service reliability.
     \item \textbf{Structural stability characterisation:} We identify a sharp boundary for contraction in multi-penalty Bellman operators: penalties that are \emph{fixed} per backup step (frozen critic weights, target networks) preserve $\gamma$-contraction, while Q-dependent penalties provably break it.  Both the positive and negative results are machine-verified in Lean~4 with no \texttt{sorry} (\texttt{Proof.lean}, \texttt{Counterproof.lean}).  This reveals a \emph{necessary design condition} for stability in regularised RL---the frozen-parameter architecture used in practice (DQN, SAC, TD3) is not merely convenient but structurally required.
@@ -258,6 +262,23 @@ To mitigate aleatoric risk, we incorporate the IPM-derived weight regularization
     \mathcal{L}_Q(\phi_k) = \mathbb{E}_{(s,a) \sim \mathcal{D}} \left[ \left( Q_{\phi_k}(s, a) - y \right)^2 \right] + \lambda_{ale} \sum_{l=1}^L \|W_{l}^{(k)}\|_1 + \beta_{ood} \cdot \sigma_{ens}(s, a),
 \end{equation}
 where $\|W_{l}^{(k)}\|_1$ is the $\ell_1$-norm of the weights in the $l$-th layer, ensuring Lipschitz continuity (see Appendix~\ref{app:contraction} for a contraction proof and Appendix~\ref{app:sac_vs_resac} for a theoretical comparison with SAC's robustness). The term $\sigma_{ens}(s, a) = \text{Std}(\{Q_{\phi_k}(s, a)\}_{k=1}^K)$ penalizes large ensemble disagreement during training.
+
+\begin{remark}[Scope of the contraction guarantee]
+    The contraction result applies to the operator under the frozen-parameter interpretation
+    (target networks for $\Gamma_{epi}$, held-fixed critic weights for $\kappa$)
+    and does not imply convergence of the full learning dynamics.
+    Contraction is preserved when penalties are fixed per backup step;
+    it provably fails when penalties depend on the value function being updated
+    (demonstrated in \texttt{Counterproof.lean}).
+    We use an upper bound on the aleatoric penalty as surrogate (Appendix~\ref{app:scope}, S2):
+    this is conservative but does not affect the existence or uniqueness of the fixed point.
+\end{remark}
+
+\begin{remark}[Scope of the contraction guarantee]
+    The contraction result applies to the operator under the frozen-parameter interpretation (target networks for $\Gamma_{epi}$, held-fixed critic weights for $\kappa$) and does not imply convergence of the full learning dynamics.
+    Contraction is preserved when penalties are fixed per backup; it may fail when penalties depend on the value function being updated---an impossibility demonstrated in \texttt{Counterproof.lean}.
+    We analyze a surrogate operator using an upper bound on the original aleatoric penalty (cf.\ Appendix~\ref{app:scope}, S2); this is conservative but does not affect the existence or uniqueness of the fixed point.
+\end{remark}
 
 \subsubsection{Actor objective and categorical embeddings}
 The policy network $\pi_\theta$ is updated to maximize the expected robust value. To promote pessimism in epistemic-uncertain regions, the actor uses a Lower Confidence Bound (LCB) objective, penalizing actions with high ensemble disagreement:

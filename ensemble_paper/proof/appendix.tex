@@ -30,11 +30,11 @@ Squaring both sides yields the sample complexity lower bound:
 \end{equation}
 This confirms that the "Exponential Barrier" is unavoidable for direct risk-sensitive optimization.
 
-\subsection{RE-SAC: Retrieving polynomial bounds}
-Why might RE-SAC avoid the exponential barrier? The key observation is that its penalty terms are \\emph{deterministic} functions of the network weights (for $\\kappa$) or the frozen target ensemble (for $\\Gamma_{epi}$), rather than statistics of the return distribution.
+\subsection{RE-SAC: A heuristic argument for polynomial scaling}
+Why might RE-SAC avoid the exponential barrier? The key observation is that its penalty terms are \emph{deterministic} functions of the network weights (for $\kappa$) or the frozen target ensemble (for $\Gamma_{epi}$), rather than statistics of the return distribution.
 
 Directly Optimizing $\mathbb{E}[\exp(\beta R)]$ (Risk-Sensitive) requires accurate estimation of the tail distribution, which is statistically expensive (hence $\exp(H)$).
-However, RE-SAC leverages the specific duality shown by Xu et al. (Appendix~\ref{app:equivalence}), which maps a specific form of robustness (IPM-based) to Norm Regularization.
+However, RE-SAC leverages the structural correspondence shown by Xu et al. (Appendix~\ref{app:equivalence}), which maps IPM-based robustness to weight-norm regularization.
 \begin{equation}
     \text{Robust Objective} \approx \mathbb{E}[R] - \lambda \|W\|_F^2.
 \end{equation}
