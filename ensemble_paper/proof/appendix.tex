@@ -361,7 +361,7 @@ By the Banach Fixed-Point Theorem ($\gamma<1$), $\mathcal{T}^{REV}_\kappa$ has a
 
 
 \textbf{Remark (relationship to the Lean~4 proof).}
-The Lean~4 proof (supplementary \texttt{Proof.lean}) mechanises the finite case
+The Lean~4 proof (supplementary \texttt{RESAC.lean}) mechanises the finite case
 (assumptions (A0)--(A2), which are the finite-space analogues of (C0)--(C2)).
 The continuous-space theorem above is not mechanised, but its proof is
 structurally identical: the only difference is that sums over a finite $\mathcal{S}$
@@ -373,15 +373,28 @@ mechanisation therefore provides a machine-verified certificate of the core
 logical structure, with the continuous extension following by the standard
 measure-theoretic argument above.
 
+\textbf{Remark (entropy-regularized / soft Bellman operator).}
+In practice, RE-SAC uses the SAC-style soft value function
+$V^Q(s')=\tau\log\sum_{a'}\exp(Q(s',a')/\tau)$ (LogSumExp) rather than the hard
+$\max_{a'}Q(s',a')$.  This does not affect the contraction result: a separate
+machine-verified proof (supplementary \texttt{SoftBellman.lean}) establishes
+that the LogSumExp is \emph{1-Lipschitz} in the $L_\infty$ norm---i.e.\
+$|V^{Q_1}_{\mathrm{soft}}(s) - V^{Q_2}_{\mathrm{soft}}(s)|\le\|Q_1-Q_2\|_\infty$---by
+an exponential bounding argument.  Combined with the Blackwell conditions
+(Lemmas~\ref{lem:monotonicity}--\ref{lem:discounting}), this yields an
+entropy-regularized contraction theorem \texttt{soft\_bellman\_contraction} with
+the same $\gamma$-rate, closing the gap between the hard-max proof and the
+actual SAC implementation.
+
 \textbf{Remark (function approximation in practice).}
 In deep RL, $Q$ is represented by a neural network $Q_\phi$ rather than an arbitrary
 measurable function.  The standard functional-approximation theory
 (e.g.~Bertsekas \& Tsitsiklis~\cite{Bertsekas1996NeuroDynProg}) shows that
 the contraction of $\mathcal{T}^{REV}_\kappa$ on the full space $\mathcal{Q}$
-transfers to approximate fixed-point results on the restricted class $\{Q_\phi\}$:
-the approximation error is bounded by $\frac{1}{1-\gamma}\min_\phi\|Q_\phi - Q^*_{robust}\|_\infty$.
-The RE-SAC training loop minimises this residual via gradient descent.  The
-finiteness assumption of the Lean proof is therefore a proof-of-concept certificate
+transfers to approximate fixed-point results on the restricted class $\{Q_\phi\}$.
+We formalise these bounds in the supplementary file \texttt{ApproxContraction.lean}
+(see \S\ref{app:approx_bounds} below for the precise statements).
+The finiteness assumption of the Lean proof is therefore a proof-of-concept certificate
 for the theoretical mechanism, not a claim that the practical system operates
 in a discrete space.
 
@@ -397,11 +410,11 @@ This observation is mathematically correct, but the scientific contribution lies
     \begin{equation}
         T_{\mathrm{bad}} Q = \gamma\, Q + \lambda_{\mathrm{ale}}\cdot Q, \label{eq:tbad}
     \end{equation}
-    in the worst case (see the 1-state 1-action derivation in the supplementary \texttt{Counterproof.lean}).
-    The effective contraction factor becomes $\gamma + \lambda_{\mathrm{ale}}$, which exceeds~1 for any non-trivial aleatoric coefficient, \emph{preventing contraction}. Formally (machine-verified in \texttt{Counterproof.lean}, Theorem~\ref{thm:counterproof}):
+    in the worst case (see the 1-state 1-action derivation in the supplementary \texttt{RESAC-Counterproof.lean}).
+    The effective contraction factor becomes $\gamma + \lambda_{\mathrm{ale}}$, which exceeds~1 for any non-trivial aleatoric coefficient, \emph{preventing contraction}. Formally (machine-verified in \texttt{RESAC-Counterproof.lean}, Theorem~\ref{thm:counterproof}):
     \phantomsection\label{thm:counterproof}%
     \begin{quote}
-        \textbf{(Non-contraction, \texttt{Counterproof.lean}: \texttt{T\_bad\_not\_contraction})} Let $\gamma\ge 0$, $\lambda\ge 0$, $\gamma+\lambda\ge 1$. Then $T_{\mathrm{bad}}(q)=(\gamma+\lambda)q$ is not a contraction: $\exists\,q_1,q_2$ s.t.\ $|T_{\mathrm{bad}}(q_1)-T_{\mathrm{bad}}(q_2)|\ge|q_1-q_2|$.
+        \textbf{(Non-contraction, \texttt{RESAC-Counterproof.lean}: \texttt{T\_bad\_not\_contraction})} Let $\gamma\ge 0$, $\lambda\ge 0$, $\gamma+\lambda\ge 1$. Then $T_{\mathrm{bad}}(q)=(\gamma+\lambda)q$ is not a contraction: $\exists\,q_1,q_2$ s.t.\ $|T_{\mathrm{bad}}(q_1)-T_{\mathrm{bad}}(q_2)|\ge|q_1-q_2|$.
     \end{quote}
     \noindent(Setting $R=0$ is without loss of generality: any constant $R$ shifts both $T_{\mathrm{bad}}(q_1)$ and $T_{\mathrm{bad}}(q_2)$ equally, leaving the distance $|T(q_1)-T(q_2)|$ unchanged.)
     A stronger result is also machine-verified (\texttt{T\_bad\_expansion}): if $\gamma+\lambda>1$ then $T_{\mathrm{bad}}$ \emph{strictly expands} distances, so it cannot be a $\gamma'$-contraction for \emph{any} $\gamma'<1$.
@@ -414,8 +427,8 @@ This observation is mathematically correct, but the scientific contribution lies
 \toprule
 \textbf{Operator} & \textbf{Aleatoric term} & \textbf{Distance factor} & \textbf{Contracts?} \\
 \midrule
-$T_{\mathrm{bad}}$ (Counterproof.lean) & $\lambda\cdot Q$ (Q-dependent) & $\gamma+\lambda$ & $\times$ if $\gamma{+}\lambda\ge 1$ \\
-$\mathcal{T}^{REV}_\kappa$ (Proof.lean) & $\kappa$ (fixed scalar) & $\gamma$ & $\checkmark$ ($\gamma<1$) \\
+$T_{\mathrm{bad}}$ (RESAC-Counterproof.lean) & $\lambda\cdot Q$ (Q-dependent) & $\gamma+\lambda$ & $\times$ if $\gamma{+}\lambda\ge 1$ \\
+$\mathcal{T}^{REV}_\kappa$ (RESAC.lean) & $\kappa$ (fixed scalar) & $\gamma$ & $\checkmark$ ($\gamma<1$) \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -438,9 +451,9 @@ We explicitly circumscribe the theoretical contribution to preempt several natur
 
 \medskip
 \noindent\textbf{(S1) Per-step vs.\ learning-dynamics guarantee.}
-The contraction property proven above (Theorem~\ref{thm:contraction}) is a \emph{per-step} result: for any fixed snapshot of the penalties $(\kappa, \Gamma_{epi})$, the operator $\mathcal{T}^{REV}_\kappa$ contracts in the $L_\infty$ norm.  It does \emph{not} by itself guarantee that the full training loop—in which $\kappa$ and $\Gamma_{epi}$ change after every gradient update—converges to a global optimum.
+The contraction property proven above (Theorem~\ref{thm:contraction}) is a \emph{per-step} result: for any fixed snapshot of the penalties $(\kappa, \Gamma_{epi})$, the operator $\mathcal{T}^{REV}_\kappa$ contracts in the $L_\infty$ norm.  It does \emph{not} by itself guarantee that the full training loop---in which $\kappa$ and $\Gamma_{epi}$ change after every gradient update---converges to a global optimum.
 This distinction is standard: every Bellman-operator contraction proof in deep RL (DQN~\cite{Mnih2015DQN}, SAC~\cite{Haarnoja2018SAC}, TD3~\cite{Fujimoto2018TD3}) establishes the same per-step property; no published result proves end-to-end convergence of the full nonlinear training loop.
-Our contribution is not a claim of global convergence but a \emph{structural certificate}: the frozen-parameter design is the exact design choice that preserves the per-step contraction, and any Q-dependent alternative provably breaks it (\texttt{Counterproof.lean}).
+Our contribution is not a claim of global convergence but a \emph{structural certificate}: the frozen-parameter design is the exact design choice that preserves the per-step contraction, and any Q-dependent alternative provably breaks it (\texttt{RESAC-Counterproof.lean}).
 
 \medskip
 \noindent\textbf{(S2) IPM-to-$\kappa$ approximation chain.}
@@ -450,25 +463,66 @@ Crucially, the contraction proof does not depend on the \emph{tightness} of $\ka
 
 \medskip
 \noindent\textbf{(S3) $\Gamma_{epi}$ is Q-independent (not Q-dependent).}
-A potential concern is that $\Gamma_{epi}(s,a) = \mathrm{Var}\bigl(\{Q_{\phi'_k}(s,a)\}\bigr)$ depends on Q-functions and could break contraction (cf.\ the counterexample in \texttt{Counterproof.lean}).
+A potential concern is that $\Gamma_{epi}(s,a) = \mathrm{Var}\bigl(\{Q_{\phi'_k}(s,a)\}\bigr)$ depends on Q-functions and could break contraction (cf.\ the counterexample in \texttt{RESAC-Counterproof.lean}).
 This concern does \emph{not} apply: the variance is computed from the \emph{target} networks $\phi'_k$, which are frozen (EMA-lagged) copies of the online networks, updated \emph{after} the Bellman backup completes.
-During the backup step $Q \mapsto \mathcal{T}^{REV}_\kappa Q$, the function $\Gamma_{epi}: \mathcal{S}\times\mathcal{A}\to\mathbb{R}$ is a fixed mapping, independent of $Q$.  The Lean proof reflects this: \texttt{Γ\_epi} is a parameter of type \texttt{S → A → ℝ}, not a function of \texttt{Q}.
+During the backup step $Q \mapsto \mathcal{T}^{REV}_\kappa Q$, the function $\Gamma_{epi}: \mathcal{S}\times\mathcal{A}\to\mathbb{R}$ is a fixed mapping, independent of $Q$.  The Lean proof reflects this: \texttt{Gamma\_epi} is a parameter of type \texttt{S -> A -> Real}, not a function of \texttt{Q}.
 This is the precise structural property that makes the penalty \emph{safe}: it enters the operator identically for $Q_1$ and $Q_2$, cancelling exactly in $\mathcal{T}^{REV}_\kappa Q_1 - \mathcal{T}^{REV}_\kappa Q_2$.
 
 \medskip
 \noindent\textbf{(S4) Robust lower bound vs.\ training loss.}
 The operator $\mathcal{T}^{REV}_\kappa$ defines the \emph{ideal} Bellman target; the actual training minimises a mean-squared loss $\mathcal{L}_Q(\phi) = \|Q_\phi - \mathcal{T}^{REV}_\kappa \hat{Q}\|^2 + \text{regularisers}$.
 The contraction of $\mathcal{T}^{REV}_\kappa$ ensures that the target to which the loss drives the network is well-defined (unique fixed point).  The gap between the training loss and the ideal operator is governed by the function-approximation error, which is bounded by $\frac{1}{1-\gamma}\min_\phi\|Q_\phi - Q^*_{robust}\|_\infty$ under standard projected Bellman theory~\cite{Bertsekas1996NeuroDynProg}.
+This bound---along with the stochastic approximation tracking error from mini-batch sampling---is formalised in \texttt{ApproxContraction.lean} (see \S\ref{app:approx_bounds}).
 
 \medskip
 \noindent\textbf{(S5) Function approximation and the deadly triad.}
 Deep RL with bootstrapping, off-policy data, and function approximation (the ``deadly triad''~\cite{VanHasselt2018DeadlyTriad}) can diverge even when the underlying operator is a contraction.
 Our contraction result does not eliminate this risk; instead, it removes one potential source of instability (operator non-contractiveness due to Q-dependent penalties) from the equation.
-The empirical stability of RE-SAC (§5) should therefore be understood as the \emph{joint} effect of per-step contraction \emph{plus} standard stabilising mechanisms (target networks, replay buffer, gradient clipping).
+The empirical stability of RE-SAC (\S{}5) should therefore be understood as the \emph{joint} effect of per-step contraction \emph{plus} standard stabilising mechanisms (target networks, replay buffer, gradient clipping).
 
 \medskip
 \noindent\textbf{(S6) Boundedness of $\kappa$ during training.}
 The scalar $\kappa = \lambda_{ale}\sum_l\|W_l\|_1$ remains bounded throughout training because (i)~gradient clipping (max norm $= 1.0$) prevents weight explosion, and (ii)~the $\ell_1$ regularisation in $\mathcal{L}_Q$ explicitly penalises large weight norms.  In our experiments, $\kappa$ stabilises within the first 50 episodes and fluctuates by less than 5\% thereafter.
+
+\subsection{Machine-verified function-approximation and stochastic bounds}
+\label{app:approx_bounds}
+
+The contraction theorems above (Theorem~\ref{thm:contraction}, \texttt{RESAC.lean}) operate in the \emph{tabular} setting where Q-functions are exact tables.  In practice, RE-SAC uses neural networks (function approximation) and mini-batch sampling (stochastic noise).  The supplementary file \texttt{ApproxContraction.lean} bridges this gap with three machine-verified results that are \emph{operator-agnostic}: they apply to any $\gamma$-contraction~$T$, whether hard-max, soft-max, single-objective, or multi-objective.
+
+\medskip
+\begin{theorem}[Projected contraction --- \texttt{ApproxContraction.lean}: \texttt{projected\_contraction}]
+\label{thm:proj_contraction}
+Let $T$ be a $\gamma$-contraction on $(\mathcal{Q}, \|\cdot\|_\infty)$ and let $\Pi$ be a non-expansive projection onto the neural network function class $\{Q_\phi\}$ (e.g.\ orthogonal projection, which is non-expansive by Hilbert-space theory).  Then the composed operator $\Pi \circ T$ is also a $\gamma$-contraction.
+\end{theorem}
+
+\begin{theorem}[Approximation error bound --- \texttt{ApproxContraction.lean}: \texttt{approx\_fixed\_point\_bound}]
+\label{thm:approx_bound}
+Let $\tilde{Q}$ be the fixed point of $\Pi \circ T$ and $Q^*$ the fixed point of~$T$.  Define the projection error $\varepsilon_{\mathrm{proj}} := \|\Pi Q^* - Q^*\|_\infty$.  Then:
+\begin{equation}
+    \|\tilde{Q} - Q^*\|_\infty \;\le\; \frac{\varepsilon_{\mathrm{proj}}}{1 - \gamma}.
+\end{equation}
+This cleanly separates the roles of the contraction rate~$\gamma$ (algorithmic, from our proofs) and the projection error~$\varepsilon_{\mathrm{proj}}$ (architectural, from network capacity).
+\end{theorem}
+
+\begin{theorem}[Stochastic tracking bound --- \texttt{ApproxContraction.lean}: \texttt{stochastic\_tracking\_bound}]
+\label{thm:stochastic_bound}
+With per-step sampling noise bounded by $\sigma \ge 0$ (from mini-batch estimation), the tracking error $e(n) = \|Q_n - Q^*\|_\infty$ satisfies:
+\begin{equation}
+    e(n) \;\le\; \gamma^n \cdot e(0) \;+\; \frac{\sigma}{1 - \gamma}.
+\end{equation}
+The first term decays geometrically (forgetting initial error); the second is the irreducible noise floor.
+\end{theorem}
+
+\begin{corollary}[Combined bound --- \texttt{ApproxContraction.lean}: \texttt{combined\_approx\_stochastic\_bound}]
+\label{cor:combined}
+When both function approximation (drift~$\varepsilon_{\mathrm{proj}}$) and mini-batch sampling (noise~$\sigma$) are present, the joint error after $n$ steps satisfies:
+\begin{equation}
+    \|Q_n - Q^*\|_\infty \;\le\; \gamma^n \|Q_0 - Q^*\|_\infty \;+\; \frac{\varepsilon_{\mathrm{proj}} + \sigma}{1 - \gamma}.
+\end{equation}
+\end{corollary}
+
+\noindent All four results are fully machine-verified in Lean~4/Mathlib with no \texttt{sorry}.
+They provide a complete error budget for practical deep RL: the contraction rate~$\gamma$ (proven in \texttt{RESAC.lean}), the network expressiveness~$\varepsilon_{\mathrm{proj}}$ (a design choice), and the mini-batch noise~$\sigma$ (controlled by replay buffer size and batch size).
 
 
 \section{Formal justification of uncertainty disentanglement}

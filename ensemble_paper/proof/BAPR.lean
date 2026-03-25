@@ -161,7 +161,88 @@ def T_BAPR (p : Params) (R : H → S → A → ℝ) (P : H → S → A → S →
     (Q : S × A → ℝ) : S × A → ℝ := fun sa =>
   ∑ h : H, ρ h * T_mode p R P Γ_epi κ_ale h Q sa
 
+-- ============================================================
+-- BLACKWELL CONDITIONS FOR BA-PR
+-- ============================================================
+
+/-! ## 5a. Monotonicity (Blackwell Condition i)
+
+Each T_h is monotone (same structure as RE-SAC), and a convex combination
+of monotone operators is monotone.
+-/
+
+/-- Per-mode monotonicity: T_h(Q₁) ≤ T_h(Q₂) when Q₁ ≤ Q₂. -/
+lemma t_mode_monotonicity (p : Params) (R : H → S → A → ℝ)
+    (P : H → S → A → S → ℝ) (Γ_epi : H → S → A → ℝ) (κ_ale : ℝ)
+    (hP_nn : ∀ h s a s', 0 ≤ P h s a s')
+    (h : H) (Q₁ Q₂ : S × A → ℝ) (hle : Q₁ ≤ Q₂) :
+    T_mode p R P Γ_epi κ_ale h Q₁ ≤ T_mode p R P Γ_epi κ_ale h Q₂ := by
+  intro ⟨s, a⟩
+  dsimp only [T_mode]
+  have hsum : ∑ s' : S, P h s a s' * max_over_a Q₁ s' ≤
+              ∑ s' : S, P h s a s' * max_over_a Q₂ s' := by
+    apply Finset.sum_le_sum; intro s' _
+    exact mul_le_mul_of_nonneg_left (max_over_a_mono hle s') (hP_nn h s a s')
+  nlinarith [p.hγ.1]
+
+/-- **Lemma (BA-PR Monotonicity)**: T_BAPR(Q₁) ≤ T_BAPR(Q₂) when Q₁ ≤ Q₂.
+    Convex combination of monotone operators is monotone. -/
+lemma bapr_monotonicity (p : Params) (R : H → S → A → ℝ)
+    (P : H → S → A → S → ℝ) (Γ_epi : H → S → A → ℝ) (κ_ale : ℝ)
+    (ρ : H → ℝ) (hP_nn : ∀ h s a s', 0 ≤ P h s a s')
+    (hρ_nn : ∀ h, 0 ≤ ρ h)
+    (Q₁ Q₂ : S × A → ℝ) (hle : Q₁ ≤ Q₂) :
+    T_BAPR p R P Γ_epi κ_ale ρ Q₁ ≤ T_BAPR p R P Γ_epi κ_ale ρ Q₂ := by
+  intro sa
+  dsimp only [T_BAPR]
+  apply Finset.sum_le_sum; intro h _
+  exact mul_le_mul_of_nonneg_left
+    (t_mode_monotonicity p R P Γ_epi κ_ale hP_nn h Q₁ Q₂ hle sa) (hρ_nn h)
+
+/-! ## 5b. Discounting (Blackwell Condition ii)
+
+Each T_h satisfies T_h(Q + c) = T_h(Q) + γc, and weighted sums preserve
+this property: T_BAPR(Q + c) = T_BAPR(Q) + γc.
+-/
+
+/-- Per-mode discounting: T_h(Q + c) = T_h(Q) + γ·c. -/
+lemma t_mode_discounting (p : Params) (R : H → S → A → ℝ)
+    (P : H → S → A → S → ℝ) (Γ_epi : H → S → A → ℝ) (κ_ale : ℝ)
+    (hP_prob : ∀ h s a, ∑ s' : S, P h s a s' = 1)
+    (h : H) (Q : S × A → ℝ) (c : ℝ) :
+    T_mode p R P Γ_epi κ_ale h (Q + fun _ => c) =
+    T_mode p R P Γ_epi κ_ale h Q + fun _ => p.γ * c := by
+  funext ⟨s, a⟩
+  simp only [T_mode, Pi.add_apply]
+  have hmax : ∀ s', max_over_a (Q + fun _ => c) s' = max_over_a Q s' + c :=
+    fun s' => max_over_a_add_const Q c s'
+  have hsum : ∑ s', P h s a s' * max_over_a (Q + fun _ => c) s' =
+      (∑ s', P h s a s' * max_over_a Q s') + c := by
+    simp_rw [hmax, mul_add]
+    rw [Finset.sum_add_distrib, ← Finset.sum_mul, hP_prob h s a, one_mul]
+  rw [hsum]; ring
+
+/-- **Lemma (BA-PR Discounting)**: T_BAPR(Q + c) = T_BAPR(Q) + γ·c.
+    Weighted sum preserves discounting when Σ ρ = 1. -/
+lemma bapr_discounting (p : Params) (R : H → S → A → ℝ)
+    (P : H → S → A → S → ℝ) (Γ_epi : H → S → A → ℝ) (κ_ale : ℝ)
+    (ρ : H → ℝ) (hP_prob : ∀ h s a, ∑ s' : S, P h s a s' = 1)
+    (hρ_sum : ∑ h : H, ρ h = 1)
+    (Q : S × A → ℝ) (c : ℝ) :
+    T_BAPR p R P Γ_epi κ_ale ρ (Q + fun _ => c) =
+    T_BAPR p R P Γ_epi κ_ale ρ Q + fun _ => p.γ * c := by
+  funext sa
+  simp only [T_BAPR, Pi.add_apply]
+  have h_mode : ∀ h, T_mode p R P Γ_epi κ_ale h (Q + fun _ => c) sa =
+      T_mode p R P Γ_epi κ_ale h Q sa + p.γ * c := by
+    intro h
+    have := congr_fun (t_mode_discounting p R P Γ_epi κ_ale hP_prob h Q c) sa
+    simp [Pi.add_apply] at this; exact this
+  simp_rw [h_mode, mul_add, Finset.sum_add_distrib,
+           ← Finset.sum_mul, hρ_sum, one_mul]
+
 /-! ## 6. Per-Mode Pointwise Contraction Bound
+
 
 This is the inner building block: each T_h satisfies the same pointwise bound
 as the standard RE-SAC operator (Proof.lean).  Frozen penalties cancel exactly.
