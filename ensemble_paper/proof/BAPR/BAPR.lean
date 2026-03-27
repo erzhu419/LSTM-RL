@@ -386,10 +386,11 @@ toward shorter run-lengths.
 
 The Bayesian update rule is:
 
-    ρ'(h) = ρ(h) · L(h, σ) / Z     where Z = Σ_h ρ(h) · L(h, σ)
+    ρ'(h) = ρ(h) · L(h, ξ) / Z     where Z = Σ_h ρ(h) · L(h, ξ)
 
-where L(h, σ) is a likelihood function mapping (run-length, surprise) to a
-non-negative score.  We prove:
+where L(h, ξ) is a likelihood function mapping (run-length, surprise ξ) to a
+non-negative score.  Note: ξ denotes the surprise signal, NOT the environment
+route speed variance σ (route.sigma) or the RL state s.  We prove:
 
 1. `update_belief_nonneg` : ρ' ≥ 0
 2. `update_belief_sum_one` : Σ ρ' = 1

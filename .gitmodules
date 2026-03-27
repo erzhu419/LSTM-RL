@@ -1,5 +1,5 @@
-[submodule "POMDP/gym-pomdp-wrappers"] 
-  path = POMDP/gym-pomdp-wrappers 
+[submodule "POMDP/gym-pomdp-wrappers"]
+  path = POMDP/gym-pomdp-wrappers
   url = https://github.com/stweigand/gym-pomdp-wrappers.git
 
 [submodule "POMDP/gym_pomdp"] 
