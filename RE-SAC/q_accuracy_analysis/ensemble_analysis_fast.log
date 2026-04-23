@@ -1,0 +1,147 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+pygame 2.5.2 (SDL 2.28.2, Python 3.12.4)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Found 100 checkpoints.
+Analyzing Checkpoints:   0%|          | 0/100 [00:00<?, ?it/s]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:209: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at ../torch/csrc/utils/tensor_new.cpp:275.)
+  target_action_tensor = torch.FloatTensor([a]).to(device)
+Analyzing Checkpoints:   2%|▏         | 2/100 [00:00<00:13,  7.30it/s]Analyzing Checkpoints:   3%|▎         | 3/100 [00:00<00:16,  5.93it/s]Analyzing Checkpoints:   4%|▍         | 4/100 [00:00<00:25,  3.70it/s]Analyzing Checkpoints:   7%|▋         | 7/100 [00:01<00:13,  6.81it/s]Analyzing Checkpoints:  10%|█         | 10/100 [00:01<00:11,  8.06it/s]Analyzing Checkpoints:  12%|█▏        | 12/100 [00:01<00:10,  8.77it/s]Analyzing Checkpoints:  13%|█▎        | 13/100 [00:01<00:10,  8.02it/s]Analyzing Checkpoints:  14%|█▍        | 14/100 [00:02<00:12,  6.89it/s]Analyzing Checkpoints:  15%|█▌        | 15/100 [00:02<00:13,  6.16it/s]Analyzing Checkpoints:  16%|█▌        | 16/100 [00:02<00:13,  6.05it/s]Analyzing Checkpoints:  17%|█▋        | 17/100 [00:02<00:14,  5.65it/s]Analyzing Checkpoints:  18%|█▊        | 18/100 [00:02<00:15,  5.18it/s]Analyzing Checkpoints:  19%|█▉        | 19/100 [00:03<00:16,  4.92it/s]Analyzing Checkpoints:  20%|██        | 20/100 [00:03<00:15,  5.06it/s]Analyzing Checkpoints:  21%|██        | 21/100 [00:03<00:17,  4.50it/s]Analyzing Checkpoints:  22%|██▏       | 22/100 [00:03<00:17,  4.57it/s]Analyzing Checkpoints:  23%|██▎       | 23/100 [00:03<00:16,  4.55it/s]Analyzing Checkpoints:  24%|██▍       | 24/100 [00:04<00:15,  4.81it/s]Analyzing Checkpoints:  25%|██▌       | 25/100 [00:04<00:15,  4.76it/s]Analyzing Checkpoints:  26%|██▌       | 26/100 [00:04<00:16,  4.47it/s]Analyzing Checkpoints:  27%|██▋       | 27/100 [00:04<00:17,  4.25it/s]Analyzing Checkpoints:  28%|██▊       | 28/100 [00:05<00:15,  4.69it/s]Analyzing Checkpoints:  29%|██▉       | 29/100 [00:05<00:17,  4.06it/s]Analyzing Checkpoints:  30%|███       | 30/100 [00:05<00:16,  4.36it/s]Analyzing Checkpoints:  31%|███       | 31/100 [00:05<00:14,  4.66it/s]Analyzing Checkpoints:  32%|███▏      | 32/100 [00:05<00:13,  5.06it/s]Analyzing Checkpoints:  33%|███▎      | 33/100 [00:06<00:13,  4.93it/s]Analyzing Checkpoints:  34%|███▍      | 34/100 [00:06<00:13,  4.95it/s]Analyzing Checkpoints:  35%|███▌      | 35/100 [00:06<00:13,  4.97it/s]Analyzing Checkpoints:  36%|███▌      | 36/100 [00:06<00:13,  4.70it/s]Analyzing Checkpoints:  37%|███▋      | 37/100 [00:06<00:12,  4.96it/s]Analyzing Checkpoints:  38%|███▊      | 38/100 [00:07<00:12,  5.13it/s]Analyzing Checkpoints:  39%|███▉      | 39/100 [00:07<00:12,  5.01it/s]Analyzing Checkpoints:  40%|████      | 40/100 [00:07<00:14,  4.14it/s]Analyzing Checkpoints:  41%|████      | 41/100 [00:07<00:13,  4.24it/s]Analyzing Checkpoints:  42%|████▏     | 42/100 [00:08<00:13,  4.17it/s]Analyzing Checkpoints:  43%|████▎     | 43/100 [00:08<00:12,  4.56it/s]Analyzing Checkpoints:  44%|████▍     | 44/100 [00:08<00:11,  4.69it/s]Analyzing Checkpoints:  45%|████▌     | 45/100 [00:08<00:10,  5.09it/s]Analyzing Checkpoints:  46%|████▌     | 46/100 [00:08<00:10,  5.08it/s]Analyzing Checkpoints:  47%|████▋     | 47/100 [00:09<00:10,  5.04it/s]Analyzing Checkpoints:  48%|████▊     | 48/100 [00:09<00:10,  5.02it/s]Analyzing Checkpoints:  49%|████▉     | 49/100 [00:09<00:12,  4.05it/s]Analyzing Checkpoints:  50%|█████     | 50/100 [00:09<00:11,  4.22it/s]Analyzing Checkpoints:  51%|█████     | 51/100 [00:10<00:11,  4.37it/s]Analyzing Checkpoints:  52%|█████▏    | 52/100 [00:10<00:13,  3.47it/s]Skipping checkpoint 0 due to runtime error: Error(s) in loading state_dict for SAC_PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.layer_norm.weight", "embedding_layer.layer_norm.bias". 
+	size mismatch for embedding_layer.embeddings.bus_id.weight: copying a param with shape torch.Size([25, 6]) from checkpoint, the shape in current model is torch.Size([25, 12]).
+	size mismatch for embedding_layer.embeddings.station_id.weight: copying a param with shape torch.Size([22, 6]) from checkpoint, the shape in current model is torch.Size([22, 11]).
+	size mismatch for embedding_layer.embeddings.time_period.weight: copying a param with shape torch.Size([15, 5]) from checkpoint, the shape in current model is torch.Size([15, 7]).
+	size mismatch for embedding_layer.embeddings.direction.weight: copying a param with shape torch.Size([2, 2]) from checkpoint, the shape in current model is torch.Size([2, 1]).
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 43]) from checkpoint, the shape in current model is torch.Size([64, 55]).
+Ep 5: Q_pred=404.14, Q_real=-1543.89
+Ep 10: Q_pred=701.40, Q_real=60.52
+Ep 15: Q_pred=807.10, Q_real=-1360.01
+Skipping checkpoint 20 due to runtime error: Error(s) in loading state_dict for SAC_PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.layer_norm.weight", "embedding_layer.layer_norm.bias". 
+	size mismatch for embedding_layer.embeddings.bus_id.weight: copying a param with shape torch.Size([25, 6]) from checkpoint, the shape in current model is torch.Size([25, 12]).
+	size mismatch for embedding_layer.embeddings.station_id.weight: copying a param with shape torch.Size([22, 6]) from checkpoint, the shape in current model is torch.Size([22, 11]).
+	size mismatch for embedding_layer.embeddings.time_period.weight: copying a param with shape torch.Size([15, 5]) from checkpoint, the shape in current model is torch.Size([15, 7]).
+	size mismatch for embedding_layer.embeddings.direction.weight: copying a param with shape torch.Size([2, 2]) from checkpoint, the shape in current model is torch.Size([2, 1]).
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 43]) from checkpoint, the shape in current model is torch.Size([64, 55]).
+Skipping checkpoint 25 due to runtime error: Error(s) in loading state_dict for SAC_PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.layer_norm.weight", "embedding_layer.layer_norm.bias". 
+	size mismatch for embedding_layer.embeddings.bus_id.weight: copying a param with shape torch.Size([25, 6]) from checkpoint, the shape in current model is torch.Size([25, 12]).
+	size mismatch for embedding_layer.embeddings.station_id.weight: copying a param with shape torch.Size([22, 6]) from checkpoint, the shape in current model is torch.Size([22, 11]).
+	size mismatch for embedding_layer.embeddings.time_period.weight: copying a param with shape torch.Size([15, 5]) from checkpoint, the shape in current model is torch.Size([15, 7]).
+	size mismatch for embedding_layer.embeddings.direction.weight: copying a param with shape torch.Size([2, 2]) from checkpoint, the shape in current model is torch.Size([2, 1]).
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 43]) from checkpoint, the shape in current model is torch.Size([64, 55]).
+Ep 30: Q_pred=1062.40, Q_real=-1504.04
+Skipping checkpoint 35 due to runtime error: Error(s) in loading state_dict for SAC_PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.layer_norm.weight", "embedding_layer.layer_norm.bias". 
+	size mismatch for embedding_layer.embeddings.bus_id.weight: copying a param with shape torch.Size([25, 6]) from checkpoint, the shape in current model is torch.Size([25, 12]).
+	size mismatch for embedding_layer.embeddings.station_id.weight: copying a param with shape torch.Size([22, 6]) from checkpoint, the shape in current model is torch.Size([22, 11]).
+	size mismatch for embedding_layer.embeddings.time_period.weight: copying a param with shape torch.Size([15, 5]) from checkpoint, the shape in current model is torch.Size([15, 7]).
+	size mismatch for embedding_layer.embeddings.direction.weight: copying a param with shape torch.Size([2, 2]) from checkpoint, the shape in current model is torch.Size([2, 1]).
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 43]) from checkpoint, the shape in current model is torch.Size([64, 55]).
+Skipping checkpoint 40 due to runtime error: Error(s) in loading state_dict for SAC_PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.layer_norm.weight", "embedding_layer.layer_norm.bias". 
+	size mismatch for embedding_layer.embeddings.bus_id.weight: copying a param with shape torch.Size([25, 6]) from checkpoint, the shape in current model is torch.Size([25, 12]).
+	size mismatch for embedding_layer.embeddings.station_id.weight: copying a param with shape torch.Size([22, 6]) from checkpoint, the shape in current model is torch.Size([22, 11]).
+	size mismatch for embedding_layer.embeddings.time_period.weight: copying a param with shape torch.Size([15, 5]) from checkpoint, the shape in current model is torch.Size([15, 7]).
+	size mismatch for embedding_layer.embeddings.direction.weight: copying a param with shape torch.Size([2, 2]) from checkpoint, the shape in current model is torch.Size([2, 1]).
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 43]) from checkpoint, the shape in current model is torch.Size([64, 55]).
+Ep 45: Q_pred=1134.41, Q_real=-261.26
+Skipping checkpoint 50 due to runtime error: Error(s) in loading state_dict for SAC_PolicyNetwork:
+	Unexpected key(s) in state_dict: "embedding_layer.layer_norm.weight", "embedding_layer.layer_norm.bias". 
+	size mismatch for embedding_layer.embeddings.bus_id.weight: copying a param with shape torch.Size([25, 6]) from checkpoint, the shape in current model is torch.Size([25, 12]).
+	size mismatch for embedding_layer.embeddings.station_id.weight: copying a param with shape torch.Size([22, 6]) from checkpoint, the shape in current model is torch.Size([22, 11]).
+	size mismatch for embedding_layer.embeddings.time_period.weight: copying a param with shape torch.Size([15, 5]) from checkpoint, the shape in current model is torch.Size([15, 7]).
+	size mismatch for embedding_layer.embeddings.direction.weight: copying a param with shape torch.Size([2, 2]) from checkpoint, the shape in current model is torch.Size([2, 1]).
+	size mismatch for linear1.weight: copying a param with shape torch.Size([64, 43]) from checkpoint, the shape in current model is torch.Size([64, 55]).
+Ep 55: Q_pred=1214.83, Q_real=17.08
+Ep 60: Q_pred=1142.46, Q_real=0.74
+Ep 65: Q_pred=1280.93, Q_real=-1964.70
+Ep 70: Q_pred=1160.01, Q_real=53.32
+Ep 75: Q_pred=1099.46, Q_real=0.00
+Ep 80: Q_pred=1253.86, Q_real=-1741.11
+Ep 85: Q_pred=1287.11, Q_real=-1531.18
+Ep 90: Q_pred=1250.34, Q_real=-1462.29
+Ep 95: Q_pred=1307.98, Q_real=-1964.70
+Ep 100: Q_pred=1145.04, Q_real=25.74
+Ep 105: Q_pred=1285.50, Q_real=-1596.69
+Ep 110: Q_pred=1166.26, Q_real=75.82
+Ep 115: Q_pred=1203.64, Q_real=0.00
+Ep 120: Q_pred=1327.71, Q_real=-1646.78
+Ep 125: Q_pred=1300.44, Q_real=-1504.04
+Ep 130: Q_pred=1304.45, Q_real=-1623.61
+Ep 135: Q_pred=1256.75, Q_real=6.31
+Ep 140: Q_pred=1259.29, Q_real=71.88
+Ep 145: Q_pred=1278.15, Q_real=28.74
+Ep 150: Q_pred=1285.80, Q_real=30.27
+Ep 155: Q_pred=1289.74, Q_real=0.00
+Ep 160: Q_pred=1312.90, Q_real=-1389.86
+Ep 165: Q_pred=1288.09, Q_real=49.82
+Ep 170: Q_pred=1283.41, Q_real=43.04
+Ep 175: Q_pred=1303.28, Q_real=-1389.86
+Ep 180: Q_pred=1302.01, Q_real=-1774.57
+Ep 185: Q_pred=1271.56, Q_real=11.59
+Ep 190: Q_pred=1294.08, Q_real=-1475.75
+Ep 195: Q_pred=1288.30, Q_real=-1964.70
+Ep 200: Q_pred=1286.83, Q_real=-1517.68
+Ep 205: Q_pred=1258.02, Q_real=73.84
+Ep 210: Q_pred=1246.28, Q_real=0.00
+Ep 215: Q_pred=1234.16, Q_real=55.09
+Ep 220: Q_pred=1223.88, Q_real=0.00
+Ep 225: Q_pred=1204.98, Q_real=-1785.51
+Ep 230: Q_pred=1197.13, Q_real=19.91
+Ep 235: Q_pred=1182.11, Q_real=55.09
+Ep 240: Q_pred=1156.69, Q_real=-1361.89
+Ep 245: Q_pred=1165.45, Q_real=30.27
+Ep 250: Q_pred=1155.12, Q_real=66.11
+Ep 255: Q_pred=1134.71, Q_real=71.88
+Analyzing Checkpoints:  53%|█████▎    | 53/100 [00:10<00:12,  3.86it/s]Analyzing Checkpoints:  54%|█████▍    | 54/100 [00:10<00:11,  4.10it/s]Analyzing Checkpoints:  55%|█████▌    | 55/100 [00:11<00:10,  4.31it/s]Analyzing Checkpoints:  56%|█████▌    | 56/100 [00:11<00:10,  4.31it/s]Analyzing Checkpoints:  57%|█████▋    | 57/100 [00:11<00:09,  4.55it/s]Analyzing Checkpoints:  58%|█████▊    | 58/100 [00:11<00:09,  4.49it/s]Analyzing Checkpoints:  59%|█████▉    | 59/100 [00:11<00:08,  4.88it/s]Analyzing Checkpoints:  60%|██████    | 60/100 [00:12<00:08,  4.95it/s]Analyzing Checkpoints:  61%|██████    | 61/100 [00:12<00:07,  5.31it/s]Analyzing Checkpoints:  62%|██████▏   | 62/100 [00:12<00:07,  5.06it/s]Analyzing Checkpoints:  63%|██████▎   | 63/100 [00:12<00:07,  5.27it/s]Analyzing Checkpoints:  64%|██████▍   | 64/100 [00:12<00:06,  5.17it/s]Analyzing Checkpoints:  65%|██████▌   | 65/100 [00:13<00:06,  5.32it/s]Analyzing Checkpoints:  66%|██████▌   | 66/100 [00:13<00:06,  5.14it/s]Analyzing Checkpoints:  67%|██████▋   | 67/100 [00:13<00:08,  3.70it/s]Analyzing Checkpoints:  68%|██████▊   | 68/100 [00:13<00:08,  3.88it/s]Analyzing Checkpoints:  69%|██████▉   | 69/100 [00:14<00:07,  4.25it/s]Analyzing Checkpoints:  70%|███████   | 70/100 [00:14<00:06,  4.46it/s]Analyzing Checkpoints:  71%|███████   | 71/100 [00:14<00:06,  4.77it/s]Analyzing Checkpoints:  72%|███████▏  | 72/100 [00:14<00:05,  4.67it/s]Analyzing Checkpoints:  73%|███████▎  | 73/100 [00:14<00:05,  4.86it/s]Analyzing Checkpoints:  74%|███████▍  | 74/100 [00:15<00:05,  4.76it/s]Analyzing Checkpoints:  75%|███████▌  | 75/100 [00:15<00:05,  4.85it/s]Analyzing Checkpoints:  76%|███████▌  | 76/100 [00:15<00:04,  5.28it/s]Analyzing Checkpoints:  77%|███████▋  | 77/100 [00:15<00:04,  5.11it/s]Analyzing Checkpoints:  78%|███████▊  | 78/100 [00:15<00:04,  4.85it/s]Analyzing Checkpoints:  79%|███████▉  | 79/100 [00:16<00:04,  4.92it/s]Analyzing Checkpoints:  80%|████████  | 80/100 [00:16<00:04,  4.55it/s]Analyzing Checkpoints:  81%|████████  | 81/100 [00:16<00:04,  4.66it/s]Analyzing Checkpoints:  82%|████████▏ | 82/100 [00:16<00:03,  4.78it/s]Analyzing Checkpoints:  83%|████████▎ | 83/100 [00:16<00:03,  4.72it/s]Analyzing Checkpoints:  84%|████████▍ | 84/100 [00:17<00:03,  4.72it/s]Analyzing Checkpoints:  85%|████████▌ | 85/100 [00:17<00:02,  5.07it/s]Analyzing Checkpoints:  86%|████████▌ | 86/100 [00:17<00:04,  3.47it/s]Analyzing Checkpoints:  87%|████████▋ | 87/100 [00:18<00:03,  3.77it/s]Analyzing Checkpoints:  88%|████████▊ | 88/100 [00:18<00:02,  4.03it/s]Analyzing Checkpoints:  89%|████████▉ | 89/100 [00:18<00:02,  4.42it/s]Analyzing Checkpoints:  90%|█████████ | 90/100 [00:18<00:02,  4.72it/s]Analyzing Checkpoints:  91%|█████████ | 91/100 [00:18<00:01,  4.92it/s]Analyzing Checkpoints:  92%|█████████▏| 92/100 [00:19<00:01,  4.76it/s]Analyzing Checkpoints:  93%|█████████▎| 93/100 [00:19<00:01,  4.82it/s]Analyzing Checkpoints:  94%|█████████▍| 94/100 [00:19<00:01,  4.70it/s]Analyzing Checkpoints:  95%|█████████▌| 95/100 [00:19<00:00,  5.14it/s]Analyzing Checkpoints:  96%|█████████▌| 96/100 [00:19<00:00,  4.25it/s]Analyzing Checkpoints:  97%|█████████▋| 97/100 [00:20<00:00,  4.60it/s]Analyzing Checkpoints:  98%|█████████▊| 98/100 [00:20<00:00,  4.98it/s]Analyzing Checkpoints:  99%|█████████▉| 99/100 [00:20<00:00,  5.31it/s]Analyzing Checkpoints: 100%|██████████| 100/100 [00:20<00:00,  5.35it/s]Analyzing Checkpoints: 100%|██████████| 100/100 [00:20<00:00,  4.85it/s]
+Ep 260: Q_pred=1119.18, Q_real=36.53
+Ep 265: Q_pred=1077.65, Q_real=67.98
+Ep 270: Q_pred=1048.18, Q_real=56.88
+Ep 275: Q_pred=993.41, Q_real=48.10
+Ep 280: Q_pred=952.86, Q_real=22.79
+Ep 285: Q_pred=925.70, Q_real=41.39
+Ep 290: Q_pred=912.66, Q_real=0.00
+Ep 295: Q_pred=937.22, Q_real=25.74
+Ep 300: Q_pred=994.57, Q_real=7.61
+Ep 305: Q_pred=1030.28, Q_real=-1419.27
+Ep 310: Q_pred=1054.42, Q_real=-1964.71
+Ep 315: Q_pred=1056.76, Q_real=-1658.99
+Ep 320: Q_pred=1101.76, Q_real=0.00
+Ep 325: Q_pred=1096.12, Q_real=25.74
+Ep 330: Q_pred=1098.54, Q_real=69.94
+Ep 335: Q_pred=1094.43, Q_real=64.23
+Ep 340: Q_pred=1101.21, Q_real=34.94
+Ep 345: Q_pred=1106.68, Q_real=31.79
+Ep 350: Q_pred=1115.12, Q_real=15.69
+Ep 355: Q_pred=1087.58, Q_real=-1433.76
+Ep 360: Q_pred=1138.04, Q_real=31.79
+Ep 365: Q_pred=1134.15, Q_real=69.94
+Ep 370: Q_pred=1138.74, Q_real=31.81
+Ep 375: Q_pred=1135.26, Q_real=0.00
+Ep 380: Q_pred=1155.46, Q_real=62.36
+Ep 385: Q_pred=1189.34, Q_real=53.31
+Ep 390: Q_pred=1181.26, Q_real=-1621.99
+Ep 395: Q_pred=1212.59, Q_real=73.84
+Ep 400: Q_pred=1215.54, Q_real=68.01
+Ep 405: Q_pred=1221.73, Q_real=49.82
+Ep 410: Q_pred=1236.18, Q_real=46.40
+Ep 415: Q_pred=1255.45, Q_real=60.52
+Ep 420: Q_pred=1273.71, Q_real=2.49
+Ep 425: Q_pred=1287.60, Q_real=58.69
+Ep 430: Q_pred=1294.42, Q_real=48.10
+Ep 435: Q_pred=1317.83, Q_real=73.84
+Ep 440: Q_pred=1324.68, Q_real=15.69
+Ep 445: Q_pred=1355.29, Q_real=31.81
+Ep 450: Q_pred=1349.73, Q_real=0.00
+Ep 455: Q_pred=1352.69, Q_real=75.82
+Ep 460: Q_pred=1355.28, Q_real=15.69
+Ep 465: Q_pred=1360.85, Q_real=66.11
+Ep 470: Q_pred=1355.61, Q_real=0.74
+Ep 475: Q_pred=1349.02, Q_real=-685.86
+Ep 480: Q_pred=1349.72, Q_real=0.00
+Ep 485: Q_pred=1360.59, Q_real=0.00
+Ep 490: Q_pred=1354.17, Q_real=0.00
+Ep 495: Q_pred=1361.26, Q_real=34.94
+Saved analysis to /home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_comparasion/ensemble_q_accuracy_norm.npy

@@ -1,0 +1,40 @@
+nohup: ignoring input
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+pygame 2.5.2 (SDL 2.28.2, Python 3.12.4)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Using device: cpu
+Found 11 checkpoints.
+Analyzing checkpoints:   0%|          | 0/11 [00:00<?, ?it/s]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:   9%|▉         | 1/11 [06:47<1:07:56, 407.61s/it]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  18%|█▊        | 2/11 [13:23<1:00:08, 400.91s/it]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  27%|██▋       | 3/11 [20:01<53:16, 399.51s/it]  /home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  36%|███▋      | 4/11 [26:37<46:25, 397.97s/it]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  45%|████▌     | 5/11 [32:59<39:12, 392.17s/it]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  55%|█████▍    | 6/11 [39:35<32:47, 393.57s/it]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  64%|██████▎   | 7/11 [46:12<26:19, 394.85s/it]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  73%|███████▎  | 8/11 [52:47<19:43, 394.63s/it]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  82%|████████▏ | 9/11 [59:23<13:10, 395.06s/it]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:151: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  a_val = float(a) if isinstance(a, (np.ndarray, list, torch.Tensor)) else a
+Analyzing checkpoints:  91%|█████████ | 10/11 [1:05:48<06:32, 392.05s/it]Analyzing checkpoints: 100%|██████████| 11/11 [1:05:48<00:00, 358.95s/it]
+Ep 0: Q_pred=-0.00, Q_real=-2.63, Error=2.63, Time=407.3s
+Ep 50: Q_pred=-0.01, Q_real=-2.99, Error=2.99, Time=395.8s
+Ep 100: Q_pred=0.01, Q_real=-2.80, Error=2.81, Time=397.5s
+Ep 150: Q_pred=-0.01, Q_real=-2.95, Error=2.94, Time=395.2s
+Ep 200: Q_pred=-0.01, Q_real=-2.64, Error=2.63, Time=381.6s
+Ep 250: Q_pred=-0.01, Q_real=-2.92, Error=2.91, Time=395.9s
+Ep 300: Q_pred=0.00, Q_real=-2.88, Error=2.88, Time=397.1s
+Ep 350: Q_pred=-0.01, Q_real=-3.18, Error=3.17, Time=393.8s
+Ep 400: Q_pred=-0.01, Q_real=-2.78, Error=2.77, Time=395.6s
+Ep 450: Q_pred=-0.00, Q_real=-3.04, Error=3.03, Time=385.0s

@@ -1,0 +1,555 @@
+nohup: ignoring input
+pygame 2.6.1 (SDL 2.28.4, Python 3.8.20)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+cuda:0
+[33mWARN: gym.spaces.Box autodetected dtype as <class 'numpy.float32'>. Please provide explicit dtype.[0m
+Q Network:  BAC_QNetwork(
+  (embedding_layer): EmbeddingLayer(
+    (embeddings): ModuleDict(
+      (bus_id): Embedding(25, 12)
+      (station_id): Embedding(22, 11)
+      (time_period): Embedding(15, 7)
+      (direction): Embedding(2, 1)
+    )
+    (layer_norm): LayerNorm((31,), eps=1e-05, elementwise_affine=True)
+  )
+  (linear1): Linear(in_features=56, out_features=64, bias=True)
+  (linear2): Linear(in_features=64, out_features=64, bias=True)
+  (LayerNorm1): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+  (linear3): Linear(in_features=64, out_features=1, bias=True)
+  (linear4): Linear(in_features=56, out_features=64, bias=True)
+  (linear5): Linear(in_features=64, out_features=64, bias=True)
+  (LayerNorm2): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+  (linear6): Linear(in_features=64, out_features=1, bias=True)
+)
+V Network:  BAC_ValueNetwork(
+  (embedding_layer): EmbeddingLayer(
+    (embeddings): ModuleDict(
+      (bus_id): Embedding(25, 12)
+      (station_id): Embedding(22, 11)
+      (time_period): Embedding(15, 7)
+      (direction): Embedding(2, 1)
+    )
+    (layer_norm): LayerNorm((31,), eps=1e-05, elementwise_affine=True)
+  )
+  (linear1): Linear(in_features=55, out_features=64, bias=True)
+  (linear2): Linear(in_features=64, out_features=64, bias=True)
+  (LayerNorm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+  (linear3): Linear(in_features=64, out_features=1, bias=True)
+)
+Policy Network:  BAC_PolicyNetwork(
+  (embedding_layer): EmbeddingLayer(
+    (embeddings): ModuleDict(
+      (bus_id): Embedding(25, 12)
+      (station_id): Embedding(22, 11)
+      (time_period): Embedding(15, 7)
+      (direction): Embedding(2, 1)
+    )
+    (layer_norm): LayerNorm((31,), eps=1e-05, elementwise_affine=True)
+  )
+  (linear1): Linear(in_features=55, out_features=64, bias=True)
+  (linear2): Linear(in_features=64, out_features=64, bias=True)
+  (LayerNorm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+  (mean_linear): Linear(in_features=64, out_features=1, bias=True)
+  (log_std_linear): Linear(in_features=64, out_features=1, bias=True)
+)
+[2K[2KEpisode: 0 | Episode Reward: -1219655.75 | Duration: 27.88s | CPU Memory: 1436.90 MB | Replay Buffer Usage: 0.50%
+[2K[2KEpisode: 1 | Episode Reward: -1183069.81 | Duration: 36.78s | CPU Memory: 1442.68 MB | Replay Buffer Usage: 0.99%
+[2K[2KEpisode: 2 | Episode Reward: -1247217.33 | Duration: 41.49s | CPU Memory: 1450.16 MB | Replay Buffer Usage: 1.49%
+[2K[2KEpisode: 3 | Episode Reward: -1240939.39 | Duration: 39.96s | CPU Memory: 1459.53 MB | Replay Buffer Usage: 1.99%
+[2K[2KEpisode: 4 | Episode Reward: -1232610.72 | Duration: 40.12s | CPU Memory: 1462.63 MB | Replay Buffer Usage: 2.49%
+[2K[2KEpisode: 5 | Episode Reward: -1155885.39 | Duration: 40.54s | CPU Memory: 1471.56 MB | Replay Buffer Usage: 2.98%
+[2K[2KEpisode: 6 | Episode Reward: -1146536.80 | Duration: 39.92s | CPU Memory: 1482.39 MB | Replay Buffer Usage: 3.48%
+[2K[2KEpisode: 7 | Episode Reward: -1088914.41 | Duration: 39.74s | CPU Memory: 1486.03 MB | Replay Buffer Usage: 3.98%
+[2K[2KEpisode: 8 | Episode Reward: -985471.79 | Duration: 42.25s | CPU Memory: 1491.24 MB | Replay Buffer Usage: 4.47%
+[2K[2KEpisode: 9 | Episode Reward: -792658.63 | Duration: 40.27s | CPU Memory: 1496.00 MB | Replay Buffer Usage: 4.97%
+[2K[2KEpisode: 10 | Episode Reward: -743657.13 | Duration: 40.60s | CPU Memory: 1501.11 MB | Replay Buffer Usage: 5.47%
+[2K[2KEpisode: 11 | Episode Reward: -712936.09 | Duration: 39.89s | CPU Memory: 1506.29 MB | Replay Buffer Usage: 5.97%
+[2K[2KEpisode: 12 | Episode Reward: -652607.68 | Duration: 39.70s | CPU Memory: 1510.12 MB | Replay Buffer Usage: 6.46%
+[2K[2KEpisode: 13 | Episode Reward: -645070.16 | Duration: 40.32s | CPU Memory: 1514.56 MB | Replay Buffer Usage: 6.96%
+[2K[2KEpisode: 14 | Episode Reward: -622343.98 | Duration: 37.93s | CPU Memory: 1522.01 MB | Replay Buffer Usage: 7.46%
+[2K[2KEpisode: 15 | Episode Reward: -587749.53 | Duration: 42.29s | CPU Memory: 1527.47 MB | Replay Buffer Usage: 7.95%
+[2K[2KEpisode: 16 | Episode Reward: -551942.85 | Duration: 42.32s | CPU Memory: 1531.19 MB | Replay Buffer Usage: 8.45%
+[2K[2KEpisode: 17 | Episode Reward: -530962.75 | Duration: 40.00s | CPU Memory: 1542.78 MB | Replay Buffer Usage: 8.95%
+[2K[2KEpisode: 18 | Episode Reward: -546326.90 | Duration: 38.17s | CPU Memory: 1551.84 MB | Replay Buffer Usage: 9.45%
+[2K[2KEpisode: 19 | Episode Reward: -499056.74 | Duration: 39.00s | CPU Memory: 1561.28 MB | Replay Buffer Usage: 9.94%
+[2K[2KEpisode: 20 | Episode Reward: -486129.16 | Duration: 38.65s | CPU Memory: 1568.11 MB | Replay Buffer Usage: 10.44%
+[2K[2KEpisode: 21 | Episode Reward: -495811.03 | Duration: 39.28s | CPU Memory: 1580.57 MB | Replay Buffer Usage: 10.94%
+[2K[2KEpisode: 22 | Episode Reward: -458066.65 | Duration: 41.49s | CPU Memory: 1588.91 MB | Replay Buffer Usage: 11.43%
+[2K[2KEpisode: 23 | Episode Reward: -468566.81 | Duration: 41.96s | CPU Memory: 1593.81 MB | Replay Buffer Usage: 11.93%
+[2K[2KEpisode: 24 | Episode Reward: -476335.16 | Duration: 39.78s | CPU Memory: 1605.17 MB | Replay Buffer Usage: 12.43%
+[2K[2KEpisode: 25 | Episode Reward: -466144.96 | Duration: 41.58s | CPU Memory: 1615.09 MB | Replay Buffer Usage: 12.93%
+[2K[2KEpisode: 26 | Episode Reward: -472667.35 | Duration: 39.79s | CPU Memory: 1623.75 MB | Replay Buffer Usage: 13.42%
+[2K[2KEpisode: 27 | Episode Reward: -449637.81 | Duration: 40.25s | CPU Memory: 1628.17 MB | Replay Buffer Usage: 13.92%
+[2K[2KEpisode: 28 | Episode Reward: -442286.92 | Duration: 42.37s | CPU Memory: 1639.81 MB | Replay Buffer Usage: 14.42%
+[2K[2KEpisode: 29 | Episode Reward: -452351.99 | Duration: 40.42s | CPU Memory: 1645.53 MB | Replay Buffer Usage: 14.91%
+[2K[2KEpisode: 30 | Episode Reward: -438415.94 | Duration: 40.38s | CPU Memory: 1657.14 MB | Replay Buffer Usage: 15.41%
+[2K[2KEpisode: 31 | Episode Reward: -435613.82 | Duration: 40.07s | CPU Memory: 1662.93 MB | Replay Buffer Usage: 15.91%
+[2K[2KEpisode: 32 | Episode Reward: -447083.57 | Duration: 38.81s | CPU Memory: 1672.14 MB | Replay Buffer Usage: 16.41%
+[2K[2KEpisode: 33 | Episode Reward: -438259.00 | Duration: 59.12s | CPU Memory: 1681.18 MB | Replay Buffer Usage: 16.90%
+[2K[2KEpisode: 34 | Episode Reward: -423311.52 | Duration: 55.91s | CPU Memory: 1688.15 MB | Replay Buffer Usage: 17.40%
+[2K[2KEpisode: 35 | Episode Reward: -446535.78 | Duration: 41.99s | CPU Memory: 1695.77 MB | Replay Buffer Usage: 17.90%
+[2K[2KEpisode: 36 | Episode Reward: -454010.52 | Duration: 76.91s | CPU Memory: 1705.72 MB | Replay Buffer Usage: 18.39%
+[2K[2KEpisode: 37 | Episode Reward: -406595.06 | Duration: 41.20s | CPU Memory: 1710.18 MB | Replay Buffer Usage: 18.89%
+[2K[2KEpisode: 38 | Episode Reward: -428492.85 | Duration: 43.70s | CPU Memory: 1719.92 MB | Replay Buffer Usage: 19.39%
+[2K[2KEpisode: 39 | Episode Reward: -405915.01 | Duration: 40.78s | CPU Memory: 1728.72 MB | Replay Buffer Usage: 19.89%
+[2K[2KEpisode: 40 | Episode Reward: -431789.26 | Duration: 41.19s | CPU Memory: 1739.21 MB | Replay Buffer Usage: 20.38%
+[2K[2KEpisode: 41 | Episode Reward: -417371.44 | Duration: 40.24s | CPU Memory: 1743.81 MB | Replay Buffer Usage: 20.88%
+[2K[2KEpisode: 42 | Episode Reward: -431402.02 | Duration: 40.77s | CPU Memory: 1750.92 MB | Replay Buffer Usage: 21.38%
+[2K[2KEpisode: 43 | Episode Reward: -405980.35 | Duration: 42.69s | CPU Memory: 1762.00 MB | Replay Buffer Usage: 21.87%
+[2K[2KEpisode: 44 | Episode Reward: -416482.12 | Duration: 43.43s | CPU Memory: 1768.20 MB | Replay Buffer Usage: 22.37%
+[2K[2KEpisode: 45 | Episode Reward: -414049.78 | Duration: 42.81s | CPU Memory: 1776.84 MB | Replay Buffer Usage: 22.87%
+[2K[2KEpisode: 46 | Episode Reward: -408961.10 | Duration: 40.23s | CPU Memory: 1781.92 MB | Replay Buffer Usage: 23.37%
+[2K[2KEpisode: 47 | Episode Reward: -397366.72 | Duration: 43.12s | CPU Memory: 1793.59 MB | Replay Buffer Usage: 23.86%
+[2K[2KEpisode: 48 | Episode Reward: -400841.47 | Duration: 39.01s | CPU Memory: 1797.93 MB | Replay Buffer Usage: 24.36%
+[2K[2KEpisode: 49 | Episode Reward: -416988.82 | Duration: 43.36s | CPU Memory: 1803.45 MB | Replay Buffer Usage: 24.86%
+[2K[2KEpisode: 50 | Episode Reward: -413599.48 | Duration: 38.49s | CPU Memory: 1818.31 MB | Replay Buffer Usage: 25.35%
+[2K[2KEpisode: 51 | Episode Reward: -421817.75 | Duration: 43.64s | CPU Memory: 1823.55 MB | Replay Buffer Usage: 25.85%
+[2K[2KEpisode: 52 | Episode Reward: -437562.65 | Duration: 40.81s | CPU Memory: 1833.01 MB | Replay Buffer Usage: 26.35%
+[2K[2KEpisode: 53 | Episode Reward: -399898.22 | Duration: 41.05s | CPU Memory: 1837.52 MB | Replay Buffer Usage: 26.85%
+[2K[2KEpisode: 54 | Episode Reward: -421371.02 | Duration: 41.52s | CPU Memory: 1849.76 MB | Replay Buffer Usage: 27.34%
+[2K[2KEpisode: 55 | Episode Reward: -416816.99 | Duration: 43.15s | CPU Memory: 1855.08 MB | Replay Buffer Usage: 27.84%
+[2K[2KEpisode: 56 | Episode Reward: -418035.19 | Duration: 45.15s | CPU Memory: 1862.43 MB | Replay Buffer Usage: 28.34%
+[2K[2KEpisode: 57 | Episode Reward: -396542.94 | Duration: 43.09s | CPU Memory: 1872.36 MB | Replay Buffer Usage: 28.83%
+[2K[2KEpisode: 58 | Episode Reward: -425666.44 | Duration: 43.83s | CPU Memory: 1878.82 MB | Replay Buffer Usage: 29.33%
+[2K[2KEpisode: 59 | Episode Reward: -426724.88 | Duration: 44.08s | CPU Memory: 1887.80 MB | Replay Buffer Usage: 29.83%
+[2K[2KEpisode: 60 | Episode Reward: -406927.79 | Duration: 40.50s | CPU Memory: 1894.55 MB | Replay Buffer Usage: 30.33%
+[2K[2KEpisode: 61 | Episode Reward: -402120.18 | Duration: 43.21s | CPU Memory: 1908.37 MB | Replay Buffer Usage: 30.82%
+[2K[2KEpisode: 62 | Episode Reward: -403241.49 | Duration: 40.37s | CPU Memory: 1910.82 MB | Replay Buffer Usage: 31.32%
+[2K[2KEpisode: 63 | Episode Reward: -414289.65 | Duration: 44.44s | CPU Memory: 1920.70 MB | Replay Buffer Usage: 31.82%
+[2K[2KEpisode: 64 | Episode Reward: -394511.64 | Duration: 49.76s | CPU Memory: 1927.57 MB | Replay Buffer Usage: 32.31%
+[2K[2KEpisode: 65 | Episode Reward: -411115.19 | Duration: 43.09s | CPU Memory: 1939.85 MB | Replay Buffer Usage: 32.81%
+[2K[2KEpisode: 66 | Episode Reward: -399098.69 | Duration: 42.61s | CPU Memory: 1943.18 MB | Replay Buffer Usage: 33.31%
+[2K[2KEpisode: 67 | Episode Reward: -420141.78 | Duration: 44.79s | CPU Memory: 1953.91 MB | Replay Buffer Usage: 33.81%
+[2K[2KEpisode: 68 | Episode Reward: -438802.89 | Duration: 47.72s | CPU Memory: 1961.34 MB | Replay Buffer Usage: 34.30%
+[2K[2KEpisode: 69 | Episode Reward: -434525.41 | Duration: 39.61s | CPU Memory: 1966.13 MB | Replay Buffer Usage: 34.80%
+[2K[2KEpisode: 70 | Episode Reward: -423022.23 | Duration: 46.36s | CPU Memory: 1977.25 MB | Replay Buffer Usage: 35.30%
+[2K[2KEpisode: 71 | Episode Reward: -439549.83 | Duration: 42.38s | CPU Memory: 1983.77 MB | Replay Buffer Usage: 35.79%
+[2K[2KEpisode: 72 | Episode Reward: -433168.22 | Duration: 41.55s | CPU Memory: 1994.82 MB | Replay Buffer Usage: 36.29%
+[2K[2KEpisode: 73 | Episode Reward: -412779.77 | Duration: 43.18s | CPU Memory: 1998.79 MB | Replay Buffer Usage: 36.79%
+[2K[2KEpisode: 74 | Episode Reward: -421406.16 | Duration: 43.88s | CPU Memory: 2006.15 MB | Replay Buffer Usage: 37.29%
+[2K[2KEpisode: 75 | Episode Reward: -426170.86 | Duration: 40.12s | CPU Memory: 2015.69 MB | Replay Buffer Usage: 37.78%
+[2K[2KEpisode: 76 | Episode Reward: -414271.52 | Duration: 41.61s | CPU Memory: 2021.89 MB | Replay Buffer Usage: 38.28%
+[2K[2KEpisode: 77 | Episode Reward: -419001.71 | Duration: 40.08s | CPU Memory: 2028.66 MB | Replay Buffer Usage: 38.78%
+[2K[2KEpisode: 78 | Episode Reward: -436161.15 | Duration: 40.31s | CPU Memory: 2039.47 MB | Replay Buffer Usage: 39.27%
+[2K[2KEpisode: 79 | Episode Reward: -412424.89 | Duration: 41.48s | CPU Memory: 2047.79 MB | Replay Buffer Usage: 39.77%
+[2K[2KEpisode: 80 | Episode Reward: -436265.20 | Duration: 40.65s | CPU Memory: 2056.48 MB | Replay Buffer Usage: 40.27%
+[2K[2KEpisode: 81 | Episode Reward: -426183.46 | Duration: 37.99s | CPU Memory: 2062.45 MB | Replay Buffer Usage: 40.77%
+[2K[2KEpisode: 82 | Episode Reward: -435604.29 | Duration: 43.72s | CPU Memory: 2071.02 MB | Replay Buffer Usage: 41.26%
+[2K[2KEpisode: 83 | Episode Reward: -426374.26 | Duration: 41.12s | CPU Memory: 2080.28 MB | Replay Buffer Usage: 41.76%
+[2K[2KEpisode: 84 | Episode Reward: -437331.57 | Duration: 43.03s | CPU Memory: 2089.79 MB | Replay Buffer Usage: 42.26%
+[2K[2KEpisode: 85 | Episode Reward: -450821.88 | Duration: 41.51s | CPU Memory: 2095.60 MB | Replay Buffer Usage: 42.75%
+[2K[2KEpisode: 86 | Episode Reward: -439981.32 | Duration: 42.94s | CPU Memory: 2099.39 MB | Replay Buffer Usage: 43.25%
+[2K[2KEpisode: 87 | Episode Reward: -446740.29 | Duration: 41.17s | CPU Memory: 2107.02 MB | Replay Buffer Usage: 43.75%
+[2K[2KEpisode: 88 | Episode Reward: -428008.57 | Duration: 40.56s | CPU Memory: 2119.63 MB | Replay Buffer Usage: 44.25%
+[2K[2KEpisode: 89 | Episode Reward: -455687.36 | Duration: 42.23s | CPU Memory: 2127.34 MB | Replay Buffer Usage: 44.74%
+[2K[2KEpisode: 90 | Episode Reward: -431965.71 | Duration: 48.73s | CPU Memory: 2140.43 MB | Replay Buffer Usage: 45.24%
+[2K[2KEpisode: 91 | Episode Reward: -446252.80 | Duration: 48.72s | CPU Memory: 2147.89 MB | Replay Buffer Usage: 45.74%
+[2K[2KEpisode: 92 | Episode Reward: -430680.23 | Duration: 43.00s | CPU Memory: 2150.84 MB | Replay Buffer Usage: 46.23%
+[2K[2KEpisode: 93 | Episode Reward: -435539.94 | Duration: 40.82s | CPU Memory: 2158.96 MB | Replay Buffer Usage: 46.73%
+[2K[2KEpisode: 94 | Episode Reward: -444755.39 | Duration: 41.82s | CPU Memory: 2169.89 MB | Replay Buffer Usage: 47.23%
+[2K[2KEpisode: 95 | Episode Reward: -426888.96 | Duration: 40.36s | CPU Memory: 2181.28 MB | Replay Buffer Usage: 47.73%
+[2K[2KEpisode: 96 | Episode Reward: -429211.77 | Duration: 40.05s | CPU Memory: 2184.42 MB | Replay Buffer Usage: 48.22%
+[2K[2KEpisode: 97 | Episode Reward: -422448.96 | Duration: 40.24s | CPU Memory: 2193.18 MB | Replay Buffer Usage: 48.72%
+[2K[2KEpisode: 98 | Episode Reward: -431688.83 | Duration: 41.93s | CPU Memory: 2201.76 MB | Replay Buffer Usage: 49.22%
+[2K[2KEpisode: 99 | Episode Reward: -437370.80 | Duration: 42.41s | CPU Memory: 2207.56 MB | Replay Buffer Usage: 49.71%
+[2K[2KEpisode: 100 | Episode Reward: -436276.75 | Duration: 44.81s | CPU Memory: 2216.84 MB | Replay Buffer Usage: 50.21%
+[2K[2KEpisode: 101 | Episode Reward: -436855.56 | Duration: 42.45s | CPU Memory: 2225.43 MB | Replay Buffer Usage: 50.71%
+[2K[2KEpisode: 102 | Episode Reward: -428322.41 | Duration: 42.23s | CPU Memory: 2234.14 MB | Replay Buffer Usage: 51.21%
+[2K[2KEpisode: 103 | Episode Reward: -455144.78 | Duration: 43.05s | CPU Memory: 2242.45 MB | Replay Buffer Usage: 51.70%
+[2K[2KEpisode: 104 | Episode Reward: -453453.16 | Duration: 46.58s | CPU Memory: 2249.37 MB | Replay Buffer Usage: 52.20%
+[2K[2KEpisode: 105 | Episode Reward: -423456.59 | Duration: 43.30s | CPU Memory: 2256.50 MB | Replay Buffer Usage: 52.70%
+[2K[2KEpisode: 106 | Episode Reward: -450037.84 | Duration: 44.27s | CPU Memory: 2263.83 MB | Replay Buffer Usage: 53.19%
+[2K[2KEpisode: 107 | Episode Reward: -414201.54 | Duration: 45.88s | CPU Memory: 2271.22 MB | Replay Buffer Usage: 53.69%
+[2K[2KEpisode: 108 | Episode Reward: -450007.62 | Duration: 45.21s | CPU Memory: 2281.48 MB | Replay Buffer Usage: 54.19%
+[2K[2KEpisode: 109 | Episode Reward: -433453.63 | Duration: 45.65s | CPU Memory: 2294.58 MB | Replay Buffer Usage: 54.69%
+[2K[2KEpisode: 110 | Episode Reward: -455547.60 | Duration: 42.99s | CPU Memory: 2298.44 MB | Replay Buffer Usage: 55.18%
+[2K[2KEpisode: 111 | Episode Reward: -442872.02 | Duration: 40.66s | CPU Memory: 2306.79 MB | Replay Buffer Usage: 55.68%
+[2K[2KEpisode: 112 | Episode Reward: -444133.33 | Duration: 40.42s | CPU Memory: 2311.62 MB | Replay Buffer Usage: 56.18%
+[2K[2KEpisode: 113 | Episode Reward: -414560.40 | Duration: 42.94s | CPU Memory: 2320.34 MB | Replay Buffer Usage: 56.67%
+[2K[2KEpisode: 114 | Episode Reward: -436459.04 | Duration: 48.12s | CPU Memory: 2327.25 MB | Replay Buffer Usage: 57.17%
+[2K[2KEpisode: 115 | Episode Reward: -421612.38 | Duration: 44.45s | CPU Memory: 2338.85 MB | Replay Buffer Usage: 57.67%
+[2K[2KEpisode: 116 | Episode Reward: -426890.29 | Duration: 44.40s | CPU Memory: 2346.28 MB | Replay Buffer Usage: 58.17%
+[2K[2KEpisode: 117 | Episode Reward: -438341.73 | Duration: 44.30s | CPU Memory: 2354.29 MB | Replay Buffer Usage: 58.66%
+[2K[2KEpisode: 118 | Episode Reward: -433286.09 | Duration: 47.76s | CPU Memory: 2360.74 MB | Replay Buffer Usage: 59.16%
+[2K[2KEpisode: 119 | Episode Reward: -430315.55 | Duration: 43.89s | CPU Memory: 2374.38 MB | Replay Buffer Usage: 59.66%
+[2K[2KEpisode: 120 | Episode Reward: -432050.48 | Duration: 42.75s | CPU Memory: 2378.11 MB | Replay Buffer Usage: 60.15%
+[2K[2KEpisode: 121 | Episode Reward: -442281.62 | Duration: 46.39s | CPU Memory: 2386.48 MB | Replay Buffer Usage: 60.65%
+[2K[2KEpisode: 122 | Episode Reward: -416654.42 | Duration: 46.75s | CPU Memory: 2395.56 MB | Replay Buffer Usage: 61.15%
+[2K[2KEpisode: 123 | Episode Reward: -439178.60 | Duration: 41.67s | CPU Memory: 2402.31 MB | Replay Buffer Usage: 61.65%
+[2K[2KEpisode: 124 | Episode Reward: -442717.42 | Duration: 46.86s | CPU Memory: 2411.28 MB | Replay Buffer Usage: 62.14%
+[2K[2KEpisode: 125 | Episode Reward: -425115.73 | Duration: 46.14s | CPU Memory: 2418.46 MB | Replay Buffer Usage: 62.64%
+[2K[2KEpisode: 126 | Episode Reward: -431318.11 | Duration: 43.82s | CPU Memory: 2429.34 MB | Replay Buffer Usage: 63.14%
+[2K[2KEpisode: 127 | Episode Reward: -451143.29 | Duration: 47.32s | CPU Memory: 2437.90 MB | Replay Buffer Usage: 63.63%
+[2K[2KEpisode: 128 | Episode Reward: -428374.04 | Duration: 43.31s | CPU Memory: 2442.05 MB | Replay Buffer Usage: 64.13%
+[2K[2KEpisode: 129 | Episode Reward: -414857.98 | Duration: 43.70s | CPU Memory: 2449.75 MB | Replay Buffer Usage: 64.63%
+[2K[2KEpisode: 130 | Episode Reward: -444610.83 | Duration: 46.71s | CPU Memory: 2461.74 MB | Replay Buffer Usage: 65.13%
+[2K[2KEpisode: 131 | Episode Reward: -429623.48 | Duration: 43.20s | CPU Memory: 2468.01 MB | Replay Buffer Usage: 65.62%
+[2K[2KEpisode: 132 | Episode Reward: -447490.92 | Duration: 41.88s | CPU Memory: 2475.06 MB | Replay Buffer Usage: 66.12%
+[2K[2KEpisode: 133 | Episode Reward: -452370.97 | Duration: 47.20s | CPU Memory: 2485.56 MB | Replay Buffer Usage: 66.62%
+[2K[2KEpisode: 134 | Episode Reward: -431114.23 | Duration: 43.94s | CPU Memory: 2491.62 MB | Replay Buffer Usage: 67.11%
+[2K[2KEpisode: 135 | Episode Reward: -411991.09 | Duration: 42.09s | CPU Memory: 2497.46 MB | Replay Buffer Usage: 67.61%
+[2K[2KEpisode: 136 | Episode Reward: -431140.03 | Duration: 46.92s | CPU Memory: 2508.81 MB | Replay Buffer Usage: 68.11%
+[2K[2KEpisode: 137 | Episode Reward: -431181.40 | Duration: 45.69s | CPU Memory: 2517.40 MB | Replay Buffer Usage: 68.61%
+[2K[2KEpisode: 138 | Episode Reward: -430975.74 | Duration: 44.07s | CPU Memory: 2527.66 MB | Replay Buffer Usage: 69.10%
+[2K[2KEpisode: 139 | Episode Reward: -441299.14 | Duration: 43.26s | CPU Memory: 2534.41 MB | Replay Buffer Usage: 69.60%
+[2K[2KEpisode: 140 | Episode Reward: -433634.27 | Duration: 43.76s | CPU Memory: 2542.15 MB | Replay Buffer Usage: 70.10%
+[2K[2KEpisode: 141 | Episode Reward: -429078.85 | Duration: 42.26s | CPU Memory: 2547.84 MB | Replay Buffer Usage: 70.59%
+[2K[2KEpisode: 142 | Episode Reward: -443909.47 | Duration: 45.90s | CPU Memory: 2557.98 MB | Replay Buffer Usage: 71.09%
+[2K[2KEpisode: 143 | Episode Reward: -452553.00 | Duration: 47.51s | CPU Memory: 2564.00 MB | Replay Buffer Usage: 71.59%
+[2K[2KEpisode: 144 | Episode Reward: -428650.74 | Duration: 43.13s | CPU Memory: 2571.03 MB | Replay Buffer Usage: 72.09%
+[2K[2KEpisode: 145 | Episode Reward: -445862.71 | Duration: 42.47s | CPU Memory: 2580.62 MB | Replay Buffer Usage: 72.58%
+[2K[2KEpisode: 146 | Episode Reward: -416365.16 | Duration: 43.49s | CPU Memory: 2591.04 MB | Replay Buffer Usage: 73.08%
+[2K[2KEpisode: 147 | Episode Reward: -452996.42 | Duration: 44.51s | CPU Memory: 2598.10 MB | Replay Buffer Usage: 73.58%
+[2K[2KEpisode: 148 | Episode Reward: -421702.40 | Duration: 43.71s | CPU Memory: 2609.18 MB | Replay Buffer Usage: 74.07%
+[2K[2KEpisode: 149 | Episode Reward: -433936.04 | Duration: 44.31s | CPU Memory: 2614.38 MB | Replay Buffer Usage: 74.57%
+[2K[2KEpisode: 150 | Episode Reward: -455403.05 | Duration: 45.99s | CPU Memory: 2621.36 MB | Replay Buffer Usage: 75.07%
+[2K[2KEpisode: 151 | Episode Reward: -414797.76 | Duration: 42.98s | CPU Memory: 2631.99 MB | Replay Buffer Usage: 75.57%
+[2K[2KEpisode: 152 | Episode Reward: -416176.46 | Duration: 43.63s | CPU Memory: 2641.37 MB | Replay Buffer Usage: 76.06%
+[2K[2KEpisode: 153 | Episode Reward: -415893.85 | Duration: 46.07s | CPU Memory: 2644.21 MB | Replay Buffer Usage: 76.56%
+[2K[2KEpisode: 154 | Episode Reward: -442259.44 | Duration: 43.33s | CPU Memory: 2653.27 MB | Replay Buffer Usage: 77.06%
+[2K[2KEpisode: 155 | Episode Reward: -421986.23 | Duration: 42.32s | CPU Memory: 2658.97 MB | Replay Buffer Usage: 77.55%
+[2K[2KEpisode: 156 | Episode Reward: -448041.26 | Duration: 40.85s | CPU Memory: 2671.59 MB | Replay Buffer Usage: 78.05%
+[2K[2KEpisode: 157 | Episode Reward: -432521.62 | Duration: 42.26s | CPU Memory: 2682.93 MB | Replay Buffer Usage: 78.55%
+[2K[2KEpisode: 158 | Episode Reward: -428597.49 | Duration: 47.35s | CPU Memory: 2689.67 MB | Replay Buffer Usage: 79.05%
+[2K[2KEpisode: 159 | Episode Reward: -452274.17 | Duration: 42.63s | CPU Memory: 2697.21 MB | Replay Buffer Usage: 79.54%
+[2K[2KEpisode: 160 | Episode Reward: -456811.46 | Duration: 42.15s | CPU Memory: 2701.27 MB | Replay Buffer Usage: 80.04%
+[2K[2KEpisode: 161 | Episode Reward: -444139.95 | Duration: 44.95s | CPU Memory: 2711.86 MB | Replay Buffer Usage: 80.54%
+[2K[2KEpisode: 162 | Episode Reward: -422360.30 | Duration: 42.80s | CPU Memory: 2715.73 MB | Replay Buffer Usage: 81.03%
+[2K[2KEpisode: 163 | Episode Reward: -419585.12 | Duration: 42.35s | CPU Memory: 2727.35 MB | Replay Buffer Usage: 81.53%
+[2K[2KEpisode: 164 | Episode Reward: -439857.44 | Duration: 43.22s | CPU Memory: 2734.14 MB | Replay Buffer Usage: 82.03%
+[2K[2KEpisode: 165 | Episode Reward: -432662.65 | Duration: 42.63s | CPU Memory: 2749.25 MB | Replay Buffer Usage: 82.53%
+[2K[2KEpisode: 166 | Episode Reward: -422773.32 | Duration: 43.07s | CPU Memory: 2754.73 MB | Replay Buffer Usage: 83.02%
+[2K[2KEpisode: 167 | Episode Reward: -420876.02 | Duration: 45.61s | CPU Memory: 2758.91 MB | Replay Buffer Usage: 83.52%
+[2K[2KEpisode: 168 | Episode Reward: -436356.24 | Duration: 43.51s | CPU Memory: 2764.12 MB | Replay Buffer Usage: 84.02%
+[2K[2KEpisode: 169 | Episode Reward: -434850.49 | Duration: 40.91s | CPU Memory: 2774.50 MB | Replay Buffer Usage: 84.51%
+[2K[2KEpisode: 170 | Episode Reward: -429329.03 | Duration: 42.57s | CPU Memory: 2786.77 MB | Replay Buffer Usage: 85.01%
+[2K[2KEpisode: 171 | Episode Reward: -413562.45 | Duration: 43.64s | CPU Memory: 2792.03 MB | Replay Buffer Usage: 85.51%
+[2K[2KEpisode: 172 | Episode Reward: -442628.40 | Duration: 42.70s | CPU Memory: 2805.21 MB | Replay Buffer Usage: 86.01%
+[2K[2KEpisode: 173 | Episode Reward: -421958.20 | Duration: 42.95s | CPU Memory: 2810.01 MB | Replay Buffer Usage: 86.50%
+[2K[2KEpisode: 174 | Episode Reward: -425687.45 | Duration: 42.39s | CPU Memory: 2815.70 MB | Replay Buffer Usage: 87.00%
+[2K[2KEpisode: 175 | Episode Reward: -435371.79 | Duration: 45.55s | CPU Memory: 2825.00 MB | Replay Buffer Usage: 87.50%
+[2K[2KEpisode: 176 | Episode Reward: -442080.77 | Duration: 43.05s | CPU Memory: 2832.37 MB | Replay Buffer Usage: 87.99%
+[2K[2KEpisode: 177 | Episode Reward: -413218.02 | Duration: 43.42s | CPU Memory: 2841.76 MB | Replay Buffer Usage: 88.49%
+[2K[2KEpisode: 178 | Episode Reward: -421153.58 | Duration: 45.16s | CPU Memory: 2845.97 MB | Replay Buffer Usage: 88.99%
+[2K[2KEpisode: 179 | Episode Reward: -416219.27 | Duration: 42.34s | CPU Memory: 2858.39 MB | Replay Buffer Usage: 89.49%
+[2K[2KEpisode: 180 | Episode Reward: -423280.96 | Duration: 43.02s | CPU Memory: 2867.12 MB | Replay Buffer Usage: 89.98%
+[2K[2KEpisode: 181 | Episode Reward: -402657.47 | Duration: 46.05s | CPU Memory: 2876.24 MB | Replay Buffer Usage: 90.48%
+[2K[2KEpisode: 182 | Episode Reward: -437126.34 | Duration: 42.11s | CPU Memory: 2880.23 MB | Replay Buffer Usage: 90.98%
+[2K[2KEpisode: 183 | Episode Reward: -419798.66 | Duration: 45.32s | CPU Memory: 2886.60 MB | Replay Buffer Usage: 91.47%
+[2K[2KEpisode: 184 | Episode Reward: -438963.18 | Duration: 46.51s | CPU Memory: 2898.52 MB | Replay Buffer Usage: 91.97%
+[2K[2KEpisode: 185 | Episode Reward: -451437.24 | Duration: 42.08s | CPU Memory: 2906.70 MB | Replay Buffer Usage: 92.47%
+[2K[2KEpisode: 186 | Episode Reward: -430500.24 | Duration: 43.17s | CPU Memory: 2917.30 MB | Replay Buffer Usage: 92.97%
+[2K[2KEpisode: 187 | Episode Reward: -427623.28 | Duration: 43.18s | CPU Memory: 2924.22 MB | Replay Buffer Usage: 93.46%
+[2K[2KEpisode: 188 | Episode Reward: -427049.69 | Duration: 43.97s | CPU Memory: 2933.85 MB | Replay Buffer Usage: 93.96%
+[2K[2KEpisode: 189 | Episode Reward: -426017.75 | Duration: 45.97s | CPU Memory: 2942.46 MB | Replay Buffer Usage: 94.46%
+[2K[2KEpisode: 190 | Episode Reward: -423381.46 | Duration: 43.51s | CPU Memory: 2945.48 MB | Replay Buffer Usage: 94.95%
+[2K[2KEpisode: 191 | Episode Reward: -425650.80 | Duration: 44.28s | CPU Memory: 2956.33 MB | Replay Buffer Usage: 95.45%
+[2K[2KEpisode: 192 | Episode Reward: -447240.14 | Duration: 46.35s | CPU Memory: 2963.00 MB | Replay Buffer Usage: 95.95%
+[2K[2KEpisode: 193 | Episode Reward: -450180.96 | Duration: 44.10s | CPU Memory: 2972.25 MB | Replay Buffer Usage: 96.45%
+[2K[2KEpisode: 194 | Episode Reward: -425407.13 | Duration: 43.27s | CPU Memory: 2976.90 MB | Replay Buffer Usage: 96.94%
+[2K[2KEpisode: 195 | Episode Reward: -427324.31 | Duration: 44.08s | CPU Memory: 2988.17 MB | Replay Buffer Usage: 97.44%
+[2K[2KEpisode: 196 | Episode Reward: -409930.88 | Duration: 43.69s | CPU Memory: 2992.92 MB | Replay Buffer Usage: 97.94%
+[2K[2KEpisode: 197 | Episode Reward: -476784.88 | Duration: 45.92s | CPU Memory: 3006.12 MB | Replay Buffer Usage: 98.43%
+[2K[2KEpisode: 198 | Episode Reward: -431049.46 | Duration: 43.86s | CPU Memory: 3012.09 MB | Replay Buffer Usage: 98.93%
+[2K[2KEpisode: 199 | Episode Reward: -437001.30 | Duration: 42.86s | CPU Memory: 3020.38 MB | Replay Buffer Usage: 99.43%
+[2K[2KEpisode: 200 | Episode Reward: -413058.76 | Duration: 44.69s | CPU Memory: 3028.58 MB | Replay Buffer Usage: 99.93%
+[2K[2KEpisode: 201 | Episode Reward: -436382.35 | Duration: 142.30s | CPU Memory: 3030.43 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 202 | Episode Reward: -404755.75 | Duration: 165.73s | CPU Memory: 3033.86 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 203 | Episode Reward: -424826.66 | Duration: 165.84s | CPU Memory: 3034.32 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 204 | Episode Reward: -423936.92 | Duration: 161.29s | CPU Memory: 3034.68 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 205 | Episode Reward: -415120.91 | Duration: 163.16s | CPU Memory: 3036.95 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 206 | Episode Reward: -421348.01 | Duration: 166.33s | CPU Memory: 3036.29 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 207 | Episode Reward: -419416.69 | Duration: 166.47s | CPU Memory: 3038.16 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 208 | Episode Reward: -446691.35 | Duration: 166.13s | CPU Memory: 3038.29 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 209 | Episode Reward: -428122.49 | Duration: 165.76s | CPU Memory: 3037.98 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 210 | Episode Reward: -407352.14 | Duration: 166.22s | CPU Memory: 3039.86 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 211 | Episode Reward: -437076.18 | Duration: 166.47s | CPU Memory: 3040.00 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 212 | Episode Reward: -431874.97 | Duration: 164.93s | CPU Memory: 3039.97 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 213 | Episode Reward: -423780.01 | Duration: 164.17s | CPU Memory: 3040.48 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 214 | Episode Reward: -444418.59 | Duration: 162.83s | CPU Memory: 3040.54 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 215 | Episode Reward: -435852.97 | Duration: 165.91s | CPU Memory: 3040.59 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 216 | Episode Reward: -443565.42 | Duration: 163.41s | CPU Memory: 3042.15 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 217 | Episode Reward: -426106.69 | Duration: 164.15s | CPU Memory: 3041.32 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 218 | Episode Reward: -455755.18 | Duration: 166.85s | CPU Memory: 3043.12 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 219 | Episode Reward: -441519.66 | Duration: 165.49s | CPU Memory: 3042.40 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 220 | Episode Reward: -459848.82 | Duration: 169.67s | CPU Memory: 3042.49 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 221 | Episode Reward: -442735.91 | Duration: 165.95s | CPU Memory: 3042.59 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 222 | Episode Reward: -459555.65 | Duration: 164.69s | CPU Memory: 3043.54 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 223 | Episode Reward: -470414.67 | Duration: 161.18s | CPU Memory: 3043.45 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 224 | Episode Reward: -482628.55 | Duration: 161.53s | CPU Memory: 3044.19 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 225 | Episode Reward: -491095.39 | Duration: 160.94s | CPU Memory: 3044.24 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 226 | Episode Reward: -531866.68 | Duration: 160.67s | CPU Memory: 3044.32 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 227 | Episode Reward: -538596.02 | Duration: 160.30s | CPU Memory: 3044.37 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 228 | Episode Reward: -585308.09 | Duration: 170.17s | CPU Memory: 3044.38 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 229 | Episode Reward: -551816.55 | Duration: 163.86s | CPU Memory: 3044.43 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 230 | Episode Reward: -635247.21 | Duration: 171.05s | CPU Memory: 3044.40 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 231 | Episode Reward: -626506.78 | Duration: 167.48s | CPU Memory: 3044.52 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 232 | Episode Reward: -666003.34 | Duration: 164.14s | CPU Memory: 3044.80 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 233 | Episode Reward: -658494.00 | Duration: 167.02s | CPU Memory: 3045.72 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 234 | Episode Reward: -686932.68 | Duration: 167.29s | CPU Memory: 3045.09 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 235 | Episode Reward: -648511.43 | Duration: 164.79s | CPU Memory: 3045.71 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 236 | Episode Reward: -658552.92 | Duration: 161.08s | CPU Memory: 3044.75 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 237 | Episode Reward: -707841.44 | Duration: 161.64s | CPU Memory: 3045.45 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 238 | Episode Reward: -681616.81 | Duration: 162.81s | CPU Memory: 3045.36 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 239 | Episode Reward: -678223.79 | Duration: 164.39s | CPU Memory: 3045.30 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 240 | Episode Reward: -683134.24 | Duration: 163.21s | CPU Memory: 3046.92 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 241 | Episode Reward: -676457.25 | Duration: 172.50s | CPU Memory: 3046.86 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 242 | Episode Reward: -750705.26 | Duration: 194.92s | CPU Memory: 3047.30 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 243 | Episode Reward: -679678.31 | Duration: 168.95s | CPU Memory: 3046.72 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 244 | Episode Reward: -737809.25 | Duration: 170.96s | CPU Memory: 3046.72 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 245 | Episode Reward: -707708.93 | Duration: 226.97s | CPU Memory: 3046.45 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 246 | Episode Reward: -663340.11 | Duration: 181.93s | CPU Memory: 3047.20 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 247 | Episode Reward: -682519.03 | Duration: 175.75s | CPU Memory: 3047.00 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 248 | Episode Reward: -743269.88 | Duration: 166.78s | CPU Memory: 3047.05 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 249 | Episode Reward: -749375.46 | Duration: 165.58s | CPU Memory: 3048.04 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 250 | Episode Reward: -608682.41 | Duration: 164.59s | CPU Memory: 3048.29 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 251 | Episode Reward: -451862.85 | Duration: 163.68s | CPU Memory: 3047.59 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 252 | Episode Reward: -465624.45 | Duration: 168.19s | CPU Memory: 3048.46 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 253 | Episode Reward: -443973.84 | Duration: 165.50s | CPU Memory: 3049.68 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 254 | Episode Reward: -442532.97 | Duration: 172.62s | CPU Memory: 3049.35 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 255 | Episode Reward: -468986.60 | Duration: 165.49s | CPU Memory: 3049.10 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 256 | Episode Reward: -457196.48 | Duration: 167.69s | CPU Memory: 3049.34 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 257 | Episode Reward: -451131.77 | Duration: 173.93s | CPU Memory: 3050.17 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 258 | Episode Reward: -446746.38 | Duration: 168.90s | CPU Memory: 3050.11 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 259 | Episode Reward: -423181.62 | Duration: 170.08s | CPU Memory: 3050.10 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 260 | Episode Reward: -451554.09 | Duration: 173.45s | CPU Memory: 3050.15 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 261 | Episode Reward: -435710.35 | Duration: 179.60s | CPU Memory: 3050.72 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 262 | Episode Reward: -453692.51 | Duration: 188.13s | CPU Memory: 3049.75 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 263 | Episode Reward: -424303.07 | Duration: 175.36s | CPU Memory: 3049.86 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 264 | Episode Reward: -413308.31 | Duration: 182.72s | CPU Memory: 3051.03 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 265 | Episode Reward: -437272.51 | Duration: 176.77s | CPU Memory: 3050.59 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 266 | Episode Reward: -450247.52 | Duration: 173.42s | CPU Memory: 3050.59 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 267 | Episode Reward: -435287.11 | Duration: 179.02s | CPU Memory: 3050.88 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 268 | Episode Reward: -429951.17 | Duration: 179.00s | CPU Memory: 3056.13 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 269 | Episode Reward: -431194.81 | Duration: 174.98s | CPU Memory: 3054.60 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 270 | Episode Reward: -439942.89 | Duration: 190.01s | CPU Memory: 3054.57 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 271 | Episode Reward: -430510.56 | Duration: 191.38s | CPU Memory: 3054.65 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 272 | Episode Reward: -433351.59 | Duration: 194.86s | CPU Memory: 3054.81 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 273 | Episode Reward: -408598.53 | Duration: 166.05s | CPU Memory: 3054.80 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 274 | Episode Reward: -427653.70 | Duration: 164.31s | CPU Memory: 3054.90 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 275 | Episode Reward: -450463.95 | Duration: 163.96s | CPU Memory: 3054.95 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 276 | Episode Reward: -456825.47 | Duration: 162.04s | CPU Memory: 3054.75 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 277 | Episode Reward: -446415.92 | Duration: 160.59s | CPU Memory: 3054.61 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 278 | Episode Reward: -444292.47 | Duration: 172.58s | CPU Memory: 3055.62 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 279 | Episode Reward: -430120.55 | Duration: 166.01s | CPU Memory: 3055.65 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 280 | Episode Reward: -443438.89 | Duration: 176.48s | CPU Memory: 3055.65 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 281 | Episode Reward: -450801.38 | Duration: 174.95s | CPU Memory: 3055.65 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 282 | Episode Reward: -446154.71 | Duration: 176.45s | CPU Memory: 3055.45 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 283 | Episode Reward: -414868.45 | Duration: 184.11s | CPU Memory: 3055.54 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 284 | Episode Reward: -464797.43 | Duration: 174.55s | CPU Memory: 3055.70 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 285 | Episode Reward: -442676.24 | Duration: 165.91s | CPU Memory: 3055.42 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 286 | Episode Reward: -453181.90 | Duration: 166.71s | CPU Memory: 3055.41 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 287 | Episode Reward: -446889.02 | Duration: 162.86s | CPU Memory: 3055.20 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 288 | Episode Reward: -455535.84 | Duration: 164.13s | CPU Memory: 3056.00 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 289 | Episode Reward: -439200.74 | Duration: 168.22s | CPU Memory: 3056.00 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 290 | Episode Reward: -449101.39 | Duration: 173.16s | CPU Memory: 3056.01 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 291 | Episode Reward: -427724.26 | Duration: 173.21s | CPU Memory: 3056.37 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 292 | Episode Reward: -457865.37 | Duration: 179.62s | CPU Memory: 3056.21 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 293 | Episode Reward: -457674.91 | Duration: 169.05s | CPU Memory: 3056.34 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 294 | Episode Reward: -430603.00 | Duration: 167.50s | CPU Memory: 3056.25 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 295 | Episode Reward: -462852.62 | Duration: 169.59s | CPU Memory: 3056.64 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 296 | Episode Reward: -465579.72 | Duration: 164.82s | CPU Memory: 3056.66 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 297 | Episode Reward: -437862.01 | Duration: 163.26s | CPU Memory: 3056.46 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 298 | Episode Reward: -455277.11 | Duration: 175.38s | CPU Memory: 3057.18 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 299 | Episode Reward: -450396.91 | Duration: 185.70s | CPU Memory: 3057.49 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 300 | Episode Reward: -466961.13 | Duration: 178.90s | CPU Memory: 3057.51 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 301 | Episode Reward: -478677.40 | Duration: 176.66s | CPU Memory: 3057.38 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 302 | Episode Reward: -440900.06 | Duration: 179.38s | CPU Memory: 3057.38 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 303 | Episode Reward: -464202.26 | Duration: 182.99s | CPU Memory: 3058.07 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 304 | Episode Reward: -441630.38 | Duration: 176.53s | CPU Memory: 3058.20 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 305 | Episode Reward: -459745.96 | Duration: 181.09s | CPU Memory: 3058.39 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 306 | Episode Reward: -408257.77 | Duration: 172.62s | CPU Memory: 3058.61 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 307 | Episode Reward: -473893.78 | Duration: 179.38s | CPU Memory: 3058.71 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 308 | Episode Reward: -461520.22 | Duration: 172.51s | CPU Memory: 3058.54 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 309 | Episode Reward: -479624.53 | Duration: 167.14s | CPU Memory: 3058.34 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 310 | Episode Reward: -425251.16 | Duration: 167.02s | CPU Memory: 3058.55 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 311 | Episode Reward: -488917.97 | Duration: 170.03s | CPU Memory: 3060.43 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 312 | Episode Reward: -475130.77 | Duration: 176.62s | CPU Memory: 3060.57 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 313 | Episode Reward: -481655.22 | Duration: 178.74s | CPU Memory: 3060.57 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 314 | Episode Reward: -479066.37 | Duration: 175.68s | CPU Memory: 3060.51 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 315 | Episode Reward: -421124.26 | Duration: 166.02s | CPU Memory: 3060.51 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 316 | Episode Reward: -431898.68 | Duration: 170.77s | CPU Memory: 3060.66 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 317 | Episode Reward: -479199.64 | Duration: 165.24s | CPU Memory: 3060.49 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 318 | Episode Reward: -472606.29 | Duration: 166.02s | CPU Memory: 3060.53 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 319 | Episode Reward: -471335.37 | Duration: 170.92s | CPU Memory: 3060.69 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 320 | Episode Reward: -472185.24 | Duration: 169.17s | CPU Memory: 3060.60 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 321 | Episode Reward: -469956.38 | Duration: 172.29s | CPU Memory: 3060.80 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 322 | Episode Reward: -504691.17 | Duration: 176.43s | CPU Memory: 3060.80 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 323 | Episode Reward: -485044.54 | Duration: 170.08s | CPU Memory: 3060.55 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 324 | Episode Reward: -463539.09 | Duration: 164.26s | CPU Memory: 3060.59 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 325 | Episode Reward: -507777.14 | Duration: 161.95s | CPU Memory: 3060.64 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 326 | Episode Reward: -474190.19 | Duration: 161.25s | CPU Memory: 3060.39 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 327 | Episode Reward: -468749.12 | Duration: 157.25s | CPU Memory: 3060.30 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 328 | Episode Reward: -461728.37 | Duration: 157.35s | CPU Memory: 3060.20 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 329 | Episode Reward: -500255.95 | Duration: 160.18s | CPU Memory: 3060.30 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 330 | Episode Reward: -488189.61 | Duration: 158.70s | CPU Memory: 3060.21 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 331 | Episode Reward: -502469.20 | Duration: 160.97s | CPU Memory: 3060.02 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 332 | Episode Reward: -453023.64 | Duration: 160.29s | CPU Memory: 3060.29 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 333 | Episode Reward: -453776.14 | Duration: 158.79s | CPU Memory: 3060.94 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 334 | Episode Reward: -488337.67 | Duration: 157.91s | CPU Memory: 3062.34 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 335 | Episode Reward: -491059.89 | Duration: 157.38s | CPU Memory: 3061.47 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 336 | Episode Reward: -491356.93 | Duration: 158.17s | CPU Memory: 3061.54 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 337 | Episode Reward: -469062.54 | Duration: 156.87s | CPU Memory: 3061.70 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 338 | Episode Reward: -474872.69 | Duration: 156.73s | CPU Memory: 3061.96 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 339 | Episode Reward: -479274.45 | Duration: 157.54s | CPU Memory: 3062.00 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 340 | Episode Reward: -486860.69 | Duration: 157.29s | CPU Memory: 3062.27 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 341 | Episode Reward: -449984.59 | Duration: 157.64s | CPU Memory: 3062.00 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 342 | Episode Reward: -464721.57 | Duration: 157.04s | CPU Memory: 3061.96 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 343 | Episode Reward: -470215.73 | Duration: 160.79s | CPU Memory: 3062.69 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 344 | Episode Reward: -455839.28 | Duration: 158.19s | CPU Memory: 3062.98 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 345 | Episode Reward: -468168.55 | Duration: 157.04s | CPU Memory: 3062.77 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 346 | Episode Reward: -504910.60 | Duration: 157.97s | CPU Memory: 3062.77 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 347 | Episode Reward: -479441.29 | Duration: 158.93s | CPU Memory: 3063.98 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 348 | Episode Reward: -487161.88 | Duration: 158.50s | CPU Memory: 3062.88 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 349 | Episode Reward: -459936.56 | Duration: 157.94s | CPU Memory: 3062.82 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 350 | Episode Reward: -488678.59 | Duration: 157.13s | CPU Memory: 3062.96 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 351 | Episode Reward: -486540.58 | Duration: 157.76s | CPU Memory: 3062.93 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 352 | Episode Reward: -487613.64 | Duration: 158.12s | CPU Memory: 3064.27 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 353 | Episode Reward: -491568.22 | Duration: 159.38s | CPU Memory: 3063.58 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 354 | Episode Reward: -518309.37 | Duration: 157.75s | CPU Memory: 3063.66 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 355 | Episode Reward: -499958.06 | Duration: 160.59s | CPU Memory: 3063.95 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 356 | Episode Reward: -489303.67 | Duration: 159.75s | CPU Memory: 3064.37 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 357 | Episode Reward: -515348.82 | Duration: 157.91s | CPU Memory: 3064.41 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 358 | Episode Reward: -514500.25 | Duration: 158.22s | CPU Memory: 3064.38 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 359 | Episode Reward: -530090.35 | Duration: 156.49s | CPU Memory: 3064.60 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 360 | Episode Reward: -500487.32 | Duration: 159.34s | CPU Memory: 3065.18 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 361 | Episode Reward: -480058.97 | Duration: 159.42s | CPU Memory: 3065.18 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 362 | Episode Reward: -515212.99 | Duration: 173.63s | CPU Memory: 3065.15 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 363 | Episode Reward: -516201.15 | Duration: 179.25s | CPU Memory: 3064.95 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 364 | Episode Reward: -498237.88 | Duration: 178.06s | CPU Memory: 3065.17 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 365 | Episode Reward: -514356.84 | Duration: 178.94s | CPU Memory: 3065.05 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 366 | Episode Reward: -510097.73 | Duration: 178.35s | CPU Memory: 3064.79 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 367 | Episode Reward: -490364.73 | Duration: 188.58s | CPU Memory: 3064.55 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 368 | Episode Reward: -500363.45 | Duration: 186.86s | CPU Memory: 3063.87 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 369 | Episode Reward: -509603.33 | Duration: 172.15s | CPU Memory: 3063.98 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 370 | Episode Reward: -494403.35 | Duration: 161.99s | CPU Memory: 3063.92 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 371 | Episode Reward: -532547.09 | Duration: 168.97s | CPU Memory: 3063.99 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 372 | Episode Reward: -518792.02 | Duration: 164.15s | CPU Memory: 3064.27 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 373 | Episode Reward: -490131.37 | Duration: 165.32s | CPU Memory: 3063.90 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 374 | Episode Reward: -498805.80 | Duration: 162.22s | CPU Memory: 3064.92 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 375 | Episode Reward: -535931.31 | Duration: 172.98s | CPU Memory: 3064.98 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 376 | Episode Reward: -533648.02 | Duration: 180.29s | CPU Memory: 3065.01 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 377 | Episode Reward: -499278.72 | Duration: 175.65s | CPU Memory: 3065.38 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 378 | Episode Reward: -512950.47 | Duration: 181.10s | CPU Memory: 3065.81 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 379 | Episode Reward: -504674.87 | Duration: 189.72s | CPU Memory: 3065.56 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 380 | Episode Reward: -498398.92 | Duration: 191.38s | CPU Memory: 3064.72 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 381 | Episode Reward: -543826.46 | Duration: 229.00s | CPU Memory: 3065.86 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 382 | Episode Reward: -555135.18 | Duration: 204.27s | CPU Memory: 3065.88 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 383 | Episode Reward: -526646.18 | Duration: 196.28s | CPU Memory: 3065.97 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 384 | Episode Reward: -549108.74 | Duration: 196.38s | CPU Memory: 3066.05 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 385 | Episode Reward: -537045.96 | Duration: 194.97s | CPU Memory: 3065.83 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 386 | Episode Reward: -502361.41 | Duration: 210.87s | CPU Memory: 3065.82 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 387 | Episode Reward: -520016.42 | Duration: 184.90s | CPU Memory: 3065.98 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 388 | Episode Reward: -511203.28 | Duration: 179.17s | CPU Memory: 3067.14 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 389 | Episode Reward: -573934.99 | Duration: 180.21s | CPU Memory: 3065.91 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 390 | Episode Reward: -541267.35 | Duration: 188.46s | CPU Memory: 3066.89 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 391 | Episode Reward: -520527.88 | Duration: 179.48s | CPU Memory: 3066.09 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 392 | Episode Reward: -504881.85 | Duration: 177.66s | CPU Memory: 3067.91 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 393 | Episode Reward: -542832.50 | Duration: 190.13s | CPU Memory: 3067.82 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 394 | Episode Reward: -516156.95 | Duration: 418.88s | CPU Memory: 3067.88 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 395 | Episode Reward: -555658.74 | Duration: 329.63s | CPU Memory: 3067.79 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 396 | Episode Reward: -527886.69 | Duration: 187.19s | CPU Memory: 3067.59 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 397 | Episode Reward: -544441.16 | Duration: 186.91s | CPU Memory: 3067.50 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 398 | Episode Reward: -521436.75 | Duration: 187.70s | CPU Memory: 3067.63 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 399 | Episode Reward: -566814.44 | Duration: 178.35s | CPU Memory: 3067.73 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 400 | Episode Reward: -517903.42 | Duration: 175.38s | CPU Memory: 3067.73 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 401 | Episode Reward: -527488.75 | Duration: 179.54s | CPU Memory: 3068.09 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 402 | Episode Reward: -532036.10 | Duration: 177.63s | CPU Memory: 3068.36 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 403 | Episode Reward: -590232.04 | Duration: 175.11s | CPU Memory: 3068.32 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 404 | Episode Reward: -555743.20 | Duration: 174.80s | CPU Memory: 3068.12 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 405 | Episode Reward: -547460.27 | Duration: 176.69s | CPU Memory: 3067.92 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 406 | Episode Reward: -595964.06 | Duration: 180.84s | CPU Memory: 3068.08 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 407 | Episode Reward: -559174.78 | Duration: 209.54s | CPU Memory: 3067.99 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 408 | Episode Reward: -591263.98 | Duration: 236.47s | CPU Memory: 3068.03 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 409 | Episode Reward: -607639.25 | Duration: 204.29s | CPU Memory: 3067.96 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 410 | Episode Reward: -590886.69 | Duration: 204.23s | CPU Memory: 3067.87 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 411 | Episode Reward: -628327.13 | Duration: 219.44s | CPU Memory: 3067.78 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 412 | Episode Reward: -576082.39 | Duration: 202.50s | CPU Memory: 3067.83 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 413 | Episode Reward: -624811.68 | Duration: 209.01s | CPU Memory: 3067.74 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 414 | Episode Reward: -602062.46 | Duration: 205.31s | CPU Memory: 3067.88 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 415 | Episode Reward: -581684.83 | Duration: 212.73s | CPU Memory: 3067.68 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 416 | Episode Reward: -597567.51 | Duration: 201.25s | CPU Memory: 3067.59 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 417 | Episode Reward: -643785.53 | Duration: 175.40s | CPU Memory: 3067.83 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 418 | Episode Reward: -618793.28 | Duration: 178.06s | CPU Memory: 3067.83 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 419 | Episode Reward: -594113.05 | Duration: 179.04s | CPU Memory: 3067.73 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 420 | Episode Reward: -593774.68 | Duration: 174.31s | CPU Memory: 3067.70 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 421 | Episode Reward: -626551.03 | Duration: 169.07s | CPU Memory: 3067.76 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 422 | Episode Reward: -638688.83 | Duration: 173.39s | CPU Memory: 3067.47 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 423 | Episode Reward: -650226.33 | Duration: 171.73s | CPU Memory: 3067.38 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 424 | Episode Reward: -629056.35 | Duration: 174.02s | CPU Memory: 3067.43 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 425 | Episode Reward: -630444.26 | Duration: 171.78s | CPU Memory: 3067.62 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 426 | Episode Reward: -659594.09 | Duration: 170.17s | CPU Memory: 3067.72 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 427 | Episode Reward: -685259.77 | Duration: 174.32s | CPU Memory: 3067.75 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 428 | Episode Reward: -631485.14 | Duration: 172.62s | CPU Memory: 3068.14 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 429 | Episode Reward: -664845.19 | Duration: 175.94s | CPU Memory: 3067.50 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 430 | Episode Reward: -664917.56 | Duration: 166.00s | CPU Memory: 3067.50 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 431 | Episode Reward: -697520.55 | Duration: 165.71s | CPU Memory: 3067.29 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 432 | Episode Reward: -758238.81 | Duration: 166.89s | CPU Memory: 3067.47 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 433 | Episode Reward: -678169.23 | Duration: 164.97s | CPU Memory: 3067.51 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 434 | Episode Reward: -702809.75 | Duration: 165.56s | CPU Memory: 3067.83 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 435 | Episode Reward: -706638.63 | Duration: 166.47s | CPU Memory: 3068.64 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 436 | Episode Reward: -689111.24 | Duration: 166.43s | CPU Memory: 3068.70 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 437 | Episode Reward: -677711.93 | Duration: 166.97s | CPU Memory: 3068.64 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 438 | Episode Reward: -707671.02 | Duration: 166.67s | CPU Memory: 3068.91 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 439 | Episode Reward: -696006.69 | Duration: 165.63s | CPU Memory: 3068.96 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 440 | Episode Reward: -685377.27 | Duration: 166.45s | CPU Memory: 3069.12 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 441 | Episode Reward: -676131.58 | Duration: 167.00s | CPU Memory: 3068.82 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 442 | Episode Reward: -721240.97 | Duration: 167.46s | CPU Memory: 3068.97 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 443 | Episode Reward: -658181.18 | Duration: 167.32s | CPU Memory: 3069.10 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 444 | Episode Reward: -708759.65 | Duration: 167.19s | CPU Memory: 3069.24 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 445 | Episode Reward: -686688.00 | Duration: 166.64s | CPU Memory: 3069.37 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 446 | Episode Reward: -704342.39 | Duration: 165.55s | CPU Memory: 3069.41 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 447 | Episode Reward: -677236.75 | Duration: 165.58s | CPU Memory: 3069.31 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 448 | Episode Reward: -741197.30 | Duration: 171.43s | CPU Memory: 3069.11 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 449 | Episode Reward: -657780.78 | Duration: 181.23s | CPU Memory: 3069.27 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 450 | Episode Reward: -665609.56 | Duration: 179.22s | CPU Memory: 3068.86 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 451 | Episode Reward: -720667.69 | Duration: 170.83s | CPU Memory: 3068.97 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 452 | Episode Reward: -669753.80 | Duration: 165.64s | CPU Memory: 3068.97 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 453 | Episode Reward: -671285.84 | Duration: 168.33s | CPU Memory: 3069.02 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 454 | Episode Reward: -668181.16 | Duration: 167.88s | CPU Memory: 3069.07 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 455 | Episode Reward: -755761.73 | Duration: 167.03s | CPU Memory: 3068.90 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 456 | Episode Reward: -663956.21 | Duration: 165.72s | CPU Memory: 3068.99 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 457 | Episode Reward: -715100.71 | Duration: 165.97s | CPU Memory: 3069.73 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 458 | Episode Reward: -675887.75 | Duration: 167.76s | CPU Memory: 3069.00 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 459 | Episode Reward: -654185.26 | Duration: 166.08s | CPU Memory: 3068.96 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 460 | Episode Reward: -705465.11 | Duration: 166.85s | CPU Memory: 3068.70 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 461 | Episode Reward: -676412.10 | Duration: 166.26s | CPU Memory: 3069.84 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 462 | Episode Reward: -758098.63 | Duration: 168.40s | CPU Memory: 3070.10 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 463 | Episode Reward: -683168.58 | Duration: 166.83s | CPU Memory: 3068.77 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 464 | Episode Reward: -674873.61 | Duration: 166.46s | CPU Memory: 3068.93 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 465 | Episode Reward: -642768.04 | Duration: 165.15s | CPU Memory: 3068.57 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 466 | Episode Reward: -737446.87 | Duration: 165.59s | CPU Memory: 3068.63 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 467 | Episode Reward: -701196.33 | Duration: 167.04s | CPU Memory: 3068.46 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 468 | Episode Reward: -721015.33 | Duration: 168.29s | CPU Memory: 3069.37 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 469 | Episode Reward: -809032.64 | Duration: 165.38s | CPU Memory: 3068.58 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 470 | Episode Reward: -690762.23 | Duration: 170.18s | CPU Memory: 3069.61 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 471 | Episode Reward: -712537.33 | Duration: 167.75s | CPU Memory: 3068.50 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 472 | Episode Reward: -734580.36 | Duration: 166.51s | CPU Memory: 3068.63 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 473 | Episode Reward: -724917.73 | Duration: 166.15s | CPU Memory: 3068.65 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 474 | Episode Reward: -744498.02 | Duration: 166.74s | CPU Memory: 3068.48 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 475 | Episode Reward: -744740.61 | Duration: 166.12s | CPU Memory: 3068.33 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 476 | Episode Reward: -748404.69 | Duration: 165.71s | CPU Memory: 3069.17 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 477 | Episode Reward: -746657.11 | Duration: 165.58s | CPU Memory: 3068.25 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 478 | Episode Reward: -791581.88 | Duration: 167.89s | CPU Memory: 3068.33 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 479 | Episode Reward: -747584.34 | Duration: 167.99s | CPU Memory: 3069.09 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 480 | Episode Reward: -732238.98 | Duration: 167.55s | CPU Memory: 3068.28 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 481 | Episode Reward: -747776.00 | Duration: 166.34s | CPU Memory: 3068.50 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 482 | Episode Reward: -755697.62 | Duration: 166.45s | CPU Memory: 3069.80 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 483 | Episode Reward: -733547.85 | Duration: 166.44s | CPU Memory: 3068.81 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 484 | Episode Reward: -738578.00 | Duration: 167.64s | CPU Memory: 3068.98 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 485 | Episode Reward: -764253.01 | Duration: 167.38s | CPU Memory: 3070.08 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 486 | Episode Reward: -756378.71 | Duration: 167.84s | CPU Memory: 3068.84 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 487 | Episode Reward: -779905.81 | Duration: 166.12s | CPU Memory: 3068.37 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 488 | Episode Reward: -768953.70 | Duration: 167.72s | CPU Memory: 3068.52 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 489 | Episode Reward: -770504.50 | Duration: 167.78s | CPU Memory: 3068.66 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 490 | Episode Reward: -754597.32 | Duration: 165.87s | CPU Memory: 3068.37 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 491 | Episode Reward: -756727.44 | Duration: 166.59s | CPU Memory: 3068.26 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 492 | Episode Reward: -757001.47 | Duration: 170.50s | CPU Memory: 3069.33 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 493 | Episode Reward: -770882.74 | Duration: 166.81s | CPU Memory: 3069.35 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 494 | Episode Reward: -815797.36 | Duration: 170.76s | CPU Memory: 3069.15 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 495 | Episode Reward: -781547.01 | Duration: 167.49s | CPU Memory: 3069.04 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 496 | Episode Reward: -705680.61 | Duration: 167.57s | CPU Memory: 3069.01 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 497 | Episode Reward: -745281.39 | Duration: 166.27s | CPU Memory: 3068.95 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 498 | Episode Reward: -772666.35 | Duration: 165.29s | CPU Memory: 3068.89 MB | Replay Buffer Usage: 100.00%
+[2K[2KEpisode: 499 | Episode Reward: -745283.49 | Duration: 167.39s | CPU Memory: 3069.04 MB | Replay Buffer Usage: 100.00%

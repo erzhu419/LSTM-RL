@@ -1,0 +1,27 @@
+algorithm_kwargs:
+  batch_size: 256
+  max_path_length: 1000
+  min_num_steps_before_training: 10000
+  num_epochs: 1000
+  num_eval_paths_per_epoch: 5
+  num_expl_steps_per_train_loop: 1000
+  num_trains_per_train_loop: 1000
+env: Walker2d-v2
+eval_env_num: 4
+expl_env_num: 4
+layer_size: 256
+ensemble_size: 10
+replay_buffer_size: 1000000
+trainer_kwargs:
+  beta: -2.0
+  beta_ood: 0.01
+  weight_reg: 0.01
+  beta_bc: 0.001
+  critic_actor_ratio: 2
+  discount: 0.99
+  policy_lr: 0.0003
+  qf_lr: 0.0003
+  soft_target_tau: 0.005
+  clip_norm: 1.0
+  use_automatic_entropy_tuning: true
+version: ensemble-10

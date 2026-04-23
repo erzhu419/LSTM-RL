@@ -1,0 +1,511 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+pygame 2.5.2 (SDL 2.28.2, Python 3.12.4)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Found 500 checkpoints.
+Analyzing Checkpoints:   0%|          | 0/500 [00:00<?, ?it/s]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:191: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at ../torch/csrc/utils/tensor_new.cpp:275.)
+  target_action_tensor = torch.FloatTensor([a]).to(device) # Shape adjustment might be needed [1, action_dim]
+Analyzing Checkpoints:   0%|          | 1/500 [00:00<01:13,  6.83it/s]Analyzing Checkpoints:   0%|          | 2/500 [00:00<00:59,  8.34it/s]Analyzing Checkpoints:   1%|          | 4/500 [00:00<00:51,  9.71it/s]Analyzing Checkpoints:   1%|          | 6/500 [00:00<00:57,  8.56it/s]Analyzing Checkpoints:   2%|▏         | 8/500 [00:00<00:53,  9.26it/s]Analyzing Checkpoints:   2%|▏         | 10/500 [00:01<00:50,  9.72it/s]Analyzing Checkpoints:   2%|▏         | 12/500 [00:01<00:47, 10.22it/s]Analyzing Checkpoints:   3%|▎         | 14/500 [00:01<00:45, 10.57it/s]Analyzing Checkpoints:   3%|▎         | 16/500 [00:01<00:45, 10.73it/s]Analyzing Checkpoints:   4%|▎         | 18/500 [00:01<00:44, 10.89it/s]Analyzing Checkpoints:   4%|▍         | 20/500 [00:01<00:45, 10.66it/s]Analyzing Checkpoints:   4%|▍         | 22/500 [00:02<00:44, 10.75it/s]Analyzing Checkpoints:   5%|▍         | 24/500 [00:02<00:49,  9.59it/s]Analyzing Checkpoints:   5%|▌         | 26/500 [00:02<00:46, 10.10it/s]Analyzing Checkpoints:   6%|▌         | 28/500 [00:02<00:46, 10.21it/s]Analyzing Checkpoints:   6%|▌         | 30/500 [00:02<00:45, 10.36it/s]Analyzing Checkpoints:   6%|▋         | 32/500 [00:03<00:44, 10.43it/s]Analyzing Checkpoints:   7%|▋         | 34/500 [00:03<00:44, 10.43it/s]Analyzing Checkpoints:   7%|▋         | 36/500 [00:03<00:44, 10.42it/s]Analyzing Checkpoints:   8%|▊         | 38/500 [00:03<00:44, 10.46it/s]Analyzing Checkpoints:   8%|▊         | 40/500 [00:03<00:43, 10.57it/s]Analyzing Checkpoints:   8%|▊         | 42/500 [00:04<00:49,  9.16it/s]Analyzing Checkpoints:   9%|▉         | 44/500 [00:04<00:48,  9.47it/s]Analyzing Checkpoints:   9%|▉         | 46/500 [00:04<00:45,  9.90it/s]Analyzing Checkpoints:  10%|▉         | 48/500 [00:04<00:44, 10.11it/s]Analyzing Checkpoints:  10%|█         | 50/500 [00:04<00:43, 10.35it/s]Analyzing Checkpoints:  10%|█         | 52/500 [00:05<00:43, 10.40it/s]Analyzing Checkpoints:  11%|█         | 54/500 [00:05<00:41, 10.69it/s]Analyzing Checkpoints:  11%|█         | 56/500 [00:05<00:41, 10.81it/s]Analyzing Checkpoints:  12%|█▏        | 58/500 [00:05<00:41, 10.69it/s]Analyzing Checkpoints:  12%|█▏        | 60/500 [00:05<00:41, 10.52it/s]Analyzing Checkpoints:  12%|█▏        | 62/500 [00:06<00:40, 10.72it/s]Analyzing Checkpoints:  13%|█▎        | 64/500 [00:06<00:40, 10.66it/s]Analyzing Checkpoints:  13%|█▎        | 66/500 [00:06<00:46,  9.26it/s]Analyzing Checkpoints:  13%|█▎        | 67/500 [00:06<00:46,  9.38it/s]Analyzing Checkpoints:  14%|█▍        | 69/500 [00:06<00:43,  9.91it/s]Analyzing Checkpoints:  14%|█▍        | 71/500 [00:06<00:41, 10.41it/s]Analyzing Checkpoints:  15%|█▍        | 73/500 [00:07<00:39, 10.72it/s]Analyzing Checkpoints:  15%|█▌        | 75/500 [00:07<00:39, 10.76it/s]Analyzing Checkpoints:  15%|█▌        | 77/500 [00:07<00:39, 10.68it/s]Analyzing Checkpoints:  16%|█▌        | 79/500 [00:07<00:38, 10.88it/s]Analyzing Checkpoints:  16%|█▌        | 81/500 [00:07<00:38, 10.75it/s]Analyzing Checkpoints:  17%|█▋        | 83/500 [00:08<00:38, 10.74it/s]Analyzing Checkpoints:  17%|█▋        | 85/500 [00:08<00:39, 10.57it/s]Analyzing Checkpoints:  17%|█▋        | 87/500 [00:08<00:38, 10.59it/s]Analyzing Checkpoints:  18%|█▊        | 89/500 [00:08<00:37, 10.91it/s]Analyzing Checkpoints:  18%|█▊        | 91/500 [00:08<00:38, 10.61it/s]Analyzing Checkpoints:  19%|█▊        | 93/500 [00:09<00:46,  8.79it/s]Analyzing Checkpoints:  19%|█▉        | 95/500 [00:09<00:43,  9.27it/s]Analyzing Checkpoints:  19%|█▉        | 97/500 [00:09<00:41,  9.82it/s]Analyzing Checkpoints:  20%|█▉        | 99/500 [00:09<00:39, 10.03it/s]Analyzing Checkpoints:  20%|██        | 101/500 [00:09<00:38, 10.34it/s]Analyzing Checkpoints:  21%|██        | 103/500 [00:10<00:38, 10.32it/s]Analyzing Checkpoints:  21%|██        | 105/500 [00:10<00:36, 10.72it/s]Analyzing Checkpoints:  21%|██▏       | 107/500 [00:10<00:37, 10.47it/s]Analyzing Checkpoints:  22%|██▏       | 109/500 [00:10<00:37, 10.55it/s]Analyzing Checkpoints:  22%|██▏       | 111/500 [00:10<00:36, 10.73it/s]Analyzing Checkpoints:  23%|██▎       | 113/500 [00:11<00:36, 10.57it/s]Analyzing Checkpoints:  23%|██▎       | 115/500 [00:11<00:36, 10.59it/s]Analyzing Checkpoints:  23%|██▎       | 117/500 [00:11<00:35, 10.83it/s]Analyzing Checkpoints:  24%|██▍       | 119/500 [00:11<00:34, 11.17it/s]Analyzing Checkpoints:  24%|██▍       | 121/500 [00:11<00:33, 11.28it/s]Analyzing Checkpoints:  25%|██▍       | 123/500 [00:11<00:33, 11.32it/s]Analyzing Checkpoints:  25%|██▌       | 125/500 [00:12<00:43,  8.69it/s]Analyzing Checkpoints:  25%|██▌       | 127/500 [00:12<00:40,  9.15it/s]Analyzing Checkpoints:  26%|██▌       | 129/500 [00:12<00:38,  9.66it/s]Analyzing Checkpoints:  26%|██▌       | 131/500 [00:12<00:37,  9.95it/s]Analyzing Checkpoints:  27%|██▋       | 133/500 [00:12<00:35, 10.44it/s]Analyzing Checkpoints:  27%|██▋       | 135/500 [00:13<00:33, 10.93it/s]Analyzing Checkpoints:  27%|██▋       | 137/500 [00:13<00:32, 11.19it/s]Analyzing Checkpoints:  28%|██▊       | 139/500 [00:13<00:32, 10.99it/s]Analyzing Checkpoints:  28%|██▊       | 141/500 [00:13<00:32, 10.91it/s]Analyzing Checkpoints:  29%|██▊       | 143/500 [00:13<00:32, 10.82it/s]Analyzing Checkpoints:  29%|██▉       | 145/500 [00:14<00:32, 10.78it/s]Analyzing Checkpoints:  29%|██▉       | 147/500 [00:14<00:32, 10.73it/s]Analyzing Checkpoints:  30%|██▉       | 149/500 [00:14<00:32, 10.73it/s]Analyzing Checkpoints:  30%|███       | 151/500 [00:14<00:33, 10.53it/s]Analyzing Checkpoints:  31%|███       | 153/500 [00:14<00:33, 10.40it/s]Analyzing Checkpoints:  31%|███       | 155/500 [00:15<00:32, 10.51it/s]Analyzing Checkpoints:  31%|███▏      | 157/500 [00:15<00:31, 10.73it/s]Analyzing Checkpoints:  32%|███▏      | 159/500 [00:15<00:32, 10.51it/s]Analyzing Checkpoints:  32%|███▏      | 161/500 [00:15<00:32, 10.58it/s]Analyzing Checkpoints:  33%|███▎      | 163/500 [00:15<00:41,  8.21it/s]Analyzing Checkpoints:  33%|███▎      | 165/500 [00:16<00:38,  8.80it/s]Analyzing Checkpoints:  33%|███▎      | 167/500 [00:16<00:36,  9.21it/s]Analyzing Checkpoints:  34%|███▍      | 169/500 [00:16<00:34,  9.51it/s]Analyzing Checkpoints:  34%|███▍      | 171/500 [00:16<00:33,  9.75it/s]Analyzing Checkpoints:  35%|███▍      | 173/500 [00:16<00:33,  9.85it/s]Analyzing Checkpoints:  35%|███▌      | 175/500 [00:17<00:32, 10.01it/s]Analyzing Checkpoints:  35%|███▌      | 177/500 [00:17<00:32, 10.09it/s]Analyzing Checkpoints:  36%|███▌      | 179/500 [00:17<00:31, 10.30it/s]Analyzing Checkpoints:  36%|███▌      | 181/500 [00:17<00:30, 10.51it/s]Analyzing Checkpoints:  37%|███▋      | 183/500 [00:17<00:29, 10.74it/s]Analyzing Checkpoints:  37%|███▋      | 185/500 [00:18<00:28, 11.01it/s]Analyzing Checkpoints:  37%|███▋      | 187/500 [00:18<00:28, 11.02it/s]Analyzing Checkpoints:  38%|███▊      | 189/500 [00:18<00:28, 10.97it/s]Analyzing Checkpoints:  38%|███▊      | 191/500 [00:18<00:27, 11.21it/s]Analyzing Checkpoints:  39%|███▊      | 193/500 [00:18<00:27, 11.29it/s]Analyzing Checkpoints:  39%|███▉      | 195/500 [00:18<00:27, 11.25it/s]Analyzing Checkpoints:  39%|███▉      | 197/500 [00:19<00:26, 11.27it/s]Analyzing Checkpoints:  40%|███▉      | 199/500 [00:19<00:27, 11.11it/s]Analyzing Checkpoints:  40%|████      | 201/500 [00:19<00:27, 10.95it/s]Analyzing Checkpoints:  41%|████      | 203/500 [00:19<00:27, 10.88it/s]Analyzing Checkpoints:  41%|████      | 205/500 [00:19<00:26, 11.02it/s]Analyzing Checkpoints:  41%|████▏     | 207/500 [00:20<00:27, 10.84it/s]Analyzing Checkpoints:  42%|████▏     | 209/500 [00:20<00:37,  7.81it/s]Analyzing Checkpoints:  42%|████▏     | 210/500 [00:20<00:35,  8.09it/s]Analyzing Checkpoints:  42%|████▏     | 212/500 [00:20<00:32,  8.97it/s]Analyzing Checkpoints:  43%|████▎     | 214/500 [00:20<00:30,  9.39it/s]Analyzing Checkpoints:  43%|████▎     | 216/500 [00:21<00:28,  9.82it/s]Analyzing Checkpoints:  44%|████▎     | 218/500 [00:21<00:27, 10.09it/s]Analyzing Checkpoints:  44%|████▍     | 220/500 [00:21<00:27, 10.23it/s]Analyzing Checkpoints:  44%|████▍     | 222/500 [00:21<00:27, 10.30it/s]Analyzing Checkpoints:  45%|████▍     | 224/500 [00:21<00:26, 10.55it/s]Analyzing Checkpoints:  45%|████▌     | 226/500 [00:22<00:26, 10.52it/s]Analyzing Checkpoints:  46%|████▌     | 228/500 [00:22<00:25, 10.46it/s]Analyzing Checkpoints:  46%|████▌     | 230/500 [00:22<00:25, 10.66it/s]Analyzing Checkpoints:  46%|████▋     | 232/500 [00:22<00:25, 10.55it/s]Ep 0: Q_pred=0.30, Q_real=-0.64
+Ep 1: Q_pred=1.00, Q_real=0.00
+Ep 2: Q_pred=2.29, Q_real=-66.00
+Ep 3: Q_pred=4.16, Q_real=0.00
+Ep 4: Q_pred=6.54, Q_real=0.00
+Ep 5: Q_pred=9.26, Q_real=0.00
+Ep 6: Q_pred=11.94, Q_real=0.00
+Ep 7: Q_pred=14.22, Q_real=0.00
+Ep 8: Q_pred=16.13, Q_real=-28.83
+Ep 9: Q_pred=16.93, Q_real=-3.66
+Ep 10: Q_pred=17.53, Q_real=-90.26
+Ep 11: Q_pred=15.17, Q_real=0.00
+Ep 12: Q_pred=13.75, Q_real=0.00
+Ep 13: Q_pred=13.05, Q_real=-246.49
+Ep 14: Q_pred=8.92, Q_real=0.00
+Ep 15: Q_pred=8.61, Q_real=-57.51
+Ep 16: Q_pred=7.61, Q_real=-13.76
+Ep 17: Q_pred=5.82, Q_real=-21.95
+Ep 18: Q_pred=0.75, Q_real=0.00
+Ep 19: Q_pred=0.38, Q_real=-237.14
+Ep 20: Q_pred=-2.67, Q_real=-986.28
+Ep 21: Q_pred=-5.63, Q_real=-306.34
+Ep 22: Q_pred=-8.78, Q_real=-153.19
+Ep 23: Q_pred=-11.06, Q_real=-94.10
+Ep 24: Q_pred=-12.61, Q_real=-34.00
+Ep 25: Q_pred=-16.23, Q_real=-120.39
+Ep 26: Q_pred=-17.16, Q_real=-54.69
+Ep 27: Q_pred=-21.71, Q_real=-1274.62
+Ep 28: Q_pred=-20.81, Q_real=-60.17
+Ep 29: Q_pred=-22.62, Q_real=-7.45
+Ep 30: Q_pred=-20.13, Q_real=-1482.94
+Ep 31: Q_pred=-21.06, Q_real=0.00
+Ep 32: Q_pred=-20.31, Q_real=-2.21
+Ep 33: Q_pred=-20.34, Q_real=-1.47
+Ep 34: Q_pred=-21.34, Q_real=-4.45
+Ep 35: Q_pred=-19.49, Q_real=-16.48
+Ep 36: Q_pred=-24.82, Q_real=0.00
+Ep 37: Q_pred=-17.82, Q_real=-26.94
+Ep 38: Q_pred=-12.61, Q_real=-48.32
+Ep 39: Q_pred=-10.90, Q_real=-869.90
+Ep 40: Q_pred=-9.12, Q_real=-25.22
+Ep 41: Q_pred=-7.46, Q_real=-793.36
+Ep 42: Q_pred=-7.80, Q_real=-43.74
+Ep 43: Q_pred=-4.87, Q_real=-22.95
+Ep 44: Q_pred=-4.86, Q_real=-101.10
+Ep 45: Q_pred=3.04, Q_real=-21.16
+Ep 46: Q_pred=13.59, Q_real=-383.21
+Ep 47: Q_pred=7.10, Q_real=0.00
+Ep 48: Q_pred=9.12, Q_real=-13.49
+Ep 49: Q_pred=7.48, Q_real=-83.32
+Ep 50: Q_pred=21.37, Q_real=-0.64
+Ep 51: Q_pred=23.09, Q_real=-131.34
+Ep 52: Q_pred=25.31, Q_real=-70.76
+Ep 53: Q_pred=23.08, Q_real=0.00
+Ep 54: Q_pred=33.37, Q_real=0.00
+Ep 55: Q_pred=37.57, Q_real=-2.99
+Ep 56: Q_pred=31.54, Q_real=-1235.34
+Ep 57: Q_pred=37.17, Q_real=-32.35
+Ep 58: Q_pred=37.89, Q_real=-120.05
+Ep 59: Q_pred=42.76, Q_real=-701.96
+Ep 60: Q_pred=38.81, Q_real=-54.58
+Ep 61: Q_pred=54.03, Q_real=-319.45
+Ep 62: Q_pred=47.33, Q_real=0.00
+Ep 63: Q_pred=55.98, Q_real=-446.98
+Ep 64: Q_pred=41.95, Q_real=-94.14
+Ep 65: Q_pred=41.90, Q_real=-0.08
+Ep 66: Q_pred=53.16, Q_real=-1206.70
+Ep 67: Q_pred=53.21, Q_real=0.00
+Ep 68: Q_pred=50.27, Q_real=-74.27
+Ep 69: Q_pred=55.35, Q_real=-50.16
+Ep 70: Q_pred=54.16, Q_real=0.00
+Ep 71: Q_pred=62.12, Q_real=-704.95
+Ep 72: Q_pred=47.22, Q_real=0.00
+Ep 73: Q_pred=49.56, Q_real=-269.02
+Ep 74: Q_pred=47.46, Q_real=0.00
+Ep 75: Q_pred=64.22, Q_real=-41.13
+Ep 76: Q_pred=57.35, Q_real=-1465.91
+Ep 77: Q_pred=50.38, Q_real=-32.69
+Ep 78: Q_pred=57.56, Q_real=0.00
+Ep 79: Q_pred=66.83, Q_real=-11.08
+Ep 80: Q_pred=54.05, Q_real=-1529.67
+Ep 81: Q_pred=57.74, Q_real=0.00
+Ep 82: Q_pred=57.23, Q_real=-29.61
+Ep 83: Q_pred=61.81, Q_real=-101.34
+Ep 84: Q_pred=46.16, Q_real=-93.15
+Ep 85: Q_pred=69.48, Q_real=-191.93
+Ep 86: Q_pred=57.94, Q_real=0.00
+Ep 87: Q_pred=49.08, Q_real=0.00
+Ep 88: Q_pred=58.17, Q_real=0.00
+Ep 89: Q_pred=71.31, Q_real=-1091.64
+Ep 90: Q_pred=60.55, Q_real=-785.22
+Ep 91: Q_pred=67.24, Q_real=-0.64
+Ep 92: Q_pred=61.65, Q_real=-3.67
+Ep 93: Q_pred=73.75, Q_real=-207.00
+Ep 94: Q_pred=57.68, Q_real=-30.57
+Ep 95: Q_pred=50.09, Q_real=0.00
+Ep 96: Q_pred=57.95, Q_real=-16.34
+Ep 97: Q_pred=52.95, Q_real=-40.51
+Ep 98: Q_pred=63.50, Q_real=-636.99
+Ep 99: Q_pred=65.06, Q_real=-14.92
+Ep 100: Q_pred=58.41, Q_real=-54.85
+Ep 101: Q_pred=71.70, Q_real=-319.45
+Ep 102: Q_pred=48.22, Q_real=-8.82
+Ep 103: Q_pred=59.74, Q_real=-15.82
+Ep 104: Q_pred=46.68, Q_real=-8.51
+Ep 105: Q_pred=59.94, Q_real=-678.08
+Ep 106: Q_pred=65.36, Q_real=-254.41
+Ep 107: Q_pred=71.29, Q_real=-445.70
+Ep 108: Q_pred=53.42, Q_real=0.00
+Ep 109: Q_pred=49.30, Q_real=-126.89
+Ep 110: Q_pred=60.17, Q_real=-765.79
+Ep 111: Q_pred=49.72, Q_real=-4.41
+Ep 112: Q_pred=61.90, Q_real=-1351.24
+Ep 113: Q_pred=48.22, Q_real=-33.76
+Ep 114: Q_pred=63.25, Q_real=-255.69
+Ep 115: Q_pred=45.88, Q_real=-14.85
+Ep 116: Q_pred=41.51, Q_real=0.00
+Ep 117: Q_pred=59.38, Q_real=-63.13
+Ep 118: Q_pred=40.32, Q_real=0.00
+Ep 119: Q_pred=40.12, Q_real=0.00
+Ep 120: Q_pred=31.55, Q_real=0.00
+Ep 121: Q_pred=45.86, Q_real=-0.36
+Ep 122: Q_pred=42.82, Q_real=0.00
+Ep 123: Q_pred=45.10, Q_real=-23.03
+Ep 124: Q_pred=41.56, Q_real=-11.91
+Ep 125: Q_pred=47.95, Q_real=-45.03
+Ep 126: Q_pred=50.02, Q_real=-14.96
+Ep 127: Q_pred=44.43, Q_real=-11.19
+Ep 128: Q_pred=38.89, Q_real=0.00
+Ep 129: Q_pred=34.85, Q_real=0.00
+Ep 130: Q_pred=32.82, Q_real=0.00
+Ep 131: Q_pred=37.91, Q_real=0.00
+Ep 132: Q_pred=45.43, Q_real=0.00
+Ep 133: Q_pred=30.84, Q_real=0.00
+Ep 134: Q_pred=31.02, Q_real=0.00
+Ep 135: Q_pred=51.16, Q_real=-510.74
+Ep 136: Q_pred=36.31, Q_real=-19.95
+Ep 137: Q_pred=31.55, Q_real=-764.52
+Ep 138: Q_pred=55.20, Q_real=-0.64
+Ep 139: Q_pred=35.32, Q_real=0.00
+Ep 140: Q_pred=29.78, Q_real=0.00
+Ep 141: Q_pred=34.51, Q_real=0.00
+Ep 142: Q_pred=27.55, Q_real=0.00
+Ep 143: Q_pred=12.60, Q_real=-26.39
+Ep 144: Q_pred=20.58, Q_real=0.00
+Ep 145: Q_pred=33.34, Q_real=0.00
+Ep 146: Q_pred=18.13, Q_real=0.00
+Ep 147: Q_pred=34.84, Q_real=-254.41
+Ep 148: Q_pred=22.02, Q_real=0.00
+Ep 149: Q_pred=26.28, Q_real=-63.13
+Ep 150: Q_pred=33.07, Q_real=-510.74
+Ep 151: Q_pred=21.81, Q_real=0.00
+Ep 152: Q_pred=37.61, Q_real=-582.30
+Ep 153: Q_pred=13.29, Q_real=-61.26
+Ep 154: Q_pred=8.13, Q_real=0.00
+Ep 155: Q_pred=14.31, Q_real=0.00
+Ep 156: Q_pred=15.38, Q_real=-1.46
+Ep 157: Q_pred=15.57, Q_real=0.00
+Ep 158: Q_pred=43.97, Q_real=-191.93
+Ep 159: Q_pred=8.46, Q_real=0.00
+Ep 160: Q_pred=22.74, Q_real=-1274.62
+Ep 161: Q_pred=8.94, Q_real=0.00
+Ep 162: Q_pred=13.68, Q_real=-8.86
+Ep 163: Q_pred=7.06, Q_real=-3.67
+Ep 164: Q_pred=3.80, Q_real=-126.39
+Ep 165: Q_pred=-1.40, Q_real=0.00
+Ep 166: Q_pred=3.45, Q_real=-7.32
+Ep 167: Q_pred=-3.88, Q_real=-13.49
+Ep 168: Q_pred=22.69, Q_real=-1594.71
+Ep 169: Q_pred=23.54, Q_real=-126.89
+Ep 170: Q_pred=23.93, Q_real=-63.13
+Ep 171: Q_pred=15.56, Q_real=-2118.82
+Ep 172: Q_pred=3.52, Q_real=0.00
+Ep 173: Q_pred=0.20, Q_real=-67.45
+Ep 174: Q_pred=24.39, Q_real=-0.64
+Ep 175: Q_pred=-7.43, Q_real=0.00
+Ep 176: Q_pred=-1.01, Q_real=0.00
+Ep 177: Q_pred=-4.62, Q_real=-1.46
+Ep 178: Q_pred=-15.11, Q_real=0.00
+Ep 179: Q_pred=11.01, Q_real=-510.74
+Ep 180: Q_pred=-3.71, Q_real=0.00
+Ep 181: Q_pred=-8.76, Q_real=0.00
+Ep 182: Q_pred=-16.04, Q_real=-39.20
+Ep 183: Q_pred=-2.10, Q_real=-88.08
+Ep 184: Q_pred=-15.47, Q_real=0.00
+Ep 185: Q_pred=-4.01, Q_real=0.00
+Ep 186: Q_pred=-9.69, Q_real=-55.03
+Ep 187: Q_pred=-6.31, Q_real=-24.24
+Ep 188: Q_pred=-16.86, Q_real=-25.37
+Ep 189: Q_pred=-13.78, Q_real=-32.19
+Ep 190: Q_pred=-8.33, Q_real=0.00
+Ep 191: Q_pred=-12.70, Q_real=-2.94
+Ep 192: Q_pred=-12.56, Q_real=-10.29
+Ep 193: Q_pred=-0.07, Q_real=-0.02
+Ep 194: Q_pred=-20.21, Q_real=-54.58
+Ep 195: Q_pred=-13.88, Q_real=-24.75
+Ep 196: Q_pred=-8.90, Q_real=-0.01
+Ep 197: Q_pred=-7.70, Q_real=-13.57
+Ep 198: Q_pred=8.30, Q_real=-381.94
+Ep 199: Q_pred=-4.95, Q_real=-29.54
+Ep 200: Q_pred=-6.85, Q_real=-45.67
+Ep 201: Q_pred=-24.70, Q_real=-11.08
+Ep 202: Q_pred=8.37, Q_real=-920.05
+Ep 203: Q_pred=3.13, Q_real=-255.69
+Ep 204: Q_pred=-19.21, Q_real=-137.17
+Ep 205: Q_pred=-16.27, Q_real=-43.19
+Ep 206: Q_pred=-17.91, Q_real=-65.64
+Ep 207: Q_pred=-17.43, Q_real=-72.05
+Ep 208: Q_pred=-24.36, Q_real=-86.16
+Ep 209: Q_pred=-24.17, Q_real=-574.50
+Ep 210: Q_pred=-26.15, Q_real=0.00
+Ep 211: Q_pred=-25.37, Q_real=0.00
+Ep 212: Q_pred=-23.42, Q_real=-76.32
+Ep 213: Q_pred=-12.34, Q_real=-68.70
+Ep 214: Q_pred=-14.61, Q_real=-47.02
+Ep 215: Q_pred=-26.68, Q_real=-89.16
+Ep 216: Q_pred=-21.53, Q_real=-53.71
+Ep 217: Q_pred=-5.66, Q_real=-509.46
+Ep 218: Q_pred=-6.14, Q_real=-381.94
+Ep 219: Q_pred=-27.60, Q_real=-5.31
+Ep 220: Q_pred=-10.14, Q_real=-843.10
+Ep 221: Q_pred=-32.61, Q_real=0.00
+Ep 222: Q_pred=-31.73, Q_real=-327.49
+Ep 223: Q_pred=-37.90, Q_real=-58.54
+Ep 224: Q_pred=-10.99, Q_real=-383.21
+Ep 225: Q_pred=-31.94, Q_real=-25.38
+Ep 226: Q_pred=-35.26, Q_real=-72.05
+Ep 227: Q_pred=-23.33, Q_real=-79.18
+Ep 228: Q_pred=-34.52, Q_real=0.00
+Ep 229: Q_pred=-36.33, Q_real=0.00
+Ep 230: Q_pred=-24.87, Q_real=-25.22
+Ep 231: Q_pred=-39.01, Q_real=-293.16
+Analyzing Checkpoints:  47%|████▋     | 234/500 [00:22<00:24, 10.73it/s]Analyzing Checkpoints:  47%|████▋     | 236/500 [00:22<00:24, 10.81it/s]Analyzing Checkpoints:  48%|████▊     | 238/500 [00:23<00:24, 10.74it/s]Analyzing Checkpoints:  48%|████▊     | 240/500 [00:23<00:23, 11.02it/s]Analyzing Checkpoints:  48%|████▊     | 242/500 [00:23<00:23, 10.77it/s]Analyzing Checkpoints:  49%|████▉     | 244/500 [00:23<00:23, 11.03it/s]Analyzing Checkpoints:  49%|████▉     | 246/500 [00:23<00:23, 11.02it/s]Analyzing Checkpoints:  50%|████▉     | 248/500 [00:24<00:22, 11.18it/s]Analyzing Checkpoints:  50%|█████     | 250/500 [00:24<00:22, 11.04it/s]Analyzing Checkpoints:  50%|█████     | 252/500 [00:24<00:22, 11.12it/s]Analyzing Checkpoints:  51%|█████     | 254/500 [00:24<00:22, 11.02it/s]Analyzing Checkpoints:  51%|█████     | 256/500 [00:24<00:22, 10.96it/s]Analyzing Checkpoints:  52%|█████▏    | 258/500 [00:24<00:22, 10.97it/s]Analyzing Checkpoints:  52%|█████▏    | 260/500 [00:25<00:22, 10.85it/s]Analyzing Checkpoints:  52%|█████▏    | 262/500 [00:25<00:21, 10.85it/s]Analyzing Checkpoints:  53%|█████▎    | 264/500 [00:25<00:21, 10.76it/s]Analyzing Checkpoints:  53%|█████▎    | 266/500 [00:25<00:31,  7.34it/s]Analyzing Checkpoints:  54%|█████▎    | 268/500 [00:26<00:28,  8.12it/s]Analyzing Checkpoints:  54%|█████▍    | 270/500 [00:26<00:26,  8.77it/s]Analyzing Checkpoints:  54%|█████▍    | 272/500 [00:26<00:24,  9.37it/s]Analyzing Checkpoints:  55%|█████▍    | 274/500 [00:26<00:22,  9.99it/s]Analyzing Checkpoints:  55%|█████▌    | 276/500 [00:26<00:22, 10.09it/s]Analyzing Checkpoints:  56%|█████▌    | 278/500 [00:27<00:21, 10.35it/s]Analyzing Checkpoints:  56%|█████▌    | 280/500 [00:27<00:21, 10.31it/s]Analyzing Checkpoints:  56%|█████▋    | 282/500 [00:27<00:20, 10.58it/s]Analyzing Checkpoints:  57%|█████▋    | 284/500 [00:27<00:20, 10.78it/s]Analyzing Checkpoints:  57%|█████▋    | 286/500 [00:27<00:19, 10.95it/s]Analyzing Checkpoints:  58%|█████▊    | 288/500 [00:28<00:19, 10.77it/s]Analyzing Checkpoints:  58%|█████▊    | 290/500 [00:28<00:19, 10.85it/s]Analyzing Checkpoints:  58%|█████▊    | 292/500 [00:28<00:19, 10.80it/s]Analyzing Checkpoints:  59%|█████▉    | 294/500 [00:28<00:18, 10.92it/s]Analyzing Checkpoints:  59%|█████▉    | 296/500 [00:28<00:18, 11.04it/s]Analyzing Checkpoints:  60%|█████▉    | 298/500 [00:28<00:18, 10.88it/s]Analyzing Checkpoints:  60%|██████    | 300/500 [00:29<00:18, 10.68it/s]Analyzing Checkpoints:  60%|██████    | 302/500 [00:29<00:18, 10.83it/s]Analyzing Checkpoints:  61%|██████    | 304/500 [00:29<00:18, 10.86it/s]Analyzing Checkpoints:  61%|██████    | 306/500 [00:29<00:17, 10.99it/s]Analyzing Checkpoints:  62%|██████▏   | 308/500 [00:29<00:17, 11.06it/s]Analyzing Checkpoints:  62%|██████▏   | 310/500 [00:30<00:17, 11.00it/s]Analyzing Checkpoints:  62%|██████▏   | 312/500 [00:30<00:17, 10.87it/s]Analyzing Checkpoints:  63%|██████▎   | 314/500 [00:30<00:17, 10.84it/s]Analyzing Checkpoints:  63%|██████▎   | 316/500 [00:30<00:16, 10.85it/s]Analyzing Checkpoints:  64%|██████▎   | 318/500 [00:30<00:16, 10.87it/s]Analyzing Checkpoints:  64%|██████▍   | 320/500 [00:30<00:16, 11.01it/s]Analyzing Checkpoints:  64%|██████▍   | 322/500 [00:31<00:16, 11.10it/s]Analyzing Checkpoints:  65%|██████▍   | 324/500 [00:31<00:15, 11.16it/s]Analyzing Checkpoints:  65%|██████▌   | 326/500 [00:31<00:15, 11.05it/s]Analyzing Checkpoints:  66%|██████▌   | 328/500 [00:31<00:15, 11.30it/s]Analyzing Checkpoints:  66%|██████▌   | 330/500 [00:31<00:14, 11.35it/s]Analyzing Checkpoints:  66%|██████▋   | 332/500 [00:32<00:14, 11.23it/s]Analyzing Checkpoints:  67%|██████▋   | 334/500 [00:32<00:24,  6.85it/s]Analyzing Checkpoints:  67%|██████▋   | 336/500 [00:32<00:21,  7.75it/s]Analyzing Checkpoints:  68%|██████▊   | 338/500 [00:32<00:18,  8.54it/s]Analyzing Checkpoints:  68%|██████▊   | 340/500 [00:33<00:17,  9.09it/s]Analyzing Checkpoints:  68%|██████▊   | 342/500 [00:33<00:16,  9.55it/s]Analyzing Checkpoints:  69%|██████▉   | 344/500 [00:33<00:15,  9.76it/s]Analyzing Checkpoints:  69%|██████▉   | 346/500 [00:33<00:15,  9.98it/s]Analyzing Checkpoints:  70%|██████▉   | 348/500 [00:33<00:15, 10.04it/s]Analyzing Checkpoints:  70%|███████   | 350/500 [00:34<00:14, 10.33it/s]Analyzing Checkpoints:  70%|███████   | 352/500 [00:34<00:14, 10.25it/s]Analyzing Checkpoints:  71%|███████   | 354/500 [00:34<00:13, 10.45it/s]Analyzing Checkpoints:  71%|███████   | 356/500 [00:34<00:14, 10.19it/s]Analyzing Checkpoints:  72%|███████▏  | 358/500 [00:34<00:13, 10.25it/s]Analyzing Checkpoints:  72%|███████▏  | 360/500 [00:35<00:13, 10.56it/s]Analyzing Checkpoints:  72%|███████▏  | 362/500 [00:35<00:12, 10.65it/s]Analyzing Checkpoints:  73%|███████▎  | 364/500 [00:35<00:12, 10.65it/s]Analyzing Checkpoints:  73%|███████▎  | 366/500 [00:35<00:12, 10.54it/s]Analyzing Checkpoints:  74%|███████▎  | 368/500 [00:35<00:12, 10.74it/s]Analyzing Checkpoints:  74%|███████▍  | 370/500 [00:35<00:12, 10.70it/s]Analyzing Checkpoints:  74%|███████▍  | 372/500 [00:36<00:11, 10.87it/s]Analyzing Checkpoints:  75%|███████▍  | 374/500 [00:36<00:11, 10.78it/s]Analyzing Checkpoints:  75%|███████▌  | 376/500 [00:36<00:11, 10.76it/s]Analyzing Checkpoints:  76%|███████▌  | 378/500 [00:36<00:11, 10.78it/s]Analyzing Checkpoints:  76%|███████▌  | 380/500 [00:36<00:11, 10.64it/s]Analyzing Checkpoints:  76%|███████▋  | 382/500 [00:37<00:10, 10.76it/s]Analyzing Checkpoints:  77%|███████▋  | 384/500 [00:37<00:10, 10.99it/s]Analyzing Checkpoints:  77%|███████▋  | 386/500 [00:37<00:10, 10.82it/s]Analyzing Checkpoints:  78%|███████▊  | 388/500 [00:37<00:10, 10.71it/s]Analyzing Checkpoints:  78%|███████▊  | 390/500 [00:37<00:10, 10.81it/s]Analyzing Checkpoints:  78%|███████▊  | 392/500 [00:37<00:09, 10.96it/s]Analyzing Checkpoints:  79%|███████▉  | 394/500 [00:38<00:09, 11.06it/s]Analyzing Checkpoints:  79%|███████▉  | 396/500 [00:38<00:09, 11.03it/s]Analyzing Checkpoints:  80%|███████▉  | 398/500 [00:38<00:09, 11.19it/s]Analyzing Checkpoints:  80%|████████  | 400/500 [00:38<00:08, 11.15it/s]Analyzing Checkpoints:  80%|████████  | 402/500 [00:38<00:08, 10.95it/s]Analyzing Checkpoints:  81%|████████  | 404/500 [00:39<00:08, 10.79it/s]Analyzing Checkpoints:  81%|████████  | 406/500 [00:39<00:08, 10.78it/s]Analyzing Checkpoints:  82%|████████▏ | 408/500 [00:39<00:08, 10.77it/s]Analyzing Checkpoints:  82%|████████▏ | 410/500 [00:39<00:08, 10.84it/s]Analyzing Checkpoints:  82%|████████▏ | 412/500 [00:39<00:08, 10.91it/s]Analyzing Checkpoints:  83%|████████▎ | 414/500 [00:39<00:07, 10.86it/s]Analyzing Checkpoints:  83%|████████▎ | 416/500 [00:40<00:13,  6.29it/s]Analyzing Checkpoints:  84%|████████▎ | 418/500 [00:40<00:11,  7.25it/s]Analyzing Checkpoints:  84%|████████▍ | 419/500 [00:40<00:10,  7.59it/s]Analyzing Checkpoints:  84%|████████▍ | 421/500 [00:41<00:09,  8.65it/s]Analyzing Checkpoints:  85%|████████▍ | 423/500 [00:41<00:08,  9.42it/s]Analyzing Checkpoints:  85%|████████▌ | 425/500 [00:41<00:07,  9.93it/s]Analyzing Checkpoints:  85%|████████▌ | 427/500 [00:41<00:07, 10.05it/s]Analyzing Checkpoints:  86%|████████▌ | 429/500 [00:41<00:06, 10.29it/s]Analyzing Checkpoints:  86%|████████▌ | 431/500 [00:41<00:06, 10.30it/s]Analyzing Checkpoints:  87%|████████▋ | 433/500 [00:42<00:06, 10.60it/s]Analyzing Checkpoints:  87%|████████▋ | 435/500 [00:42<00:06, 10.73it/s]Analyzing Checkpoints:  87%|████████▋ | 437/500 [00:42<00:05, 10.77it/s]Analyzing Checkpoints:  88%|████████▊ | 439/500 [00:42<00:05, 10.85it/s]Analyzing Checkpoints:  88%|████████▊ | 441/500 [00:42<00:05, 10.94it/s]Analyzing Checkpoints:  89%|████████▊ | 443/500 [00:43<00:05, 10.89it/s]Analyzing Checkpoints:  89%|████████▉ | 445/500 [00:43<00:05, 10.71it/s]Analyzing Checkpoints:  89%|████████▉ | 447/500 [00:43<00:04, 10.64it/s]Analyzing Checkpoints:  90%|████████▉ | 449/500 [00:43<00:04, 10.45it/s]Analyzing Checkpoints:  90%|█████████ | 451/500 [00:43<00:04, 10.35it/s]Ep 232: Q_pred=-24.96, Q_real=-42.77
+Ep 233: Q_pred=-3.62, Q_real=-107.98
+Ep 234: Q_pred=-7.26, Q_real=-151.69
+Ep 235: Q_pred=-43.43, Q_real=0.00
+Ep 236: Q_pred=-12.27, Q_real=-1024.62
+Ep 237: Q_pred=-28.20, Q_real=-11.00
+Ep 238: Q_pred=-25.58, Q_real=-407.90
+Ep 239: Q_pred=-39.27, Q_real=0.00
+Ep 240: Q_pred=-45.08, Q_real=-98.75
+Ep 241: Q_pred=-0.02, Q_real=-877.99
+Ep 242: Q_pred=-37.32, Q_real=0.00
+Ep 243: Q_pred=-20.61, Q_real=-124.11
+Ep 244: Q_pred=-13.50, Q_real=-18.23
+Ep 245: Q_pred=-24.07, Q_real=-191.93
+Ep 246: Q_pred=-18.98, Q_real=-74.27
+Ep 247: Q_pred=-18.13, Q_real=-107.52
+Ep 248: Q_pred=-14.97, Q_real=-56.55
+Ep 249: Q_pred=-29.11, Q_real=-17.85
+Ep 250: Q_pred=-20.99, Q_real=-20.60
+Ep 251: Q_pred=1.12, Q_real=-999.32
+Ep 252: Q_pred=-37.78, Q_real=-14.85
+Ep 253: Q_pred=-21.42, Q_real=-89.58
+Ep 254: Q_pred=-1.92, Q_real=-465.72
+Ep 255: Q_pred=-6.14, Q_real=-0.64
+Ep 256: Q_pred=-16.83, Q_real=-215.12
+Ep 257: Q_pred=-13.86, Q_real=-30.42
+Ep 258: Q_pred=-35.77, Q_real=-31.67
+Ep 259: Q_pred=-42.24, Q_real=-0.03
+Ep 260: Q_pred=3.04, Q_real=-1232.36
+Ep 261: Q_pred=-23.19, Q_real=-68.92
+Ep 262: Q_pred=-20.76, Q_real=-82.70
+Ep 263: Q_pred=-7.44, Q_real=-383.21
+Ep 264: Q_pred=-25.82, Q_real=0.00
+Ep 265: Q_pred=-33.27, Q_real=-2.21
+Ep 266: Q_pred=-12.35, Q_real=-24.65
+Ep 267: Q_pred=-27.05, Q_real=-0.09
+Ep 268: Q_pred=-22.47, Q_real=-169.53
+Ep 269: Q_pred=-25.40, Q_real=-43.74
+Ep 270: Q_pred=-33.39, Q_real=-71.83
+Ep 271: Q_pred=-35.40, Q_real=0.00
+Ep 272: Q_pred=-13.12, Q_real=-0.05
+Ep 273: Q_pred=-27.22, Q_real=-114.90
+Ep 274: Q_pred=-28.26, Q_real=0.00
+Ep 275: Q_pred=1.19, Q_real=-411.59
+Ep 276: Q_pred=-3.74, Q_real=-365.11
+Ep 277: Q_pred=-22.63, Q_real=0.00
+Ep 278: Q_pred=-22.83, Q_real=-1529.67
+Ep 279: Q_pred=-20.73, Q_real=-289.60
+Ep 280: Q_pred=-24.02, Q_real=-8.88
+Ep 281: Q_pred=-21.95, Q_real=-49.84
+Ep 282: Q_pred=-26.41, Q_real=-152.89
+Ep 283: Q_pred=-25.12, Q_real=-92.59
+Ep 284: Q_pred=-13.16, Q_real=-46.99
+Ep 285: Q_pred=-11.01, Q_real=-352.94
+Ep 286: Q_pred=-20.54, Q_real=-438.48
+Ep 287: Q_pred=-40.02, Q_real=-141.72
+Ep 288: Q_pred=-22.62, Q_real=-59.52
+Ep 289: Q_pred=-26.63, Q_real=-50.51
+Ep 290: Q_pred=-32.58, Q_real=-57.42
+Ep 291: Q_pred=-37.23, Q_real=-767.81
+Ep 292: Q_pred=-28.74, Q_real=-101.89
+Ep 293: Q_pred=-22.89, Q_real=-72.53
+Ep 294: Q_pred=-30.98, Q_real=0.00
+Ep 295: Q_pred=-16.56, Q_real=-41.13
+Ep 296: Q_pred=-33.08, Q_real=-5.31
+Ep 297: Q_pred=-37.43, Q_real=-33.85
+Ep 298: Q_pred=-18.08, Q_real=-28.65
+Ep 299: Q_pred=-22.22, Q_real=-1248.25
+Ep 300: Q_pred=-32.62, Q_real=0.00
+Ep 301: Q_pred=-22.63, Q_real=-412.31
+Ep 302: Q_pred=-44.26, Q_real=-90.26
+Ep 303: Q_pred=-14.12, Q_real=-509.46
+Ep 304: Q_pred=-39.03, Q_real=-82.49
+Ep 305: Q_pred=-31.66, Q_real=-16.05
+Ep 306: Q_pred=-14.54, Q_real=-255.69
+Ep 307: Q_pred=-36.18, Q_real=-150.87
+Ep 308: Q_pred=-32.87, Q_real=-170.75
+Ep 309: Q_pred=-10.04, Q_real=-962.42
+Ep 310: Q_pred=-47.33, Q_real=0.00
+Ep 311: Q_pred=-38.75, Q_real=-8.82
+Ep 312: Q_pred=-34.04, Q_real=0.00
+Ep 313: Q_pred=-41.54, Q_real=-0.08
+Ep 314: Q_pred=-34.03, Q_real=-24.65
+Ep 315: Q_pred=-22.57, Q_real=-1163.29
+Ep 316: Q_pred=-43.43, Q_real=-47.11
+Ep 317: Q_pred=-28.38, Q_real=-137.33
+Ep 318: Q_pred=-36.70, Q_real=-9.52
+Ep 319: Q_pred=-44.69, Q_real=-76.59
+Ep 320: Q_pred=-49.26, Q_real=-64.98
+Ep 321: Q_pred=-32.58, Q_real=0.00
+Ep 322: Q_pred=-41.30, Q_real=-53.60
+Ep 323: Q_pred=-39.47, Q_real=-22.50
+Ep 324: Q_pred=-18.65, Q_real=-0.02
+Ep 325: Q_pred=-65.49, Q_real=-1593.43
+Ep 326: Q_pred=-42.45, Q_real=-33.98
+Ep 327: Q_pred=-38.43, Q_real=-54.85
+Ep 328: Q_pred=-26.03, Q_real=-261.32
+Ep 329: Q_pred=-51.04, Q_real=-42.23
+Ep 330: Q_pred=-20.91, Q_real=-638.27
+Ep 331: Q_pred=-42.16, Q_real=-11.85
+Ep 332: Q_pred=-60.81, Q_real=-236.03
+Ep 333: Q_pred=-33.16, Q_real=-254.41
+Ep 334: Q_pred=-38.52, Q_real=-20.81
+Ep 335: Q_pred=-52.05, Q_real=-18.63
+Ep 336: Q_pred=-48.63, Q_real=-8.60
+Ep 337: Q_pred=-45.77, Q_real=-190.54
+Ep 338: Q_pred=-28.29, Q_real=-14.44
+Ep 339: Q_pred=-40.26, Q_real=0.00
+Ep 340: Q_pred=-39.79, Q_real=-0.07
+Ep 341: Q_pred=-31.21, Q_real=-30.71
+Ep 342: Q_pred=-35.35, Q_real=-164.51
+Ep 343: Q_pred=-35.60, Q_real=-45.03
+Ep 344: Q_pred=-58.13, Q_real=-4.69
+Ep 345: Q_pred=-31.07, Q_real=-63.03
+Ep 346: Q_pred=-42.27, Q_real=-25.46
+Ep 347: Q_pred=-36.72, Q_real=-402.64
+Ep 348: Q_pred=-54.76, Q_real=0.00
+Ep 349: Q_pred=-46.38, Q_real=-682.80
+Ep 350: Q_pred=-44.57, Q_real=0.00
+Ep 351: Q_pred=-36.73, Q_real=-728.65
+Ep 352: Q_pred=-71.80, Q_real=-254.91
+Ep 353: Q_pred=-26.75, Q_real=-71.79
+Ep 354: Q_pred=-41.06, Q_real=-700.75
+Ep 355: Q_pred=-34.88, Q_real=-21.42
+Ep 356: Q_pred=-51.14, Q_real=-21.53
+Ep 357: Q_pred=-55.68, Q_real=-0.73
+Ep 358: Q_pred=-31.79, Q_real=-608.31
+Ep 359: Q_pred=-49.58, Q_real=-70.76
+Ep 360: Q_pred=-44.87, Q_real=-20.52
+Ep 361: Q_pred=-41.11, Q_real=-19.87
+Ep 362: Q_pred=-53.56, Q_real=-29.67
+Ep 363: Q_pred=-47.74, Q_real=-60.92
+Ep 364: Q_pred=-36.36, Q_real=-696.30
+Ep 365: Q_pred=-36.95, Q_real=-5.86
+Ep 366: Q_pred=-46.19, Q_real=-147.35
+Ep 367: Q_pred=-45.73, Q_real=-26.36
+Ep 368: Q_pred=-32.24, Q_real=-69.73
+Ep 369: Q_pred=-55.94, Q_real=-112.86
+Ep 370: Q_pred=-40.74, Q_real=-177.83
+Ep 371: Q_pred=-47.78, Q_real=-3.75
+Ep 372: Q_pred=-44.04, Q_real=-469.28
+Ep 373: Q_pred=-40.19, Q_real=-30.42
+Ep 374: Q_pred=-56.61, Q_real=-114.15
+Ep 375: Q_pred=-45.39, Q_real=-78.98
+Ep 376: Q_pred=-48.62, Q_real=-30.71
+Ep 377: Q_pred=-45.21, Q_real=-78.98
+Ep 378: Q_pred=-46.84, Q_real=-15.44
+Ep 379: Q_pred=-59.56, Q_real=-397.04
+Ep 380: Q_pred=-47.27, Q_real=-11.85
+Ep 381: Q_pred=-45.96, Q_real=-64.98
+Ep 382: Q_pred=-49.14, Q_real=-1019.57
+Ep 383: Q_pred=-47.87, Q_real=-60.65
+Ep 384: Q_pred=-41.83, Q_real=-5.31
+Ep 385: Q_pred=-33.15, Q_real=-873.99
+Ep 386: Q_pred=-36.12, Q_real=-1051.24
+Ep 387: Q_pred=-54.81, Q_real=-6.90
+Ep 388: Q_pred=-53.23, Q_real=-153.15
+Ep 389: Q_pred=-25.98, Q_real=-151.39
+Ep 390: Q_pred=-26.38, Q_real=-118.52
+Ep 391: Q_pred=-38.91, Q_real=0.00
+Ep 392: Q_pred=-39.49, Q_real=-265.85
+Ep 393: Q_pred=-53.84, Q_real=-85.65
+Ep 394: Q_pred=-52.18, Q_real=-247.03
+Ep 395: Q_pred=-36.97, Q_real=-152.61
+Ep 396: Q_pred=-44.36, Q_real=-37.60
+Ep 397: Q_pred=-32.76, Q_real=-32.79
+Ep 398: Q_pred=-55.64, Q_real=-113.86
+Ep 399: Q_pred=-33.56, Q_real=-214.44
+Ep 400: Q_pred=-47.63, Q_real=-54.69
+Ep 401: Q_pred=-46.74, Q_real=-186.21
+Ep 402: Q_pred=-62.82, Q_real=-280.41
+Ep 403: Q_pred=-52.25, Q_real=-865.79
+Ep 404: Q_pred=-57.38, Q_real=-63.15
+Ep 405: Q_pred=-56.88, Q_real=-1661.75
+Ep 406: Q_pred=-70.02, Q_real=-129.36
+Ep 407: Q_pred=-48.20, Q_real=-97.77
+Ep 408: Q_pred=-55.66, Q_real=-2.95
+Ep 409: Q_pred=-47.86, Q_real=-20.60
+Ep 410: Q_pred=-43.26, Q_real=-860.99
+Ep 411: Q_pred=-46.74, Q_real=-38.27
+Ep 412: Q_pred=-42.88, Q_real=-278.06
+Ep 413: Q_pred=-48.89, Q_real=0.00
+Ep 414: Q_pred=-53.12, Q_real=0.00
+Ep 415: Q_pred=-63.85, Q_real=-137.33
+Ep 416: Q_pred=-47.06, Q_real=-400.74
+Ep 417: Q_pred=-44.05, Q_real=-11.00
+Ep 418: Q_pred=-48.95, Q_real=-1481.22
+Ep 419: Q_pred=-63.52, Q_real=-509.46
+Ep 420: Q_pred=-77.04, Q_real=-107.41
+Ep 421: Q_pred=-48.01, Q_real=-206.51
+Ep 422: Q_pred=-60.03, Q_real=-507.48
+Ep 423: Q_pred=-67.51, Q_real=-397.27
+Ep 424: Q_pred=-49.74, Q_real=-2.56
+Ep 425: Q_pred=-62.25, Q_real=-534.27
+Ep 426: Q_pred=-91.77, Q_real=-97.77
+Ep 427: Q_pred=-57.33, Q_real=-269.49
+Ep 428: Q_pred=-59.06, Q_real=-11.91
+Ep 429: Q_pred=-54.81, Q_real=-59.74
+Ep 430: Q_pred=-54.66, Q_real=-340.99
+Ep 431: Q_pred=-71.81, Q_real=-23.44
+Ep 432: Q_pred=-64.25, Q_real=-175.86
+Ep 433: Q_pred=-70.56, Q_real=-15.33
+Ep 434: Q_pred=-42.40, Q_real=-137.33
+Ep 435: Q_pred=-71.75, Q_real=-6.39
+Ep 436: Q_pred=-58.41, Q_real=-41.30
+Ep 437: Q_pred=-68.74, Q_real=-226.08
+Ep 438: Q_pred=-60.51, Q_real=-2.99
+Ep 439: Q_pred=-47.96, Q_real=-37.87
+Ep 440: Q_pred=-52.21, Q_real=0.00
+Ep 441: Q_pred=-76.62, Q_real=-333.46
+Ep 442: Q_pred=-81.67, Q_real=-331.00
+Ep 443: Q_pred=-47.74, Q_real=-128.04
+Ep 444: Q_pred=-57.34, Q_real=-221.31
+Ep 445: Q_pred=-80.41, Q_real=0.00
+Ep 446: Q_pred=-74.84, Q_real=0.00
+Ep 447: Q_pred=-73.07, Q_real=-240.48
+Ep 448: Q_pred=-66.29, Q_real=-157.54
+Ep 449: Q_pred=-75.04, Q_real=-203.90
+Ep 450: Q_pred=-65.93, Q_real=-247.30
+Ep 451: Q_pred=-85.81, Q_real=-577.94
+Analyzing Checkpoints:  91%|█████████ | 453/500 [00:44<00:04, 10.17it/s]Analyzing Checkpoints:  91%|█████████ | 455/500 [00:44<00:04, 10.28it/s]Analyzing Checkpoints:  91%|█████████▏| 457/500 [00:44<00:04, 10.41it/s]Analyzing Checkpoints:  92%|█████████▏| 459/500 [00:44<00:03, 10.47it/s]Analyzing Checkpoints:  92%|█████████▏| 461/500 [00:44<00:03, 10.49it/s]Analyzing Checkpoints:  93%|█████████▎| 463/500 [00:45<00:03, 10.39it/s]Analyzing Checkpoints:  93%|█████████▎| 465/500 [00:45<00:03, 10.56it/s]Analyzing Checkpoints:  93%|█████████▎| 467/500 [00:45<00:03, 10.61it/s]Analyzing Checkpoints:  94%|█████████▍| 469/500 [00:45<00:02, 10.74it/s]Analyzing Checkpoints:  94%|█████████▍| 471/500 [00:45<00:02, 10.79it/s]Analyzing Checkpoints:  95%|█████████▍| 473/500 [00:45<00:02, 10.79it/s]Analyzing Checkpoints:  95%|█████████▌| 475/500 [00:46<00:02, 10.61it/s]Analyzing Checkpoints:  95%|█████████▌| 477/500 [00:46<00:02, 10.77it/s]Analyzing Checkpoints:  96%|█████████▌| 479/500 [00:46<00:01, 10.62it/s]Analyzing Checkpoints:  96%|█████████▌| 481/500 [00:46<00:01, 10.93it/s]Analyzing Checkpoints:  97%|█████████▋| 483/500 [00:46<00:01, 10.76it/s]Analyzing Checkpoints:  97%|█████████▋| 485/500 [00:47<00:01, 10.88it/s]Analyzing Checkpoints:  97%|█████████▋| 487/500 [00:47<00:01, 10.75it/s]Analyzing Checkpoints:  98%|█████████▊| 489/500 [00:47<00:00, 11.00it/s]Analyzing Checkpoints:  98%|█████████▊| 491/500 [00:47<00:00, 10.84it/s]Analyzing Checkpoints:  99%|█████████▊| 493/500 [00:47<00:00, 11.06it/s]Analyzing Checkpoints:  99%|█████████▉| 495/500 [00:47<00:00, 11.05it/s]Analyzing Checkpoints:  99%|█████████▉| 497/500 [00:48<00:00, 11.09it/s]Analyzing Checkpoints: 100%|█████████▉| 499/500 [00:48<00:00, 11.15it/s]Analyzing Checkpoints: 100%|██████████| 500/500 [00:48<00:00, 10.33it/s]
+Ep 452: Q_pred=-96.44, Q_real=-381.94
+Ep 453: Q_pred=-69.71, Q_real=-32.19
+Ep 454: Q_pred=-65.16, Q_real=-97.97
+Ep 455: Q_pred=-56.96, Q_real=-102.10
+Ep 456: Q_pred=-73.70, Q_real=-641.03
+Ep 457: Q_pred=-84.94, Q_real=-594.82
+Ep 458: Q_pred=-69.17, Q_real=-329.80
+Ep 459: Q_pred=-97.70, Q_real=-229.41
+Ep 460: Q_pred=-78.57, Q_real=-259.71
+Ep 461: Q_pred=-93.07, Q_real=0.00
+Ep 462: Q_pred=-85.33, Q_real=-62.00
+Ep 463: Q_pred=-85.49, Q_real=-8.86
+Ep 464: Q_pred=-92.88, Q_real=-693.53
+Ep 465: Q_pred=-85.82, Q_real=-223.97
+Ep 466: Q_pred=-71.46, Q_real=-13.39
+Ep 467: Q_pred=-77.60, Q_real=-98.10
+Ep 468: Q_pred=-74.81, Q_real=-78.85
+Ep 469: Q_pred=-97.62, Q_real=-4.45
+Ep 470: Q_pred=-81.83, Q_real=-0.64
+Ep 471: Q_pred=-100.95, Q_real=-84.72
+Ep 472: Q_pred=-88.81, Q_real=-155.22
+Ep 473: Q_pred=-76.48, Q_real=-175.44
+Ep 474: Q_pred=-90.20, Q_real=-941.76
+Ep 475: Q_pred=-76.99, Q_real=-136.82
+Ep 476: Q_pred=-54.94, Q_real=-82.91
+Ep 477: Q_pred=-89.74, Q_real=-280.32
+Ep 478: Q_pred=-89.42, Q_real=-104.16
+Ep 479: Q_pred=-87.43, Q_real=-144.67
+Ep 480: Q_pred=-82.65, Q_real=-110.78
+Ep 481: Q_pred=-95.40, Q_real=0.00
+Ep 482: Q_pred=-99.12, Q_real=-190.65
+Ep 483: Q_pred=-78.04, Q_real=-134.46
+Ep 484: Q_pred=-63.66, Q_real=-78.98
+Ep 485: Q_pred=-92.19, Q_real=-242.04
+Ep 486: Q_pred=-115.18, Q_real=-1720.96
+Ep 487: Q_pred=-98.39, Q_real=-340.52
+Ep 488: Q_pred=-73.58, Q_real=-94.14
+Ep 489: Q_pred=-123.99, Q_real=-764.52
+Ep 490: Q_pred=-113.75, Q_real=-178.92
+Ep 491: Q_pred=-107.24, Q_real=-68.21
+Ep 492: Q_pred=-102.12, Q_real=-94.62
+Ep 493: Q_pred=-112.55, Q_real=-775.08
+Ep 494: Q_pred=-91.44, Q_real=-200.09
+Ep 495: Q_pred=-104.70, Q_real=-1402.14
+Ep 496: Q_pred=-108.24, Q_real=-1363.36
+Ep 497: Q_pred=-95.27, Q_real=-383.65
+Ep 498: Q_pred=-107.07, Q_real=-923.64
+Ep 499: Q_pred=-105.99, Q_real=-3.75
+Saved analysis to /home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_comparasion/sac_q_accuracy_debug.npy

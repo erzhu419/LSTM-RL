@@ -1,0 +1,111 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+pygame 2.5.2 (SDL 2.28.2, Python 3.12.4)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Found 100 checkpoints.
+Analyzing Checkpoints:   0%|          | 0/100 [00:00<?, ?it/s]/home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_accuracy_analysis/analyze_q_accuracy.py:209: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at ../torch/csrc/utils/tensor_new.cpp:275.)
+  target_action_tensor = torch.FloatTensor([a]).to(device)
+Analyzing Checkpoints:   1%|          | 1/100 [00:00<00:23,  4.28it/s]Analyzing Checkpoints:   2%|▏         | 2/100 [00:00<00:18,  5.33it/s]Analyzing Checkpoints:   3%|▎         | 3/100 [00:00<00:19,  5.04it/s]Analyzing Checkpoints:   4%|▍         | 4/100 [00:00<00:17,  5.44it/s]Analyzing Checkpoints:   5%|▌         | 5/100 [00:00<00:17,  5.59it/s]Analyzing Checkpoints:   6%|▌         | 6/100 [00:01<00:17,  5.40it/s]Analyzing Checkpoints:   7%|▋         | 7/100 [00:01<00:17,  5.33it/s]Analyzing Checkpoints:   8%|▊         | 8/100 [00:01<00:17,  5.34it/s]Analyzing Checkpoints:   9%|▉         | 9/100 [00:01<00:18,  4.99it/s]Analyzing Checkpoints:  10%|█         | 10/100 [00:01<00:16,  5.37it/s]Analyzing Checkpoints:  11%|█         | 11/100 [00:02<00:15,  5.68it/s]Analyzing Checkpoints:  12%|█▏        | 12/100 [00:02<00:15,  5.57it/s]Analyzing Checkpoints:  13%|█▎        | 13/100 [00:02<00:16,  5.39it/s]Analyzing Checkpoints:  14%|█▍        | 14/100 [00:02<00:16,  5.25it/s]Analyzing Checkpoints:  15%|█▌        | 15/100 [00:02<00:15,  5.58it/s]Analyzing Checkpoints:  16%|█▌        | 16/100 [00:02<00:14,  5.92it/s]Analyzing Checkpoints:  17%|█▋        | 17/100 [00:03<00:15,  5.27it/s]Analyzing Checkpoints:  18%|█▊        | 18/100 [00:03<00:15,  5.17it/s]Analyzing Checkpoints:  19%|█▉        | 19/100 [00:03<00:14,  5.44it/s]Analyzing Checkpoints:  20%|██        | 20/100 [00:03<00:17,  4.54it/s]Analyzing Checkpoints:  21%|██        | 21/100 [00:04<00:17,  4.64it/s]Analyzing Checkpoints:  22%|██▏       | 22/100 [00:04<00:16,  4.79it/s]Analyzing Checkpoints:  23%|██▎       | 23/100 [00:04<00:15,  5.04it/s]Analyzing Checkpoints:  24%|██▍       | 24/100 [00:04<00:15,  4.98it/s]Analyzing Checkpoints:  25%|██▌       | 25/100 [00:04<00:17,  4.32it/s]Analyzing Checkpoints:  26%|██▌       | 26/100 [00:05<00:18,  4.08it/s]Analyzing Checkpoints:  27%|██▋       | 27/100 [00:05<00:16,  4.52it/s]Analyzing Checkpoints:  28%|██▊       | 28/100 [00:05<00:14,  5.00it/s]Analyzing Checkpoints:  29%|██▉       | 29/100 [00:05<00:13,  5.36it/s]Analyzing Checkpoints:  30%|███       | 30/100 [00:05<00:12,  5.69it/s]Analyzing Checkpoints:  31%|███       | 31/100 [00:05<00:12,  5.74it/s]Analyzing Checkpoints:  32%|███▏      | 32/100 [00:06<00:15,  4.46it/s]Analyzing Checkpoints:  33%|███▎      | 33/100 [00:06<00:14,  4.67it/s]Analyzing Checkpoints:  34%|███▍      | 34/100 [00:06<00:15,  4.14it/s]Analyzing Checkpoints:  35%|███▌      | 35/100 [00:06<00:13,  4.69it/s]Analyzing Checkpoints:  36%|███▌      | 36/100 [00:07<00:12,  5.19it/s]Analyzing Checkpoints:  37%|███▋      | 37/100 [00:07<00:11,  5.42it/s]Analyzing Checkpoints:  38%|███▊      | 38/100 [00:07<00:10,  5.65it/s]Analyzing Checkpoints:  39%|███▉      | 39/100 [00:07<00:10,  5.96it/s]Analyzing Checkpoints:  40%|████      | 40/100 [00:07<00:10,  5.83it/s]Analyzing Checkpoints:  41%|████      | 41/100 [00:07<00:10,  5.82it/s]Analyzing Checkpoints:  42%|████▏     | 42/100 [00:08<00:09,  5.96it/s]Analyzing Checkpoints:  43%|████▎     | 43/100 [00:08<00:09,  5.88it/s]Analyzing Checkpoints:  44%|████▍     | 44/100 [00:08<00:10,  5.59it/s]Analyzing Checkpoints:  45%|████▌     | 45/100 [00:08<00:09,  5.54it/s]Analyzing Checkpoints:  46%|████▌     | 46/100 [00:08<00:09,  5.44it/s]Analyzing Checkpoints:  47%|████▋     | 47/100 [00:09<00:12,  4.34it/s]Analyzing Checkpoints:  48%|████▊     | 48/100 [00:09<00:11,  4.44it/s]Analyzing Checkpoints:  49%|████▉     | 49/100 [00:09<00:10,  4.78it/s]Analyzing Checkpoints:  50%|█████     | 50/100 [00:09<00:09,  5.08it/s]Analyzing Checkpoints:  51%|█████     | 51/100 [00:10<00:11,  4.35it/s]Analyzing Checkpoints:  52%|█████▏    | 52/100 [00:10<00:10,  4.52it/s]Analyzing Checkpoints:  53%|█████▎    | 53/100 [00:10<00:09,  5.05it/s]Analyzing Checkpoints:  54%|█████▍    | 54/100 [00:10<00:08,  5.26it/s]Analyzing Checkpoints:  55%|█████▌    | 55/100 [00:10<00:08,  5.38it/s]Analyzing Checkpoints:  56%|█████▌    | 56/100 [00:10<00:07,  5.76it/s]Analyzing Checkpoints:  57%|█████▋    | 57/100 [00:11<00:07,  5.74it/s]Analyzing Checkpoints:  58%|█████▊    | 58/100 [00:11<00:07,  5.99it/s]Analyzing Checkpoints:  59%|█████▉    | 59/100 [00:11<00:06,  6.19it/s]Analyzing Checkpoints:  60%|██████    | 60/100 [00:11<00:06,  5.91it/s]Analyzing Checkpoints:  61%|██████    | 61/100 [00:11<00:08,  4.78it/s]Analyzing Checkpoints:  62%|██████▏   | 62/100 [00:12<00:10,  3.59it/s]Analyzing Checkpoints:  63%|██████▎   | 63/100 [00:12<00:09,  3.98it/s]Analyzing Checkpoints:  64%|██████▍   | 64/100 [00:12<00:08,  4.27it/s]Analyzing Checkpoints:  65%|██████▌   | 65/100 [00:12<00:07,  4.42it/s]Analyzing Checkpoints:  66%|██████▌   | 66/100 [00:13<00:06,  4.90it/s]Analyzing Checkpoints:  67%|██████▋   | 67/100 [00:13<00:06,  4.95it/s]Analyzing Checkpoints:  68%|██████▊   | 68/100 [00:13<00:05,  5.40it/s]Analyzing Checkpoints:  69%|██████▉   | 69/100 [00:13<00:05,  5.52it/s]Analyzing Checkpoints:  70%|███████   | 70/100 [00:13<00:05,  5.86it/s]Analyzing Checkpoints:  71%|███████   | 71/100 [00:14<00:06,  4.32it/s]Analyzing Checkpoints:  72%|███████▏  | 72/100 [00:14<00:06,  4.58it/s]Analyzing Checkpoints:  73%|███████▎  | 73/100 [00:14<00:05,  4.84it/s]Analyzing Checkpoints:  74%|███████▍  | 74/100 [00:14<00:04,  5.22it/s]Analyzing Checkpoints:  75%|███████▌  | 75/100 [00:14<00:04,  5.20it/s]Analyzing Checkpoints:  76%|███████▌  | 76/100 [00:14<00:04,  5.53it/s]Analyzing Checkpoints:  77%|███████▋  | 77/100 [00:15<00:03,  5.80it/s]Analyzing Checkpoints:  78%|███████▊  | 78/100 [00:15<00:03,  6.00it/s]Analyzing Checkpoints:  79%|███████▉  | 79/100 [00:15<00:03,  6.22it/s]Analyzing Checkpoints:  80%|████████  | 80/100 [00:15<00:04,  4.36it/s]Analyzing Checkpoints:  81%|████████  | 81/100 [00:15<00:04,  4.54it/s]Analyzing Checkpoints:  82%|████████▏ | 82/100 [00:16<00:03,  5.00it/s]Analyzing Checkpoints:  83%|████████▎ | 83/100 [00:16<00:03,  4.99it/s]Analyzing Checkpoints:  84%|████████▍ | 84/100 [00:16<00:03,  4.96it/s]Analyzing Checkpoints:  85%|████████▌ | 85/100 [00:16<00:02,  5.12it/s]Analyzing Checkpoints:  86%|████████▌ | 86/100 [00:16<00:02,  5.28it/s]Analyzing Checkpoints:  87%|████████▋ | 87/100 [00:17<00:02,  5.66it/s]Analyzing Checkpoints:  88%|████████▊ | 88/100 [00:17<00:02,  5.45it/s]Analyzing Checkpoints:  89%|████████▉ | 89/100 [00:17<00:01,  5.58it/s]Analyzing Checkpoints:  90%|█████████ | 90/100 [00:17<00:01,  5.45it/s]Analyzing Checkpoints:  91%|█████████ | 91/100 [00:17<00:01,  5.33it/s]Analyzing Checkpoints:  92%|█████████▏| 92/100 [00:17<00:01,  5.27it/s]Analyzing Checkpoints:  93%|█████████▎| 93/100 [00:18<00:01,  5.60it/s]Analyzing Checkpoints:  94%|█████████▍| 94/100 [00:18<00:01,  5.63it/s]Analyzing Checkpoints:  95%|█████████▌| 95/100 [00:18<00:00,  5.81it/s]Analyzing Checkpoints:  96%|█████████▌| 96/100 [00:18<00:00,  5.82it/s]Analyzing Checkpoints:  97%|█████████▋| 97/100 [00:18<00:00,  5.91it/s]Analyzing Checkpoints:  98%|█████████▊| 98/100 [00:18<00:00,  6.10it/s]Analyzing Checkpoints:  99%|█████████▉| 99/100 [00:19<00:00,  6.30it/s]Analyzing Checkpoints: 100%|██████████| 100/100 [00:19<00:00,  6.40it/s]Analyzing Checkpoints: 100%|██████████| 100/100 [00:19<00:00,  5.19it/s]
+Ep 0: Q_pred=0.30, Q_real=56.88
+Ep 5: Q_pred=8.99, Q_real=8.92
+Ep 10: Q_pred=17.79, Q_real=0.00
+Ep 15: Q_pred=8.94, Q_real=18.49
+Ep 20: Q_pred=-0.65, Q_real=-1763.53
+Ep 25: Q_pred=-13.75, Q_real=-1517.68
+Ep 30: Q_pred=-21.42, Q_real=53.31
+Ep 35: Q_pred=-22.74, Q_real=44.71
+Ep 40: Q_pred=-12.06, Q_real=11.59
+Ep 45: Q_pred=1.36, Q_real=6.31
+Ep 50: Q_pred=14.14, Q_real=1.49
+Ep 55: Q_pred=37.92, Q_real=43.04
+Ep 60: Q_pred=42.03, Q_real=60.52
+Ep 65: Q_pred=45.36, Q_real=60.52
+Ep 70: Q_pred=54.50, Q_real=11.59
+Ep 75: Q_pred=54.12, Q_real=0.00
+Ep 80: Q_pred=56.14, Q_real=12.94
+Ep 85: Q_pred=52.85, Q_real=-1462.30
+Ep 90: Q_pred=56.28, Q_real=17.08
+Ep 95: Q_pred=57.58, Q_real=-1197.24
+Ep 100: Q_pred=39.73, Q_real=68.01
+Ep 105: Q_pred=73.01, Q_real=-1609.40
+Ep 110: Q_pred=49.40, Q_real=24.26
+Ep 115: Q_pred=39.96, Q_real=66.11
+Ep 120: Q_pred=45.24, Q_real=41.39
+Ep 125: Q_pred=53.85, Q_real=-1366.44
+Ep 130: Q_pred=40.30, Q_real=19.91
+Ep 135: Q_pred=33.34, Q_real=5.03
+Ep 140: Q_pred=33.51, Q_real=8.92
+Ep 145: Q_pred=24.02, Q_real=3.76
+Ep 150: Q_pred=39.33, Q_real=-1784.65
+Ep 155: Q_pred=18.26, Q_real=-827.72
+Ep 160: Q_pred=-0.76, Q_real=53.32
+Ep 165: Q_pred=12.21, Q_real=25.73
+Ep 170: Q_pred=4.34, Q_real=0.00
+Ep 175: Q_pred=-0.29, Q_real=0.00
+Ep 180: Q_pred=25.18, Q_real=-1807.04
+Ep 185: Q_pred=-5.13, Q_real=14.31
+Ep 190: Q_pred=-11.54, Q_real=0.00
+Ep 195: Q_pred=-9.16, Q_real=41.39
+Ep 200: Q_pred=-1.14, Q_real=30.27
+Ep 205: Q_pred=-22.50, Q_real=15.69
+Ep 210: Q_pred=0.82, Q_real=-1729.73
+Ep 215: Q_pred=-31.05, Q_real=71.88
+Ep 220: Q_pred=-29.67, Q_real=48.10
+Ep 225: Q_pred=-6.28, Q_real=-1544.55
+Ep 230: Q_pred=-27.72, Q_real=17.08
+Ep 235: Q_pred=-49.41, Q_real=77.82
+Ep 240: Q_pred=-33.35, Q_real=30.27
+Ep 245: Q_pred=-19.78, Q_real=24.26
+Ep 250: Q_pred=-13.68, Q_real=-1361.89
+Ep 255: Q_pred=-36.13, Q_real=69.90
+Ep 260: Q_pred=-29.24, Q_real=0.00
+Ep 265: Q_pred=-15.92, Q_real=31.81
+Ep 270: Q_pred=-23.51, Q_real=30.27
+Ep 275: Q_pred=-18.34, Q_real=0.00
+Ep 280: Q_pred=-15.97, Q_real=24.26
+Ep 285: Q_pred=-27.47, Q_real=0.00
+Ep 290: Q_pred=-35.53, Q_real=7.61
+Ep 295: Q_pred=-11.53, Q_real=-1557.78
+Ep 300: Q_pred=-22.24, Q_real=-1197.24
+Ep 305: Q_pred=-15.77, Q_real=-1623.61
+Ep 310: Q_pred=-33.95, Q_real=44.71
+Ep 315: Q_pred=-41.69, Q_real=60.49
+Ep 320: Q_pred=-25.23, Q_real=-1419.27
+Ep 325: Q_pred=-30.52, Q_real=8.92
+Ep 330: Q_pred=-33.77, Q_real=-1462.29
+Ep 335: Q_pred=-47.19, Q_real=0.74
+Ep 340: Q_pred=-42.87, Q_real=27.23
+Ep 345: Q_pred=-34.11, Q_real=0.00
+Ep 350: Q_pred=-30.64, Q_real=-941.42
+Ep 355: Q_pred=-59.83, Q_real=55.09
+Ep 360: Q_pred=-59.49, Q_real=43.04
+Ep 365: Q_pred=-40.22, Q_real=14.31
+Ep 370: Q_pred=-41.36, Q_real=-1531.18
+Ep 375: Q_pred=-39.99, Q_real=11.59
+Ep 380: Q_pred=-42.66, Q_real=6.31
+Ep 385: Q_pred=-51.41, Q_real=5.03
+Ep 390: Q_pred=-47.73, Q_real=0.00
+Ep 395: Q_pred=-56.10, Q_real=2.49
+Ep 400: Q_pred=-67.25, Q_real=68.01
+Ep 405: Q_pred=-61.84, Q_real=8.92
+Ep 410: Q_pred=-58.36, Q_real=-1964.70
+Ep 415: Q_pred=-77.44, Q_real=66.11
+Ep 420: Q_pred=-54.30, Q_real=44.71
+Ep 425: Q_pred=-71.82, Q_real=30.27
+Ep 430: Q_pred=-64.20, Q_real=0.00
+Ep 435: Q_pred=-51.48, Q_real=66.11
+Ep 440: Q_pred=-53.50, Q_real=-1729.73
+Ep 445: Q_pred=-58.80, Q_real=-1544.55
+Ep 450: Q_pred=-56.44, Q_real=64.23
+Ep 455: Q_pred=-73.00, Q_real=49.82
+Ep 460: Q_pred=-81.80, Q_real=0.00
+Ep 465: Q_pred=-88.07, Q_real=-1763.53
+Ep 470: Q_pred=-59.28, Q_real=8.92
+Ep 475: Q_pred=-65.70, Q_real=28.74
+Ep 480: Q_pred=-81.77, Q_real=18.49
+Ep 485: Q_pred=-86.25, Q_real=5.03
+Ep 490: Q_pred=-78.54, Q_real=0.00
+Ep 495: Q_pred=-91.91, Q_real=2.50
+Saved analysis to /home/erzhu419/mine_code/LSTM-RL/ensemble_paper/q_comparasion/sac_q_accuracy_norm.npy
